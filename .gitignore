@@ -2,3 +2,4 @@ out/
 site/node_modules/
 site/.netlify/
 *.log
+site/public/
