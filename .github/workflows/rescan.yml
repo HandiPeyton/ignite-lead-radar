@@ -1,0 +1,67 @@
+name: Monthly lead rescan
+
+on:
+  schedule:
+    - cron: '30 9 1 * *'   # 09:30 UTC on the 1st = 5:30 AM ET, before business hours
+  workflow_dispatch: {}     # manual "Run workflow" button (works from the GitHub phone app too)
+
+permissions:
+  contents: write           # the run commits its scan snapshot back for next-run diffing
+
+jobs:
+  rescan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Snapshot tracking state (backup + owner corrections)
+        run: |
+          mkdir -p out
+          curl -s https://ignite-lead-radar.netlify.app/api/state -o out/state-live.json
+
+      - name: Scan all six regions
+        run: node scan.mjs --pace 4000
+
+      - name: Deep audit (TLS / SPF / DMARC / SEO)
+        run: node audit-deep.mjs
+
+      - name: Google ratings (skips itself without the key)
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node enrich-ratings.mjs
+
+      - name: Build checkup pages + board
+        run: |
+          node build-audits.mjs
+          node build-board.mjs
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        working-directory: site
+        run: |
+          npm install --no-fund --no-audit
+          npx netlify-cli deploy --prod --site 565e77e6-a859-4b59-aa14-c268aa57071c --no-build --dir public --functions functions
+
+      - name: Commit scan snapshot (feeds new/hotter diffing next run)
+        run: |
+          git config user.name "lead-radar-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -f out/leads.json out/summary.json out/ratings.json 2>/dev/null || true
+          git commit -m "scan snapshot $(date -u +%F)" || echo "nothing to commit"
+          git push || true
+
+      - name: Upload leads CSV + tracking backup
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: leads-and-backup-${{ github.run_number }}
+          path: |
+            out/leads.csv
+            out/state-live.json
+          if-no-files-found: ignore

@@ -1,0 +1,948 @@
+<title>Ignite Lead Radar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #FAF7F4;
+    --surface: #FFFFFF;
+    --surface-2: #F1EBE5;
+    --ink: #26211D;
+    --ink-soft: #6B6259;
+    --line: #E3DAD1;
+    --accent: #C2410C;
+    --accent-ink: #FFFFFF;
+    --need-both: #B3400F;      --need-both-bg: #F7E3D7;
+    --need-web: #2F6FAB;       --need-web-bg: #E1ECF5;
+    --need-it: #177E70;        --need-it-bg: #DCF0EB;
+    --verify: #8A6D1C;         --verify-bg: #F5ECD4;
+    --quoted: #6D4FA1;         --quoted-bg: #EAE3F5;
+    --row-hover: #F4EDE6;
+    --ok: #177E70;
+    --err: #B3400F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #201B17;
+      --surface: #292320;
+      --surface-2: #322B26;
+      --ink: #EDE6DF;
+      --ink-soft: #A89C90;
+      --line: #3D3630;
+      --accent: #E0561F;
+      --accent-ink: #FFF7F2;
+      --need-both: #F0956B;    --need-both-bg: #45291B;
+      --need-web: #85B4DC;     --need-web-bg: #1F3245;
+      --need-it: #6FC4B5;      --need-it-bg: #173832;
+      --verify: #D6B75E;       --verify-bg: #3A311A;
+      --quoted: #B49BE0;       --quoted-bg: #2E2540;
+      --row-hover: #2E2723;
+      --ok: #6FC4B5;
+      --err: #F0956B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #201B17;
+    --surface: #292320;
+    --surface-2: #322B26;
+    --ink: #EDE6DF;
+    --ink-soft: #A89C90;
+    --line: #3D3630;
+    --accent: #E0561F;
+    --accent-ink: #FFF7F2;
+    --need-both: #F0956B;    --need-both-bg: #45291B;
+    --need-web: #85B4DC;     --need-web-bg: #1F3245;
+    --need-it: #6FC4B5;      --need-it-bg: #173832;
+    --verify: #D6B75E;       --verify-bg: #3A311A;
+    --quoted: #B49BE0;       --quoted-bg: #2E2540;
+    --row-hover: #2E2723;
+    --ok: #6FC4B5;
+    --err: #F0956B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 14px/1.5 "Barlow", "Segoe UI", system-ui, sans-serif;
+  }
+  a { color: var(--need-web); }
+
+  .wrap { max-width: 1420px; margin: 0 auto; padding: 20px 20px 48px; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 28px;
+    padding-bottom: 14px; border-bottom: 2px solid var(--ink);
+  }
+  .brand h1 {
+    margin: 0;
+    font: 700 34px/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: .02em; text-transform: uppercase;
+  }
+  .brand h1 .tick { color: var(--accent); }
+  .brand p { margin: 4px 0 0; color: var(--ink-soft); font-size: 13px; }
+  .scanmeta {
+    margin-left: auto; display: flex; gap: 20px; align-items: flex-end;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat { text-align: right; }
+  .stat b {
+    display: block;
+    font: 600 24px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif;
+  }
+  .stat span {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft);
+  }
+
+  .rail {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;
+    padding: 14px 0 4px;
+  }
+  .rail.second { padding: 4px 0 12px; }
+  .rail .lbl {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--ink-soft); margin-right: 2px;
+  }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 500 13px/1 "Barlow", sans-serif;
+    padding: 7px 11px; border-radius: 4px; cursor: pointer;
+    transition: background .12s, border-color .12s;
+  }
+  .chip:hover { border-color: var(--ink-soft); }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip .n { opacity: .7; font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .chip:focus-visible, #q:focus-visible, .pager button:focus-visible, th.sortable:focus-visible,
+  .edwrap textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .rail .gap { width: 10px; }
+  #q {
+    margin-left: auto; min-width: 220px; flex: 0 1 280px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--surface); color: var(--ink);
+    font: 400 13px/1 "Barlow", sans-serif; padding: 8px 10px;
+  }
+  #q::placeholder { color: var(--ink-soft); }
+
+  .count { font-size: 12px; color: var(--ink-soft); padding: 4px 0 8px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .count .export { margin-left: auto; }
+
+  .tablewrap {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface);
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 1250px; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface-2);
+    font: 600 11px/1.2 "Barlow", sans-serif;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft);
+    text-align: left; padding: 9px 10px; border-bottom: 2px solid var(--line);
+    white-space: nowrap;
+  }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--ink); }
+  th .dir { color: var(--accent); }
+  tbody td {
+    padding: 8px 10px; border-bottom: 1px solid var(--line);
+    vertical-align: top; font-size: 13px;
+  }
+  tbody tr.lead { cursor: default; }
+  tbody tr.lead.trackable { cursor: pointer; }
+  tbody tr.lead:hover { background: var(--row-hover); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.biz { font-weight: 600; max-width: 220px; }
+  td.town, td.vert { white-space: nowrap; color: var(--ink-soft); }
+  td.vert { text-transform: capitalize; }
+  .needchip {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
+    white-space: nowrap;
+  }
+  .need-Both    { color: var(--need-both); background: var(--need-both-bg); }
+  .need-Website { color: var(--need-web);  background: var(--need-web-bg); }
+  .need-IT      { color: var(--need-it);   background: var(--need-it-bg); }
+  .vchip {
+    display: inline-block; margin-top: 3px; padding: 2px 6px; border-radius: 4px;
+    border: 1px dashed var(--verify); color: var(--verify); background: var(--verify-bg);
+    font: 500 10px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  }
+
+  .stchip {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .03em; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .st-new        { color: var(--ink-soft); background: var(--surface-2); }
+  .st-noanswer   { color: var(--verify); background: var(--verify-bg); }
+  .st-callback   { color: var(--need-web); background: var(--need-web-bg); }
+  .st-interested { color: var(--need-it); background: var(--need-it-bg); }
+  .st-quoted     { color: var(--quoted); background: var(--quoted-bg); }
+  .st-won        { color: var(--bg); background: var(--need-it); }
+  .st-lost       { color: var(--need-both); background: var(--need-both-bg); }
+  .st-bad        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line); border-style: dashed; opacity: .8; }
+  .notedot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); margin-left: 6px; vertical-align: middle;
+  }
+  .duetag { font: 500 10px/1.4 "IBM Plex Mono", monospace; color: var(--verify); margin-top: 3px; white-space: nowrap; }
+  .duetag.overdue { color: var(--err); font-weight: 600; }
+  .badge {
+    display: inline-block; margin-left: 6px; padding: 1px 5px; border-radius: 3px;
+    font: 600 9px/1.4 "Barlow", sans-serif; letter-spacing: .07em; text-transform: uppercase;
+    vertical-align: 2px;
+  }
+  .badge.bnew { color: var(--need-web); border: 1px solid var(--need-web); }
+  .badge.bup  { color: var(--accent-ink); background: var(--accent); }
+  .rstar { font-size: 11px; color: var(--verify); margin-left: 6px; white-space: nowrap; font-weight: 500; }
+  .chip.due-on { background: var(--verify); border-color: var(--verify); color: var(--bg); }
+
+  td.score { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.why { color: var(--ink-soft); font-size: 12px; line-height: 1.45; max-width: 340px; min-width: 220px; }
+  td.phone { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
+  td.phone a, td.links a { color: var(--need-web); text-decoration: none; }
+  td.phone a:hover, td.links a:hover { text-decoration: underline; }
+  td.links { white-space: nowrap; font-size: 12px; }
+  td.links .site { display: block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+
+  tr.edrow > td { background: var(--surface-2); padding: 0; }
+  .edwrap {
+    position: sticky; left: 0;
+    max-width: min(720px, calc(100vw - 80px));
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 16px 16px;
+  }
+  .edwrap .stbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .edwrap .stbtn {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 500 12px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .edwrap .stbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .edwrap textarea {
+    width: 100%; min-height: 74px; resize: vertical;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--surface); color: var(--ink);
+    font: 400 13px/1.5 "Barlow", sans-serif; padding: 9px 10px;
+  }
+  .edwrap textarea::placeholder { color: var(--ink-soft); }
+  .furow { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; }
+  .furow input[type="date"] {
+    border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px;
+    background: var(--surface); color: var(--ink); font: 400 12px/1 "Barlow", sans-serif;
+  }
+  .edmeta { font-size: 11px; color: var(--ink-soft); }
+  .edmeta .saved { color: var(--ok); }
+  .edmeta .fail { color: var(--err); }
+
+  .prep {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 6px; background: var(--surface);
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 9px;
+  }
+  .prow { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: start; }
+  .plbl {
+    font: 600 10px/1.6 "Barlow", sans-serif; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--ink-soft); padding-top: 2px;
+  }
+  .prow p, .prow ul { margin: 0; font-size: 13px; line-height: 1.5; }
+  .prow ul { padding-left: 18px; }
+  .prow li { margin-bottom: 2px; }
+  .prow .pv { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+  .minibtn {
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    font: 500 11px/1 "Barlow", sans-serif; padding: 4px 8px; border-radius: 4px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .minibtn:hover { border-color: var(--ink-soft); }
+  .prow .warn { color: var(--verify); font-weight: 600; }
+  @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
+
+  .pager { display: inline-flex; gap: 6px; align-items: center; }
+  .pager button {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 500 13px/1 "Barlow", sans-serif; padding: 7px 12px; border-radius: 4px; cursor: pointer;
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .pager .plabel {
+    font-size: 12px; color: var(--ink-soft); padding: 0 6px;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .pager.bottom { display: flex; justify-content: center; margin-top: 14px; }
+
+  .toast {
+    position: fixed; right: 16px; bottom: 16px; z-index: 50;
+    background: var(--ink); color: var(--bg);
+    padding: 10px 14px; border-radius: 6px; font-size: 13px;
+    opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  footer {
+    margin-top: 22px; color: var(--ink-soft); font-size: 12px; line-height: 1.6;
+    border-top: 1px solid var(--line); padding-top: 12px;
+  }
+  .empty { padding: 40px; text-align: center; color: var(--ink-soft); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip, .toast { transition: none; }
+  }
+  @media (max-width: 720px) {
+    .scanmeta { margin-left: 0; }
+    #q { margin-left: 0; flex-basis: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Ignite <span class="tick">/</span> Lead Radar</h1>
+      <p>Ignite Cyber &middot; Ridge Web Designs &mdash; regional prospect scanner</p>
+    </div>
+    <div class="scanmeta" id="scanmeta"></div>
+  </header>
+
+  <div class="rail" role="toolbar" aria-label="Filters">
+    <span class="lbl">Region</span>
+    <span id="regionChips"></span>
+    <span class="gap"></span>
+    <span class="lbl">Need</span>
+    <span id="needChips"></span>
+    <span class="gap"></span>
+    <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence only</button>
+    <input id="q" type="search" placeholder="Search name, town, notes&hellip;" aria-label="Search leads">
+  </div>
+  <div class="rail second" id="progressRail" hidden>
+    <span class="lbl">Progress</span>
+    <span id="statusChips"></span>
+  </div>
+
+  <div class="count">
+    <span id="count"></span>
+    <span class="pager" id="pagerTop"></span>
+    <button class="chip export" id="nextBtn" hidden>Next lead &rsaquo;</button>
+    <button class="chip" id="exportBtn" hidden>Export CSV</button>
+    <button class="chip" id="backupBtn" hidden title="Download all progress + notes as a JSON backup">Backup</button>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-k="name" tabindex="0">Business <span class="dir"></span></th>
+          <th class="sortable" data-k="town" tabindex="0">Town <span class="dir"></span></th>
+          <th id="progressTh" hidden>Progress</th>
+          <th class="sortable" data-k="needRank" tabindex="0">Needs <span class="dir"></span></th>
+          <th class="sortable" data-k="wScore" tabindex="0">Web <span class="dir"></span></th>
+          <th class="sortable" data-k="itScore" tabindex="0">IT <span class="dir"></span></th>
+          <th>Why flagged</th>
+          <th>Phone</th>
+          <th>Region</th>
+          <th>Vertical</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>No leads match these filters.</div>
+  </div>
+  <div class="pager bottom" id="pagerBottom"></div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <footer>
+    <strong>Need</strong> = what the evidence points to: a new <em>website</em> (Ridge Web Designs pitch), an <em>IT</em> partner (Ignite Cyber pitch), or <em>both</em>.
+    Rows marked <em>verify</em> came from listings without a website on file &mdash; do a 30-second Google check before dialing.
+    Click any row for the call-prep brief, progress label, and call notes.
+    Every lead has a phone number. Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
+  </footer>
+</div>
+
+<script>
+  const DATA = /*__DATA__*/[];
+  const META = /*__META__*/{};
+  const REGION_LABELS = /*__REGIONS__*/{};
+  const TRACKING = /*__TRACKING__*/false;
+
+  const needRank = { Both: 0, Website: 1, IT: 2 };
+  DATA.forEach((d, i) => { d.needRank = needRank[d.need] ?? 9; d.idx = i; });
+
+  const STATUSES = [
+    ['new', 'To call'], ['noanswer', 'No answer'], ['callback', 'Call back'],
+    ['interested', 'Interested'], ['quoted', 'Quoted'], ['won', 'Won'],
+    ['lost', 'Not interested'], ['bad', 'Bad number'],
+  ];
+  const ST_LABEL = Object.fromEntries(STATUSES);
+
+  const state = { region: 'all', need: 'all', status: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1 };
+  const PAGE_SIZE = 15; // small pages: the board must stay light on modest hardware
+  const now = new Date();
+  const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+  // ---- tracking state ----
+  let trackState = {};              // key -> {s, n, t}
+  let unlocked = false;
+  const keyOf = (d) => (d.name + '|' + d.town + '|' + d.st).toLowerCase();
+  const stOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].s) || 'new';
+  const noteOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].n) || '';
+  const dueOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].d) || '';
+  const isDue = (d) => {
+    const dd = dueOf(d);
+    return !!dd && dd <= TODAY && !['won', 'lost', 'bad'].includes(stOf(d));
+  };
+
+  const toast = document.getElementById('toast');
+  let toastT;
+  function showToast(msg) {
+    toast.textContent = msg; toast.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  async function api(method, body) {
+    const res = await fetch('/api/state', {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  async function initTracking() {
+    try {
+      trackState = await api('GET');
+      unlocked = true;
+      document.getElementById('progressRail').hidden = false;
+      document.getElementById('exportBtn').hidden = false;
+      document.getElementById('backupBtn').hidden = false;
+      document.getElementById('nextBtn').hidden = false;
+      document.getElementById('progressTh').hidden = false;
+      buildStatusChips();
+      render();
+    } catch {
+      showToast('Tracking service unreachable — board is read-only right now');
+    }
+  }
+  if (TRACKING) initTracking();
+
+  // save queue: status saves immediately, notes debounced per lead
+  const noteTimers = {};
+  async function saveLead(key, patch, metaEl) {
+    if (metaEl) metaEl.innerHTML = 'Saving&hellip;';
+    try {
+      const cur = trackState[key] || {};
+      const body = { key, s: patch.s ?? cur.s ?? 'new', n: patch.n ?? cur.n ?? '', d: patch.d ?? cur.d ?? '', w: patch.w ?? cur.w ?? '' };
+      const r = await api('POST', body);
+      trackState[key] = { s: body.s, n: body.n, d: body.d, w: body.w, t: r.t };
+      if (metaEl) metaEl.innerHTML = '<span class="saved">Saved</span> &middot; ' + new Date(r.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      buildStatusChips();
+    } catch (e) {
+      if (metaEl) metaEl.innerHTML = '<span class="fail">Couldn&rsquo;t save — check connection</span>';
+      showToast('Save failed — check connection');
+    }
+  }
+
+  // ---- header stats ----
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const sm = document.getElementById('scanmeta');
+  function stat(v, label) {
+    const d = document.createElement('div'); d.className = 'stat';
+    const b = document.createElement('b'); b.textContent = v;
+    const s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); sm.append(d);
+  }
+  stat(DATA.length, 'callable leads');
+  stat(META.byNeed ? META.byNeed.Both : 0, 'need both');
+  stat(Object.keys(REGION_LABELS).length, 'regions');
+  stat(META.ranAt ? fmtDate(META.ranAt) : '—', 'last scan');
+  if (META.retired) stat(META.retired, 'retired since last scan');
+
+  // ---- filter chips ----
+  function chip(label, count, pressed) {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.setAttribute('aria-pressed', pressed);
+    b.textContent = label;
+    if (count != null) { const n = document.createElement('span'); n.className = 'n'; n.textContent = count; b.append(n); }
+    return b;
+  }
+  const regionWrap = document.getElementById('regionChips');
+  const regionCounts = {}; DATA.forEach((d) => { regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; });
+  const regionChips = [['all', 'All']].concat(Object.entries(REGION_LABELS)).map(([key, label]) => {
+    const b = chip(label, key === 'all' ? DATA.length : (regionCounts[key] || 0), String(state.region === key));
+    b.addEventListener('click', () => { state.region = key; syncChips(regionChips, key); refresh(); });
+    b.dataset.key = key; regionWrap.append(b); return b;
+  });
+  const needWrap = document.getElementById('needChips');
+  const needCounts = {}; DATA.forEach((d) => { needCounts[d.need] = (needCounts[d.need] || 0) + 1; });
+  const needChips = [['all', 'All'], ['Both', 'Both'], ['Website', 'Website'], ['IT', 'IT']].map(([key, label]) => {
+    const b = chip(label, key === 'all' ? DATA.length : (needCounts[key] || 0), String(state.need === key));
+    b.addEventListener('click', () => { state.need = key; syncChips(needChips, key); refresh(); });
+    b.dataset.key = key; needWrap.append(b); return b;
+  });
+  function syncChips(chips, key) { chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.key === key))); }
+
+  let statusChips = [];
+  function buildStatusChips() {
+    const wrap = document.getElementById('statusChips');
+    wrap.textContent = '';
+    const counts = { all: DATA.length };
+    let dueCount = 0;
+    DATA.forEach((d) => {
+      const s = stOf(d); counts[s] = (counts[s] || 0) + 1;
+      if (isDue(d)) dueCount++;
+    });
+    const dueBtn = chip('Due', dueCount, String(state.due));
+    if (state.due) dueBtn.classList.add('due-on');
+    dueBtn.title = 'Follow-ups dated today or earlier';
+    dueBtn.addEventListener('click', () => { state.due = !state.due; refresh(); buildStatusChips(); });
+    wrap.append(dueBtn);
+    statusChips = [['all', 'All']].concat(STATUSES).map(([key, label]) => {
+      const b = chip(label, counts[key] || 0, String(state.status === key));
+      b.addEventListener('click', () => { state.status = key; syncChips(statusChips, key); refresh(); });
+      b.dataset.key = key; wrap.append(b); return b;
+    });
+  }
+
+  const confChip = document.getElementById('confChip');
+  confChip.addEventListener('click', () => {
+    state.highConf = !state.highConf;
+    confChip.setAttribute('aria-pressed', String(state.highConf));
+    refresh();
+  });
+
+  const q = document.getElementById('q');
+  let qt; q.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { state.q = q.value.trim().toLowerCase(); refresh(); }, 150); });
+
+  // ---- sorting ----
+  document.querySelectorAll('th.sortable').forEach((th) => {
+    const act = () => {
+      const k = th.dataset.k;
+      if (state.sortK === k) state.sortDir *= -1; else { state.sortK = k; state.sortDir = 1; }
+      document.querySelectorAll('th.sortable .dir').forEach((d) => { d.textContent = ''; });
+      th.querySelector('.dir').textContent = state.sortDir > 0 ? '▴' : '▾';
+      refresh();
+    };
+    th.addEventListener('click', act);
+    th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  });
+
+  // ---- render ----
+  const rowsEl = document.getElementById('rows');
+  const emptyEl = document.getElementById('empty');
+  const countEl = document.getElementById('count');
+  const pagerTop = document.getElementById('pagerTop');
+  const pagerBottom = document.getElementById('pagerBottom');
+  const COLS = 11;
+
+  function renderPager(el, totalPages, scrollOnChange) {
+    el.textContent = '';
+    if (totalPages <= 1) return;
+    const mk = (label, delta, disabled) => {
+      const b = document.createElement('button');
+      b.textContent = label; b.disabled = disabled;
+      b.addEventListener('click', () => {
+        state.page = Math.min(Math.max(1, state.page + delta), totalPages);
+        render();
+        if (scrollOnChange) document.querySelector('.tablewrap').scrollIntoView({ block: 'start' });
+      });
+      return b;
+    };
+    const label = document.createElement('span');
+    label.className = 'plabel';
+    label.textContent = 'Page ' + state.page + ' of ' + totalPages;
+    el.append(mk('‹ Prev', -1, state.page <= 1), label, mk('Next ›', 1, state.page >= totalPages));
+  }
+
+  function filtered() {
+    let rows = DATA;
+    if (state.region !== 'all') rows = rows.filter((d) => d.region === state.region);
+    if (state.need !== 'all') rows = rows.filter((d) => d.need === state.need);
+    if (state.status !== 'all') rows = rows.filter((d) => stOf(d) === state.status);
+    if (state.due) rows = rows.filter(isDue);
+    if (state.highConf) rows = rows.filter((d) => d.confidence === 'High');
+    if (state.q) {
+      const needle = state.q;
+      rows = rows.filter((d) =>
+        d.name.toLowerCase().includes(needle) ||
+        d.town.toLowerCase().includes(needle) ||
+        (d.vertical || '').includes(needle) ||
+        (d.evidence || '').toLowerCase().includes(needle) ||
+        (unlocked && noteOf(d).toLowerCase().includes(needle)));
+    }
+    if (state.sortK) {
+      const k = state.sortK, dir = state.sortDir;
+      rows = rows.slice().sort((a, b) => {
+        const av = a[k], bv = b[k];
+        if (typeof av === 'number') return (av - bv) * dir || a.idx - b.idx;
+        return String(av).localeCompare(String(bv)) * dir || a.idx - b.idx;
+      });
+      if (['wScore', 'itScore'].includes(k) && dir === 1) rows.reverse();
+    }
+    return rows;
+  }
+
+  function td(cls, content) {
+    const el = document.createElement('td');
+    if (cls) el.className = cls;
+    if (content != null) el.textContent = content;
+    return el;
+  }
+
+  // ---- call prep (generated client-side from scan evidence) ----
+  const CALL_WINDOWS = {
+    healthcare: 'Mid-morning (9:30–11:30) or right after lunch. Front desk answers — ask for the office manager.',
+    veterinary: 'Mid-morning or 1–3 PM. Ask for the practice manager.',
+    legal: '10–11:30 AM. The receptionist answers — ask for the office administrator or managing partner.',
+    accounting: 'Mid-morning; avoid Jan–Apr 15. Ask for the partner or office manager.',
+    finance: 'Mid-morning weekdays. Ask for the agent or owner directly.',
+    engineering: 'Mid-morning. Ask for the principal or office manager.',
+    manufacturing: 'Mid-morning (9–11). Ask for the plant manager or office manager.',
+    realestate: 'Late morning — agents are out showing in the afternoon. The broker-in-charge is the buyer.',
+    trades: '7–8:30 AM before jobs start, or 4–5 PM when they land. The owner often answers the phone personally.',
+    construction: 'Early morning (7–8:30). The owner usually answers.',
+    auto: 'Mid-morning (9:30–11:30). Ask for the shop owner or manager.',
+    hospitality: '10 AM–2 PM. Front desk answers — ask for the GM or owner.',
+    fitness: 'Mid-morning or early afternoon. Ask for the owner or manager.',
+    food: '2–4 PM, between rushes — never 11:30–1:30. Ask for the owner or GM.',
+    retail: 'Mid-morning weekdays. Ask for the owner or manager.',
+    professional: 'Mid-morning weekdays. Ask for the owner.',
+    other: 'Mid-morning weekdays. Ask for the owner.',
+  };
+
+  function makePrep(d) {
+    const ev = (d.evidence + '; ' + (d.x || '')).toLowerCase();
+    const brand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
+    const intro = 'Hey, this is Peyton with ' + brand + ' — we’re a local team here in the Tri-Cities. ';
+    let hook;
+    if (ev.includes('down/unreachable')) hook = 'I was looking up ' + d.vertical + ' businesses around ' + d.town + ' and noticed your website isn’t loading at all — wanted to make sure y’all knew before more customers run into it.';
+    else if (ev.includes('domain parked')) hook = 'I noticed your old website domain is showing a "parked" page now — anyone who Googles you hits a dead end. Wanted to give you a heads up.';
+    else if (ev.includes('ssl certificate broken') || ev.includes('certificate expired')) hook = 'I noticed your website is showing visitors a security warning — the "not secure" full-screen one. It’s usually a 10-minute fix, but it’s costing you customers every day it’s up.';
+    else if (ev.includes('facebook/instagram')) hook = 'I noticed y’all are running on just a Facebook page — no actual website. You’re invisible on Google for folks searching "' + d.vertical + ' near me." That’s fixable for a lot less than most people think.';
+    else if (ev.includes('no website listed')) hook = 'I couldn’t find a website for you anywhere — is that on purpose, or just never got around to it? Asking because folks searching for a ' + d.vertical + ' in ' + d.town + ' right now are finding your competitors instead.';
+    else if (ev.includes('spoofable') || ev.includes('missing dmarc') || ev.includes('missing spf')) hook = 'This one’s a security heads-up: your email domain is missing the records that stop scammers from sending fake emails as your business. It’s how invoice fraud usually starts, and it’s an hour’s fix.';
+    else if (ev.includes('not mobile-friendly')) hook = 'I pulled your website up on my phone and it’s showing the shrunk-down desktop version — over half your visitors see it that way. Wanted to see if you’d looked at fixing that.';
+    else if (ev.includes('wordpress')) hook = 'I noticed your website is running a version of WordPress that’s years out of date — it’s the #1 thing that gets small-business sites hacked. Wanted to flag it before it becomes a problem.';
+    else if (ev.includes('2000s-era') || ev.includes('pre-2010') || ev.includes('table-based') || ev.includes('authoring tool')) hook = 'I came across your website and — honest feedback — the design is showing its age. It works, but next to your competitors it reads like it hasn’t been touched in fifteen years, and Google notices that too. A refresh costs less than most folks expect.';
+    else if (ev.includes('copyright stuck')) hook = 'I came across your website and noticed it hasn’t been touched in a few years — Google reads that as abandoned and buries it. Wanted to see if a refresh is on your radar.';
+    else hook = 'I ran a quick checkup on your website and a few things came up — nothing scary, but worth two minutes. Want me to text you the one-page summary?';
+
+    const pitch = d.need === 'Both'
+      ? 'Lead with the website problem, then bridge: "and honestly the tech behind it needs the same attention — we handle both." Ridge: custom site from $500, 2–4 weeks, they own every file. Ignite: local managed IT, one call for everything.'
+      : d.need === 'IT'
+        ? 'Ignite Cyber Solutions — local managed IT: we keep the computers, email, and security handled so you don’t think about it. Anchor on the security finding; offer a free 15-minute look at their setup.'
+        : 'Ridge Web Designs — custom-coded site from $500, done in 2–4 weeks, no templates, and they own every file and account. Anchor on the specific problem, then the price point.';
+
+    const who = d.multi
+      ? 'Heads up: this name shows up in ' + d.multi + ' towns in the scan — likely multi-location. Ask who handles marketing/IT across locations and get that name.'
+      : 'Independent local business (chains were filtered out of this list) — the decision-maker is the owner. Get them, not a message.';
+
+    const points = (d.evidence ? d.evidence.split('; ') : []).concat(d.x ? d.x.split('; ') : []).slice(0, 6);
+    const when = CALL_WINDOWS[d.vertical] || CALL_WINDOWS.other;
+    return { opener: intro + hook, pitch, who, points, when };
+  }
+
+  function prepBlock(d) {
+    const p = makePrep(d);
+    const box = document.createElement('div'); box.className = 'prep';
+    const row = (label, node) => {
+      const r = document.createElement('div'); r.className = 'prow';
+      const l = document.createElement('span'); l.className = 'plbl'; l.textContent = label;
+      r.append(l, node); box.append(r);
+    };
+    const copyBtn = (text, label) => {
+      const b = document.createElement('button'); b.className = 'minibtn'; b.textContent = label || 'Copy';
+      b.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = label || 'Copy'; }, 1500); })
+          .catch(() => showToast('Copy failed — select it manually'));
+      });
+      return b;
+    };
+
+    const op = document.createElement('div'); op.className = 'pv';
+    const opP = document.createElement('p'); opP.textContent = p.opener;
+    op.append(opP, copyBtn(p.opener));
+    row('Open with', op);
+
+    const ul = document.createElement('ul');
+    for (const pt of p.points) { const li = document.createElement('li'); li.textContent = pt; ul.append(li); }
+    row('Talking points', ul);
+
+    const pi = document.createElement('p'); pi.textContent = p.pitch;
+    row('Pitch', pi);
+
+    const wh = document.createElement('p');
+    wh.textContent = p.when + (d.hours ? ' Posted hours: ' + d.hours + '.' : '');
+    row('When to call', wh);
+
+    const who = document.createElement('p');
+    who.textContent = p.who;
+    if (d.multi) who.className = 'warn';
+    row('Who to ask for', who);
+
+    if (d.r) {
+      const rp = document.createElement('p');
+      rp.textContent = d.r + '★ from ' + d.rc + ' Google reviews — ' + (
+        d.r >= 4.5 ? 'lead with it: “you’ve earned a great reputation, but nobody can see it online.”'
+        : d.r >= 3.8 ? 'solid reputation; the online presence should match it.'
+        : 'reputation needs work too — tread gently and focus on the fix.');
+      row('Reputation', rp);
+    }
+
+    if (d.slug) {
+      const lk = document.createElement('div'); lk.className = 'pv';
+      const a = document.createElement('a');
+      a.href = '/a/' + d.slug + '.html'; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'Open their checkup page';
+      const full = location.origin + '/a/' + d.slug + '.html';
+      lk.append(a, copyBtn(full, 'Copy link to send'));
+      row('Checkup', lk);
+    }
+    return box;
+  }
+
+  let openKey = null;
+  function closeEditor() {
+    const ed = rowsEl.querySelector('tr.edrow');
+    if (ed) ed.remove();
+    openKey = null;
+  }
+  function openEditor(tr, d) {
+    closeEditor();
+    const key = keyOf(d);
+    openKey = key;
+    const ed = document.createElement('tr'); ed.className = 'edrow';
+    const cell = document.createElement('td'); cell.colSpan = COLS;
+    const wrap = document.createElement('div'); wrap.className = 'edwrap';
+
+    const btns = document.createElement('div'); btns.className = 'stbtns';
+    const meta = document.createElement('div'); meta.className = 'edmeta';
+    const cur = trackState[key] || {};
+    meta.innerHTML = cur.t
+      ? 'Last updated ' + new Date(cur.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : 'Not contacted yet';
+
+    for (const [sk, label] of STATUSES) {
+      const b = document.createElement('button');
+      b.className = 'stbtn'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(stOf(d) === sk));
+      b.addEventListener('click', () => {
+        btns.querySelectorAll('.stbtn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        saveLead(key, { s: sk }, meta).then(() => updateRowChip(tr, d));
+      });
+      btns.append(b);
+    }
+
+    const ta = document.createElement('textarea');
+    ta.placeholder = 'Call notes — who you talked to, what they said, next step…';
+    ta.value = noteOf(d);
+    ta.addEventListener('input', () => {
+      clearTimeout(noteTimers[key]);
+      meta.innerHTML = 'Typing&hellip;';
+      noteTimers[key] = setTimeout(() => {
+        saveLead(key, { n: ta.value }, meta).then(() => updateRowChip(tr, d));
+      }, 900);
+    });
+
+    const fu = document.createElement('div'); fu.className = 'furow';
+    const fuLbl = document.createElement('span'); fuLbl.textContent = 'Follow up on:';
+    const fuIn = document.createElement('input'); fuIn.type = 'date'; fuIn.value = dueOf(d);
+    fuIn.addEventListener('change', () => {
+      saveLead(key, { d: fuIn.value }, meta).then(() => { updateRowChip(tr, d); buildStatusChips(); });
+    });
+    const fuClear = document.createElement('button'); fuClear.className = 'minibtn'; fuClear.textContent = 'Clear';
+    fuClear.addEventListener('click', () => {
+      fuIn.value = '';
+      saveLead(key, { d: '' }, meta).then(() => { updateRowChip(tr, d); buildStatusChips(); });
+    });
+    const quick = document.createElement('button'); quick.className = 'minibtn'; quick.textContent = '+1 week';
+    quick.addEventListener('click', () => {
+      const t = new Date(); t.setDate(t.getDate() + 7);
+      fuIn.value = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+      fuIn.dispatchEvent(new Event('change'));
+    });
+    fu.append(fuLbl, fuIn, quick, fuClear);
+
+    // Wrong-domain correction: what goes here overrides the scanned website and
+    // is re-audited on the next monthly rescan.
+    const cw = document.createElement('div'); cw.className = 'furow';
+    const cwLbl = document.createElement('span'); cwLbl.textContent = 'Real website:';
+    const cwIn = document.createElement('input'); cwIn.type = 'url';
+    cwIn.placeholder = 'https://… (paste if ours is wrong or missing)';
+    cwIn.style.flex = '1 1 220px';
+    cwIn.value = (trackState[key] && trackState[key].w) || '';
+    cwIn.addEventListener('change', () => {
+      let v = cwIn.value.trim();
+      if (v && !/^https?:\/\//i.test(v)) { v = 'https://' + v; cwIn.value = v; }
+      if (v && !/^https?:\/\/\S{4,300}$/.test(v)) { showToast('That doesn’t look like a URL'); return; }
+      saveLead(key, { w: v }, meta).then(() => render());
+    });
+    cw.append(cwLbl, cwIn);
+
+    wrap.append(prepBlock(d), btns, ta, fu, cw, meta);
+    cell.append(wrap);
+    ed.append(cell);
+    tr.after(ed);
+  }
+  function updateRowChip(tr, d) {
+    const cell = tr.querySelector('td.progress');
+    if (cell) fillProgressCell(cell, d);
+  }
+  function fillProgressCell(cell, d) {
+    cell.textContent = '';
+    const s = stOf(d);
+    const chipEl = document.createElement('span');
+    chipEl.className = 'stchip st-' + s; chipEl.textContent = ST_LABEL[s];
+    cell.append(chipEl);
+    if (noteOf(d)) { const dot = document.createElement('span'); dot.className = 'notedot'; dot.title = 'Has notes'; cell.append(dot); }
+    const dd = dueOf(d);
+    if (dd && !['won', 'lost', 'bad'].includes(s)) {
+      const tag = document.createElement('div');
+      tag.className = 'duetag' + (dd < TODAY ? ' overdue' : '');
+      tag.textContent = (dd < TODAY ? 'overdue ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/');
+      cell.append(tag);
+    }
+  }
+
+  function render() {
+    const rows = filtered();
+    closeEditor();
+    rowsEl.textContent = '';
+    emptyEl.hidden = rows.length > 0;
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (state.page > totalPages) state.page = totalPages;
+    const start = (state.page - 1) * PAGE_SIZE;
+    const slice = rows.slice(start, start + PAGE_SIZE);
+    const frag = document.createDocumentFragment();
+    for (const d of slice) {
+      const tr = document.createElement('tr');
+      tr.className = 'lead' + (TRACKING && unlocked ? ' trackable' : '');
+      tr.dataset.key = keyOf(d);
+      const biz = td('biz', d.name);
+      if (d.r) { const st = document.createElement('span'); st.className = 'rstar'; st.textContent = d.r + '★'; st.title = d.rc + ' Google reviews'; biz.append(st); }
+      if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
+      else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
+      tr.append(biz);
+      tr.append(td('town', d.town + ', ' + d.st));
+      if (TRACKING && unlocked) {
+        const p = td('progress'); fillProgressCell(p, d); tr.append(p);
+      } else if (TRACKING) {
+        tr.append(td('progress', ''));
+      }
+      const needTd = td('');
+      const chipEl = document.createElement('span');
+      chipEl.className = 'needchip need-' + d.need; chipEl.textContent = d.need;
+      needTd.append(chipEl);
+      if (d.confidence === 'Verify') {
+        needTd.append(document.createElement('br'));
+        const v = document.createElement('span'); v.className = 'vchip'; v.textContent = 'verify';
+        needTd.append(v);
+      }
+      tr.append(needTd);
+      tr.append(td('score', String(d.wScore)));
+      tr.append(td('score', String(d.itScore)));
+      tr.append(td('why', d.evidence));
+      const ph = td('phone');
+      if (d.phone) { const a = document.createElement('a'); a.href = 'tel:' + d.phone.replace(/[^+\d]/g, ''); a.textContent = d.phone; ph.append(a); }
+      tr.append(ph);
+      tr.append(td('town', REGION_LABELS[d.region] || d.region));
+      tr.append(td('vert', d.vertical));
+      const links = td('links');
+      const map = document.createElement('a');
+      map.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.name + ' ' + d.town + ' ' + d.st);
+      map.target = '_blank'; map.rel = 'noopener'; map.textContent = 'map';
+      links.append(map);
+      if (TRACKING && d.slug) {
+        links.append(' ');
+        const au = document.createElement('a');
+        au.href = '/a/' + d.slug + '.html'; au.target = '_blank'; au.rel = 'noopener';
+        au.textContent = 'checkup';
+        links.append(au);
+      }
+      const override = TRACKING && unlocked && trackState[keyOf(d)] && trackState[keyOf(d)].w;
+      const shownSite = override || d.website;
+      if (shownSite) {
+        const s = document.createElement('a'); s.className = 'site';
+        s.href = shownSite; s.target = '_blank'; s.rel = 'noopener';
+        s.textContent = (override ? '✓ ' : '') + shownSite.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        if (override) s.title = 'Corrected domain (overrides the scanned one; re-audited next rescan)';
+        links.append(s);
+      }
+      tr.append(links);
+      if (TRACKING && unlocked) {
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('a, button, input, textarea')) return;
+          const wasOpen = openKey === keyOf(d);
+          closeEditor();
+          if (!wasOpen) openEditor(tr, d);
+        });
+      }
+      frag.append(tr);
+    }
+    rowsEl.append(frag);
+    countEl.textContent = (rows.length ? 'Leads ' + (start + 1) + '–' + (start + slice.length) + ' of ' + rows.length : '0 leads') +
+      (rows.length !== DATA.length ? ' (filtered from ' + DATA.length + ')' : '');
+    renderPager(pagerTop, totalPages, false);
+    renderPager(pagerBottom, totalPages, true);
+  }
+
+  // ---- next lead: best untouched lead under current region/need filters ----
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    let cand = DATA.filter((d) =>
+      (state.region === 'all' || d.region === state.region) &&
+      (state.need === 'all' || d.need === state.need) &&
+      (!state.highConf || d.confidence === 'High') &&
+      stOf(d) === 'new');
+    const high = cand.filter((d) => d.confidence === 'High');
+    if (high.length) cand = high;
+    if (!cand.length) { showToast('No untouched leads match the current region/need filters'); return; }
+    const target = cand[0];
+    state.status = 'all'; state.due = false; state.q = ''; q.value = '';
+    state.sortK = null;
+    document.querySelectorAll('th.sortable .dir').forEach((el) => { el.textContent = ''; });
+    buildStatusChips();
+    const rows = filtered();
+    const idx = rows.indexOf(target);
+    state.page = Math.max(1, Math.floor(idx / PAGE_SIZE) + 1);
+    render();
+    const tr = rowsEl.querySelector('tr[data-key="' + CSS.escape(keyOf(target)) + '"]');
+    if (tr) { openEditor(tr, target); tr.scrollIntoView({ block: 'center' }); }
+  });
+
+  // ---- backup: download the whole tracking doc ----
+  document.getElementById('backupBtn').addEventListener('click', async () => {
+    try {
+      const data = await api('GET');
+      const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radar-backup-' + TODAY + '.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch { showToast('Backup failed — check connection'); }
+  });
+
+  // ---- export (current filters, with progress + notes) ----
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const rows = filtered();
+    const header = ['Region', 'Town', 'State', 'Business', 'Vertical', 'Need', 'Confidence', 'Web score', 'IT score', 'Evidence', 'Phone', 'Website', 'Google rating', 'Reviews', 'Progress', 'Follow-up', 'Notes'];
+    const esc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [header].concat(rows.map((d) => [
+      REGION_LABELS[d.region] || d.region, d.town, d.st, d.name, d.vertical, d.need, d.confidence,
+      d.wScore, d.itScore, d.evidence, d.phone, d.website, d.r || '', d.rc || '', ST_LABEL[stOf(d)], dueOf(d), noteOf(d),
+    ])).map((r) => r.map(esc).join(','));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'leads-tracked.csv';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+
+  function refresh() { state.page = 1; render(); }
+  render();
+</script>
