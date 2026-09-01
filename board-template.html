@@ -473,7 +473,7 @@
     try {
       trackState = await api('GET');
       unlocked = true;
-      document.getElementById('progressRail').hidden = false;
+      document.getElementById('progressRail').hidden = state.view !== 'leads';
       document.getElementById('exportBtn').hidden = false;
       document.getElementById('backupBtn').hidden = false;
       document.getElementById('nextBtn').hidden = false;
