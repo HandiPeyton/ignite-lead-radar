@@ -57,10 +57,16 @@ so share it deliberately.
   prefers High confidence) with its prep panel ready — dial, mark, repeat.
 - **Backup** downloads all progress/notes as JSON; `rescan.cmd` also snapshots it to
   `out/backups/` before every rescan.
-- **Google ratings**: once `GOOGLE_PLACES_API_KEY` is set (see below), run
-  `node tools/lead-scanner/enrich-ratings.mjs` then rebuild/deploy — rows get "4.8★",
-  the prep panel gets a Reputation line, and the monthly pipeline keeps it fresh.
-  Rating-only lookups (Pro SKU) — all 733 fit in the 5,000/month free tier.
+- **Still-in-business verification (live, via Foursquare)**: `enrich-fsq.mjs` checks
+  every lead against Foursquare's free-tier places data (`FOURSQUARE_API_KEY` secret,
+  no card needed) — `date_closed` present ⇒ permanently closed ⇒ removed from the
+  board/CSV/checkups; matched leads show "Listed as operational (places data, record
+  verified <date>)" in call prep; unmatched ones say "confirm when you call". Matching
+  is anchored to each lead's own coordinates + name similarity across top-5 results.
+- **Google ratings (dormant)**: Google billing was never activated ($30 prepay wall),
+  so `enrich-ratings.mjs` self-skips. If billing ever goes live, the same
+  `GOOGLE_PLACES_API_KEY` secret lights up ratings + Google's businessStatus, and
+  Google data automatically overrides Foursquare's.
 - **Monthly auto-rescan**: Windows Task Scheduler job "IgniteLeadRadar Rescan" runs
   [rescan.cmd](rescan.cmd) at 7 AM on the 1st (or next boot if the PC was off): backup →
   scan → deep audit → ratings → rebuild → deploy. After each rescan the board badges
