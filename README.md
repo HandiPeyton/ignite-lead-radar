@@ -45,9 +45,11 @@ Region keys: `netn`, `swva`, `swv`, `wnc`, `seky`, `nsc` — towns/radii live in
 
 **https://ignite-lead-radar.netlify.app** — its own Netlify project (`ignite-lead-radar`,
 site id `565e77e6-a859-4b59-aa14-c268aa57071c`; completely separate from
-ignitecybersolutions.com). No login, no passcode (removed at Peyton's request):
-**anyone with the link can view and edit tracking** — the unlisted URL is the only gate,
-so share it deliberately.
+ignitecybersolutions.com). The lead table is viewable by anyone with the link;
+**tracking, schedule, and call prep are PIN-gated** (numeric PIN, entered once per
+device). The PIN lives only in the `LEAD_BOARD_KEY` Netlify env var — recover it with
+`npx netlify-cli env:get LEAD_BOARD_KEY --site 565e77e6-…`, rotate it with `env:set`
+plus a redeploy.
 
 - Click any row → the call-prep brief, a progress label (To call / No answer / Call back /
   Interested / Quoted / Won / Not interested / Bad number), call notes, and a
