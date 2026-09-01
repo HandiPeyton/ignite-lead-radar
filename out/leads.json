@@ -27,34 +27,56 @@
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain; Business email is jointpainreliefctrs@gmail.com; Using the corrected domain from the board"
  },
  {
-  "name": "Healthy Petz Veterinary Clinic",
-  "vertical": "veterinary",
-  "website": "http://myhealthypetz.com/",
-  "phone": "+1-828-437-4524",
-  "email": "healthypetz109@gmail.com",
-  "hours": "Mo-Fr 07:00-18:00; Sa 09:00-13:00",
-  "address": "109 Enola Road",
-  "town": "Morganton",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 35.72311,
-  "lng": -81.67298,
+  "name": "Karing Hearts Cardiology",
+  "vertical": "healthcare",
+  "website": "https://karingheartscardiology.com/",
+  "phone": "+1-423-926-4468",
+  "email": "",
+  "hours": "",
+  "address": "701 North State of Franklin Road",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.31662,
+  "lng": -82.39126,
   "source": "OSM",
   "audit": {
-   "status": "http-only",
-   "viewport": false,
-   "year": 2020,
-   "flags": [],
-   "freeEmail": "",
-   "oldServer": "",
-   "finalUrl": "http://myhealthypetz.com/",
-   "https": false
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
   },
   "wScore": 5,
-  "itScore": 5,
+  "itScore": 4,
   "need": "Both",
-  "confidence": "High",
-  "evidence": "No HTTPS (insecure site); Copyright stuck at 2020; Business email is healthypetz109@gmail.com"
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Dr. Katherine Barteck",
+  "vertical": "healthcare",
+  "website": "https://drbarteck.com/",
+  "phone": "+1-423-449-9146",
+  "email": "support@drbarteck.com",
+  "hours": "Mo-Fr 08:00-18:00",
+  "address": "508 East Unaka Avenue",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.3274,
+  "lng": -82.3516,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Blue Ridge Animal Hospital",
@@ -121,32 +143,6 @@
   "evidence": "No HTTPS (insecure site); WordPress 4.1 (outdated); Outdated server stack: Apache PHP/5.4.45; Business email is motojohnsoncity@gmail.com"
  },
  {
-  "name": "Diminick Dentistry",
-  "vertical": "healthcare",
-  "website": "https://www.diminickdentistry.com/",
-  "phone": "+14232479196",
-  "email": "",
-  "hours": "",
-  "address": "2975 Fort Henry Drive",
-  "town": "Kingsport",
-  "st": "TN",
-  "region": "netn",
-  "lat": 36.51496,
-  "lng": -82.51808,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 502"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 502) — verify before pitching: the listing may point to an old domain"
- },
- {
   "name": "Lingerfelt Drug and Gift Center",
   "vertical": "healthcare",
   "website": "",
@@ -187,6 +183,58 @@
   "evidence": "No website listed (OSM) — verify with a quick Google/call; healthcare business with no web presence — likely no IT partner either; Business email is wheelerchiropracticdc@gmail.com"
  },
  {
+  "name": "Warner Realty Company",
+  "vertical": "realestate",
+  "website": "https://warnerrealtyco.com",
+  "phone": "+1-423-639-7653",
+  "email": "",
+  "hours": "",
+  "address": "522 Justis Dr",
+  "town": "Greeneville",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.17537,
+  "lng": -82.79446,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Trinity Heart & Vascular Group",
+  "vertical": "healthcare",
+  "website": "https://trinityheartandvasculargroup.com/",
+  "phone": "+1-423-588-5660",
+  "email": "",
+  "hours": "",
+  "address": "1231 Tusculum Boulevard",
+  "town": "Greeneville",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.17197,
+  "lng": -82.79974,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "SureQuote, LLC",
   "vertical": "finance",
   "website": "https://sure-quote.com/",
@@ -211,6 +259,32 @@
   "need": "Both",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Fetch Specialty & Emergency Veterinary Centers (Greenville, SC)",
+  "vertical": "veterinary",
+  "website": "https://fetchvets.com/greenville-sc/",
+  "phone": "+1-864-900-5888",
+  "email": "",
+  "hours": "24/7",
+  "address": "5 Market Point Drive",
+  "town": "Greenville",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.82436,
+  "lng": -82.29935,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "UND_ERR_CONNECT_TIMEOUT"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Allen Tate Realtors",
@@ -371,7 +445,7 @@
  {
   "name": "Premier DOT Physicals",
   "vertical": "healthcare",
-  "website": "http://premierdotphysicalsllc.com/",
+  "website": "https://premierdotphysicalsllc.com",
   "phone": "+1-864-336-5275",
   "email": "",
   "hours": "",
@@ -382,6 +456,7 @@
   "lat": 34.92768,
   "lng": -82.12085,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -392,33 +467,7 @@
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 404) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Kinard-Barath Tax Group, LLC",
-  "vertical": "accounting",
-  "website": "https://www.kinard-barath.com/home",
-  "phone": "+1-864-439-0492",
-  "email": "katie.barath@kinard-barath.com",
-  "hours": "",
-  "address": "812 East Main Street",
-  "town": "Greer",
-  "st": "SC",
-  "region": "nsc",
-  "lat": 34.92604,
-  "lng": -82.12053,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "ENOTFOUND"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 404) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Whispering Wind Counseling, LLC",
@@ -525,6 +574,32 @@
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Riffenburg Insurance Services",
+  "vertical": "finance",
+  "website": "https://riffenburg.com",
+  "phone": "+1-864-585-8649",
+  "email": "info@riffenburg.com",
+  "hours": "Mo-Fr 09:00-17:00",
+  "address": "",
+  "town": "Spartanburg",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.95322,
+  "lng": -81.92364,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "Boiling Springs Dentistry",
   "vertical": "healthcare",
   "website": "https://www.boilingspringsdentistry.com/",
@@ -551,35 +626,9 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
-  "name": "Roebuck Family Dentistry",
-  "vertical": "healthcare",
-  "website": "https://www.roebuckfamilydentistry.com/",
-  "phone": "+1-864-576-0870",
-  "email": "",
-  "hours": "",
-  "address": "4265 South Church Street",
-  "town": "Spartanburg",
-  "st": "SC",
-  "region": "nsc",
-  "lat": 34.88436,
-  "lng": -81.95685,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 502"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 502) — verify before pitching: the listing may point to an old domain"
- },
- {
   "name": "The Forrester Center for Behavioral Health",
   "vertical": "healthcare",
-  "website": "https://www.theforrestercenter.org/",
+  "website": "https://theforrestercenter.org",
   "phone": "+1-864-582-7588",
   "email": "",
   "hours": "",
@@ -590,6 +639,7 @@
   "lat": 34.98137,
   "lng": -81.89678,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -600,7 +650,7 @@
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Walker Animal Hospital",
@@ -645,14 +695,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
+    "EAI_AGAIN"
    ]
   },
   "wScore": 5,
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (EAI_AGAIN) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Liberty Family Care",
@@ -733,6 +783,32 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Lice Clinics Rock Hill - LCA York County",
+  "vertical": "healthcare",
+  "website": "https://www.liceremovalyorkcounty.com",
+  "phone": "+1 803-868-4733",
+  "email": "",
+  "hours": "",
+  "address": "1069 Bayshore Drive",
+  "town": "Rock Hill",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.97378,
+  "lng": -81.02488,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "ECONNRESET"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (ECONNRESET) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "The Burris Legal Group, P.A.",
   "vertical": "legal",
   "website": "https://www.the urrislegalgroup.com",
@@ -757,6 +833,32 @@
   "need": "Both",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (Bad URL) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Carolina Urology Partners",
+  "vertical": "healthcare",
+  "website": "https://www.carolinaurology.com/",
+  "phone": "+1-803-327-1116",
+  "email": "",
+  "hours": "",
+  "address": "1780 Medical Park Drive",
+  "town": "Rock Hill",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.9576,
+  "lng": -81.04932,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    23
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Piedmont Medical Center",
@@ -811,6 +913,32 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Chester Regional Medical Center",
+  "vertical": "healthcare",
+  "website": "https://www.chesterregional.com/",
+  "phone": "+1 803 581 3151",
+  "email": "",
+  "hours": "24/7",
+  "address": "1 Medical Park Drive",
+  "town": "Chester",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.6843,
+  "lng": -81.18313,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    23
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "John R Hansen Attorney At Law",
   "vertical": "legal",
   "website": "https://johnrhansenattorneyatlaw.com",
@@ -827,14 +955,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
+    "ENOTFOUND"
    ]
   },
   "wScore": 5,
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Blue Ridge Insurance Group",
@@ -973,6 +1101,58 @@
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "The Behavioral Health Pavilion of the Virginias",
+  "vertical": "healthcare",
+  "website": "http://www.pchonline.org/ourservices/psychiatry.aspx",
+  "phone": "+1 304 325 4673",
+  "email": "",
+  "hours": "",
+  "address": "1333 Southview Drive",
+  "town": "Bluefield",
+  "st": "WV",
+  "region": "swv",
+  "lat": 37.24242,
+  "lng": -81.23089,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    23
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Princeton Community Hospital",
+  "vertical": "healthcare",
+  "website": "https://wvumedicine.org/locations/princeton/",
+  "phone": "+1 304 487 7000",
+  "email": "",
+  "hours": "24/7",
+  "address": "122 12th Street",
+  "town": "Princeton",
+  "st": "WV",
+  "region": "swv",
+  "lat": 37.36308,
+  "lng": -81.11329,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "watchdog timeout"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (watchdog timeout) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "J. L. Massie Insurance Inc.",
   "vertical": "finance",
   "website": "https://www.massieinsuranceinc.com/",
@@ -1077,6 +1257,32 @@
   "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Cox Realty and Auction",
+  "vertical": "finance",
+  "website": "https://www.coxrealty-auction.com/",
+  "phone": "+1-276-236-5171",
+  "email": "",
+  "hours": "Mo-Fr 09:00-17:00",
+  "address": "1110 East Stuart Drive",
+  "town": "Galax",
+  "st": "VA",
+  "region": "swva",
+  "lat": 36.68847,
+  "lng": -80.88504,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "UND_ERR_CONNECT_TIMEOUT"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "Ballard Real Estate & Insurance",
   "vertical": "realestate",
   "website": "https://www.ballardrealty.net/",
@@ -1157,7 +1363,7 @@
  {
   "name": "South Guard Advisors",
   "vertical": "finance",
-  "website": "https://www.southguardadvisors.com/",
+  "website": "https://www.southguardadvisors.com",
   "phone": "+1-276-963-6277",
   "email": "",
   "hours": "",
@@ -1167,6 +1373,33 @@
   "region": "swva",
   "lat": 37.04829,
   "lng": -81.77975,
+  "source": "OSM",
+  "corrected": true,
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
+ },
+ {
+  "name": "Compass",
+  "vertical": "healthcare",
+  "website": "https://compassva.com/location/new-river-valley/",
+  "phone": "+1-540-348-4808",
+  "email": "",
+  "hours": "",
+  "address": "1080 South Main Street",
+  "town": "Blacksburg",
+  "st": "VA",
+  "region": "swva",
+  "lat": 37.21996,
+  "lng": -80.40417,
   "source": "OSM",
   "audit": {
    "status": "down",
@@ -1363,6 +1596,36 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Structures Design/Build",
+  "vertical": "engineering",
+  "website": "http://www.structuresdb.com/",
+  "phone": "+1-540-774-4800",
+  "email": "",
+  "hours": "",
+  "address": "3904 Franklin Road",
+  "town": "Roanoke",
+  "st": "VA",
+  "region": "swva",
+  "lat": 37.2303,
+  "lng": -79.97115,
+  "source": "OSM",
+  "audit": {
+   "status": "ssl-error",
+   "viewport": false,
+   "year": 2014,
+   "flags": [],
+   "freeEmail": "",
+   "oldServer": "",
+   "finalUrl": "http://structuresdb.com/",
+   "https": false
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "High",
+  "evidence": "SSL certificate broken/expired; Copyright stuck at 2014"
+ },
+ {
   "name": "LewisGale Medical Center",
   "vertical": "healthcare",
   "website": "https://www.hcavirginia.com/locations/lewisgale-medical-center",
@@ -1375,6 +1638,32 @@
   "region": "swva",
   "lat": 37.26371,
   "lng": -80.02988,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 4,
+  "need": "Both",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "New Horizons Healthcare",
+  "vertical": "healthcare",
+  "website": "https://newhorizonshealthcare.org/",
+  "phone": "+1 540 362 0360",
+  "email": "",
+  "hours": "",
+  "address": "3716 Melrose Avenue Northwest",
+  "town": "Roanoke",
+  "st": "VA",
+  "region": "swva",
+  "lat": 37.29388,
+  "lng": -79.99792,
   "source": "OSM",
   "audit": {
    "status": "down",
@@ -1491,32 +1780,6 @@
   "need": "Both",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Dwayne M Dills CPA PC",
-  "vertical": "accounting",
-  "website": "http://www.dwaynedillscpa.com",
-  "phone": "+1 828-398-0257",
-  "email": "",
-  "hours": "",
-  "address": "18 Regent Park Boulevard",
-  "town": "Asheville",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 35.59135,
-  "lng": -82.58356,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 502"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 502) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Hope Women's Cancer Center",
@@ -1718,6 +1981,7 @@
   "lat": 35.53019,
   "lng": -82.91883,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -1728,7 +1992,7 @@
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Village Real Estate",
@@ -1757,32 +2021,6 @@
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
  },
  {
-  "name": "di Santi Watson Capua & Wilson",
-  "vertical": "legal",
-  "website": "http://dwc-law.com/",
-  "phone": "+1 828 264 6126",
-  "email": "",
-  "hours": "",
-  "address": "642 West King Street",
-  "town": "Boone",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 36.21893,
-  "lng": -81.68377,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    23
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
- },
- {
   "name": "Turlington Law Firm",
   "vertical": "legal",
   "website": "https://www.davidturlington.com/",
@@ -1799,40 +2037,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
+    "EAI_AGAIN"
    ]
   },
   "wScore": 5,
   "itScore": 4,
   "need": "Both",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Ashe Memorial Hospital",
-  "vertical": "healthcare",
-  "website": "https://www.ashememorial.org/",
-  "phone": "+1 336 846 7101",
-  "email": "",
-  "hours": "24/7",
-  "address": "200 Hospital Avenue",
-  "town": "West Jefferson",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 36.4235,
-  "lng": -81.45798,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    23
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (EAI_AGAIN) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Blue Ridge Regional Hospital",
@@ -1911,32 +2123,6 @@
   "need": "Both",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Grace Dental",
-  "vertical": "healthcare",
-  "website": "https://gracedentalnc.com/",
-  "phone": "+1 828-267-1400",
-  "email": "",
-  "hours": "Mo-Th 08:00-17:00; Fr 08:00-13:00",
-  "address": "2535 Highway 70 SE",
-  "town": "Hickory",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 35.70114,
-  "lng": -81.28743,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 502"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 502) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "The ChildHealth Center, PA",
@@ -2034,36 +2220,6 @@
   "evidence": "2000s-era HTML (font/center/marquee markup); Uses free email for business (laurensdentistry@gmail.com); Business email is laurensdentistry@gmail.com"
  },
  {
-  "name": "Structures Design/Build",
-  "vertical": "engineering",
-  "website": "http://www.structuresdb.com/",
-  "phone": "+1-540-774-4800",
-  "email": "",
-  "hours": "",
-  "address": "3904 Franklin Road",
-  "town": "Roanoke",
-  "st": "VA",
-  "region": "swva",
-  "lat": 37.2303,
-  "lng": -79.97115,
-  "source": "OSM",
-  "audit": {
-   "status": "http-only",
-   "viewport": false,
-   "year": 2014,
-   "flags": [],
-   "freeEmail": "",
-   "oldServer": "",
-   "finalUrl": "http://www.structuresdb.com/",
-   "https": false
-  },
-  "wScore": 4,
-  "itScore": 4,
-  "need": "Both",
-  "confidence": "High",
-  "evidence": "No HTTPS (insecure site); Copyright stuck at 2014"
- },
- {
   "name": "Pinnacle Falls",
   "vertical": "realestate",
   "website": "https://www.pinnaclefalls.com/",
@@ -2094,6 +2250,39 @@
   "need": "Both",
   "confidence": "High",
   "evidence": "Copyright stuck at 2018; WordPress 3.7 (outdated); Business email is ajball1003@aol.com"
+ },
+ {
+  "name": "Studio of Michael McDunn",
+  "vertical": "trades",
+  "website": "http://mcdunnstudio.com",
+  "phone": "+1-864-242-0311",
+  "email": "",
+  "hours": "",
+  "address": "741 Rutherford Road",
+  "town": "Greenville",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.88095,
+  "lng": -82.38859,
+  "source": "OSM",
+  "audit": {
+   "status": "http-only",
+   "viewport": false,
+   "year": 2016,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)",
+    "Ancient jQuery library (1.x)"
+   ],
+   "freeEmail": "mpmcdunn@bellsouth.net",
+   "oldServer": "",
+   "finalUrl": "http://mcdunnstudio.com/",
+   "https": false
+  },
+  "wScore": 8,
+  "itScore": 3,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "No HTTPS (insecure site); Copyright stuck at 2016; 2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x); Uses free email for business (mpmcdunn@bellsouth.net)"
  },
  {
   "name": "Jinx Proof Tattoo Emporium",
@@ -2207,6 +2396,32 @@
   "need": "Website",
   "confidence": "High",
   "evidence": "No HTTPS (insecure site); Weebly builder; 2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x); Table-based page layout (dated design)"
+ },
+ {
+  "name": "Gilleez",
+  "vertical": "retail",
+  "website": "https://gilleez.com/",
+  "phone": "+1-423-251-2295",
+  "email": "gilleez2020@gmail.com",
+  "hours": "Mo-Fr 10:00-18:00",
+  "address": "2117 Glenburn Road",
+  "town": "Kingsport",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.49002,
+  "lng": -82.58917,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    23
+   ]
+  },
+  "wScore": 6,
+  "itScore": 3,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain; Business email is gilleez2020@gmail.com"
  },
  {
   "name": "Elizabethton Collision Center",
@@ -2681,32 +2896,6 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Business email is mezzalunahendersonville@gmail.com"
  },
  {
-  "name": "Sabeing",
-  "vertical": "food",
-  "website": "https://sabeingbooneking.com/",
-  "phone": "+1-828-832-8189",
-  "email": "sabeing454@gmail.com",
-  "hours": "11:00-21:30",
-  "address": "454 West King Street",
-  "town": "Boone",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 36.2174,
-  "lng": -81.68099,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 403"
-   ]
-  },
-  "wScore": 6,
-  "itScore": 3,
-  "need": "Website",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Business email is sabeing454@gmail.com"
- },
- {
   "name": "Blowing Rock Lodge",
   "vertical": "hospitality",
   "website": "http://www.blowingrocklodge.com/",
@@ -2805,40 +2994,6 @@
   "evidence": "Copyright stuck at 2022; 2000s-era HTML (font/center/marquee markup); Business email is troyhooverdds@gmail.com"
  },
  {
-  "name": "Studio of Michael McDunn",
-  "vertical": "trades",
-  "website": "http://mcdunnstudio.com",
-  "phone": "+1-864-242-0311",
-  "email": "",
-  "hours": "",
-  "address": "741 Rutherford Road",
-  "town": "Greenville",
-  "st": "SC",
-  "region": "nsc",
-  "lat": 34.88095,
-  "lng": -82.38859,
-  "source": "OSM",
-  "audit": {
-   "status": "http-only",
-   "viewport": true,
-   "year": 2025,
-   "flags": [
-    "Weebly builder",
-    "2000s-era HTML (font/center/marquee markup)",
-    "Ancient jQuery library (1.x)"
-   ],
-   "freeEmail": "",
-   "oldServer": "",
-   "finalUrl": "http://www.mcdunnstudio.com/",
-   "https": false
-  },
-  "wScore": 6,
-  "itScore": 2,
-  "need": "Website",
-  "confidence": "High",
-  "evidence": "No HTTPS (insecure site); Weebly builder; 2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x)"
- },
- {
   "name": "Color Clay Cafe",
   "vertical": "trades",
   "website": "http://www.colorclaycafe.com/",
@@ -2902,6 +3057,32 @@
   "need": "Website",
   "confidence": "High",
   "evidence": "No HTTPS (insecure site); 2000s-era HTML (font/center/marquee markup); WordPress 5.4 (outdated)"
+ },
+ {
+  "name": "White Duck Taco Shop",
+  "vertical": "food",
+  "website": "https://whiteducktacoshop.com/",
+  "phone": "+1-423-328-9193",
+  "email": "",
+  "hours": "Mo-Su 11:30-21:00",
+  "address": "126 Buffalo Street",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.31483,
+  "lng": -82.35339,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 521"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 521) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Bill Gatton Mazda/Acura",
@@ -3016,18 +3197,18 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
-  "name": "787 Bar & Grill",
-  "vertical": "food",
-  "website": "https://787bargrill.com/",
-  "phone": "+1-423-390-0984",
-  "email": "",
+  "name": "Enkore Salon",
+  "vertical": "retail",
+  "website": "https://enkoresalon.com/",
+  "phone": "+1-423-929-2918",
+  "email": "info@enkoresalon.com",
   "hours": "",
-  "address": "1000 South Roan Street",
+  "address": "4703 North Roan Street",
   "town": "Johnson City",
   "st": "TN",
   "region": "netn",
-  "lat": 36.31318,
-  "lng": -82.34736,
+  "lat": 36.38996,
+  "lng": -82.41154,
   "source": "OSM",
   "audit": {
    "status": "down",
@@ -3042,6 +3223,33 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "787 Bar & Grill",
+  "vertical": "food",
+  "website": "https://787bargrill.com",
+  "phone": "+1-423-390-0984",
+  "email": "",
+  "hours": "",
+  "address": "1000 South Roan Street",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.31318,
+  "lng": -82.34736,
+  "source": "OSM",
+  "corrected": true,
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
+ },
+ {
   "name": "Harbor House Seafood Restaurant",
   "vertical": "food",
   "website": "https://www.harborhousejc.com/",
@@ -3054,6 +3262,58 @@
   "region": "netn",
   "lat": 36.35105,
   "lng": -82.3794,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Victory Fit",
+  "vertical": "fitness",
+  "website": "https://bevictoryfit.com/",
+  "phone": "+1-423-796-6048",
+  "email": "info@bevictoryfit.com",
+  "hours": "24/7",
+  "address": "220 North 2nd Avenue",
+  "town": "Jonesborough",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.2953,
+  "lng": -82.47703,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 403"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "Mahoney's Outfitters",
+  "vertical": "retail",
+  "website": "https://mahoneysports.com/",
+  "phone": "+1-423-282-5413",
+  "email": "web@mahoneysports.com",
+  "hours": "Mo-Fr 10:00-19:00; Sa 10:00-18:00; Su 13:00-17:00",
+  "address": "378 378 Marketplace Blvd",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.33415,
+  "lng": -82.38929,
   "source": "OSM",
   "audit": {
    "status": "down",
@@ -3092,6 +3352,32 @@
   "need": "Website",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+ },
+ {
+  "name": "J’Clares Nail Salon",
+  "vertical": "retail",
+  "website": "https://jclaresnailsalon.com/",
+  "phone": "+1-423-268-2626",
+  "email": "",
+  "hours": "Tu-Fr 08:00-18:00; Sa 08:00-15:00",
+  "address": "111 Spring Street",
+  "town": "Johnson City",
+  "st": "TN",
+  "region": "netn",
+  "lat": 36.31612,
+  "lng": -82.35192,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    23
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Kimball M. Sterling, Inc.",
@@ -3769,6 +4055,39 @@
   "evidence": "Uses Flash (dead tech); WordPress 3.7 (outdated)"
  },
  {
+  "name": "Roebuck Family Dentistry",
+  "vertical": "healthcare",
+  "website": "https://www.roebuckfamilydentistry.com/",
+  "phone": "+1-864-576-0870",
+  "email": "",
+  "hours": "",
+  "address": "4265 South Church Street",
+  "town": "Spartanburg",
+  "st": "SC",
+  "region": "nsc",
+  "lat": 34.88436,
+  "lng": -81.95685,
+  "source": "OSM",
+  "audit": {
+   "status": "ok",
+   "viewport": true,
+   "year": null,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)",
+    "Ancient jQuery library (1.x)"
+   ],
+   "freeEmail": "leverjk@yahoo.com",
+   "oldServer": "",
+   "finalUrl": "https://www.roebuckfamilydentistry.com/",
+   "https": true
+  },
+  "wScore": 4,
+  "itScore": 3,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x); Uses free email for business (leverjk@yahoo.com)"
+ },
+ {
   "name": "Pickens Construction Inc",
   "vertical": "trades",
   "website": "http://pickensconstruction.com/",
@@ -3911,32 +4230,6 @@
   "region": "seky",
   "lat": 36.94526,
   "lng": -84.02033,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "ENOTFOUND"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 2,
-  "need": "Website",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Bolton's Towing & Repair",
-  "vertical": "auto",
-  "website": "http://boltonstowingandrepair.com",
-  "phone": "+1-606-523-1132",
-  "email": "",
-  "hours": "",
-  "address": "235 West Cumberland Gap Parkway",
-  "town": "Corbin",
-  "st": "KY",
-  "region": "seky",
-  "lat": 36.9661,
-  "lng": -84.0828,
   "source": "OSM",
   "audit": {
    "status": "down",
@@ -4103,7 +4396,7 @@
  {
   "name": "Fanning Funeral Home",
   "vertical": "retail",
-  "website": "https://www.fanningfuneralhomes.com/",
+  "website": "https://www.fanningfuneralhomes.com",
   "phone": "+1 304 875 4800",
   "email": "",
   "hours": "",
@@ -4114,6 +4407,7 @@
   "lat": 37.30244,
   "lng": -81.68006,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -4124,7 +4418,7 @@
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Master Roofing Systems",
@@ -4309,6 +4603,32 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
+  "name": "Lucky Rivers Cafe and Catering",
+  "vertical": "food",
+  "website": "https://luckyriverscafe.com/",
+  "phone": "+1 304-309-4157",
+  "email": "",
+  "hours": "",
+  "address": "213 2nd Avenue",
+  "town": "Hinton",
+  "st": "WV",
+  "region": "swv",
+  "lat": 37.67424,
+  "lng": -80.89121,
+  "source": "OSM",
+  "audit": {
+   "status": "down",
+   "notes": [
+    "HTTP 503"
+   ]
+  },
+  "wScore": 5,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "Verify",
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 503) — verify before pitching: the listing may point to an old domain"
+ },
+ {
   "name": "blowfish emporium",
   "vertical": "retail",
   "website": "http://www.blowfishemporium.com/",
@@ -4429,7 +4749,7 @@
   "audit": {
    "status": "ssl-error",
    "notes": [
-    "HTTP 429"
+    "HTTP 404"
    ]
   },
   "wScore": 4,
@@ -4455,14 +4775,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
+    "EAI_AGAIN"
    ]
   },
   "wScore": 5,
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (EAI_AGAIN) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Greeko's Grill & Cafe",
@@ -4545,7 +4865,7 @@
  {
   "name": "Skyview Mini Storage",
   "vertical": "retail",
-  "website": "https://skyviewministorage.com",
+  "website": "https://www.skyviewministorage.com",
   "phone": "+1-276-685-7285",
   "email": "",
   "hours": "Mo-Su 09:00-09:00",
@@ -4556,6 +4876,7 @@
   "lat": 36.82846,
   "lng": -81.58113,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -4566,7 +4887,7 @@
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "The Wooden Pickle",
@@ -4675,7 +4996,7 @@
  {
   "name": "Fiddler’s Restaurant",
   "vertical": "food",
-  "website": "https://www.fiddlersva.com/",
+  "website": "https://www.fiddlersva.com",
   "phone": "+1-276-728-4977",
   "email": "",
   "hours": "Su-Th 07:00-21:00; Fr-Sa 07:00-22:00",
@@ -4686,6 +5007,7 @@
   "lat": 36.74422,
   "lng": -80.7792,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -4696,7 +5018,7 @@
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Vic's Decorating",
@@ -4821,32 +5143,6 @@
   "need": "Website",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Gillie's",
-  "vertical": "food",
-  "website": "https://gilliesrestaurant.com/",
-  "phone": "+1-540-961-2703",
-  "email": "",
-  "hours": "We-Fr 08:00-11:00; Sa,Su 08:00-14:00",
-  "address": "153 College Avenue",
-  "town": "Blacksburg",
-  "st": "VA",
-  "region": "swva",
-  "lat": 37.23002,
-  "lng": -80.4161,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    23
-   ]
-  },
-  "wScore": 5,
-  "itScore": 2,
-  "need": "Website",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Chinese Kitchen",
@@ -5182,38 +5478,6 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 404) — verify before pitching: the listing may point to an old domain"
  },
  {
-  "name": "Fair Way Pharmacy",
-  "vertical": "healthcare",
-  "website": "https://www.thefairwaypharmacy.com",
-  "phone": "+1-540-524-9983",
-  "email": "",
-  "hours": "Mo-Tu 10:00-18:00; We 10:00-20:00; Th-Fr 10:00-18:00",
-  "address": "2311 Sanford Avenue Southwest",
-  "town": "Roanoke",
-  "st": "VA",
-  "region": "swva",
-  "lat": 37.25287,
-  "lng": -79.95771,
-  "source": "OSM",
-  "audit": {
-   "status": "ok",
-   "viewport": true,
-   "year": 2022,
-   "flags": [
-    "Wix builder"
-   ],
-   "freeEmail": "fairwaypharmacy@outlook.com",
-   "oldServer": "",
-   "finalUrl": "https://www.thefairwaypharmacy.com/",
-   "https": true
-  },
-  "wScore": 4,
-  "itScore": 3,
-  "need": "Website",
-  "confidence": "High",
-  "evidence": "Copyright stuck at 2022; Wix builder; Uses free email for business (fairwaypharmacy@outlook.com)"
- },
- {
   "name": "Kathmandu Cafe",
   "vertical": "food",
   "website": "http://kathmanducafeasheville.com",
@@ -5282,14 +5546,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
+    "ENOTFOUND"
    ]
   },
   "wScore": 5,
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (ENOTFOUND) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Itto Ramen & Japanese Tapas",
@@ -5370,32 +5634,6 @@
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
  },
  {
-  "name": "Sawasdee Thai Cuisine",
-  "vertical": "food",
-  "website": "https://sawasdeethaicuisine-asheville.com/",
-  "phone": "+1-828-676-2995",
-  "email": "",
-  "hours": "Tu-Sa 11:00-14:00, 16:30-20:00",
-  "address": "1950-5 Hendersonville Road",
-  "town": "Asheville",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 35.49116,
-  "lng": -82.52243,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    "HTTP 403"
-   ]
-  },
-  "wScore": 5,
-  "itScore": 2,
-  "need": "Website",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
- },
- {
   "name": "Green Sage Cafe",
   "vertical": "food",
   "website": "https://www.greensagecafe.com/",
@@ -5456,7 +5694,7 @@
  {
   "name": "Andaaz",
   "vertical": "food",
-  "website": "https://www.andaazasheville.com/",
+  "website": "https://www.andaazasheville.com",
   "phone": "+1 828-552-3200",
   "email": "",
   "hours": "Su-Th 11:30-14:30, 16:30-21:00; Fr-Sa 11:30-14:30, 16:30-21:30",
@@ -5467,6 +5705,7 @@
   "lat": 35.59528,
   "lng": -82.55594,
   "source": "OSM",
+  "corrected": true,
   "audit": {
    "status": "down",
    "notes": [
@@ -5477,7 +5716,7 @@
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain; Using the corrected domain from the board"
  },
  {
   "name": "Suwanna's Thai Orchid",
@@ -5608,32 +5847,6 @@
   "need": "Website",
   "confidence": "Verify",
   "evidence": "Listed website unreachable on every variant we tried (HTTP 403) — verify before pitching: the listing may point to an old domain"
- },
- {
-  "name": "Double D's Coffee & Desserts",
-  "vertical": "food",
-  "website": "https://www.doubledscoffee.com/",
-  "phone": "+1-828-505-2439",
-  "email": "",
-  "hours": "Su-Th 10:00-19:00, Fr-Sa 10:00-19:30",
-  "address": "41 Biltmore Avenue",
-  "town": "Asheville",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 35.59323,
-  "lng": -82.55141,
-  "source": "OSM",
-  "audit": {
-   "status": "down",
-   "notes": [
-    23
-   ]
-  },
-  "wScore": 5,
-  "itScore": 2,
-  "need": "Website",
-  "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (23) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "Clarion Pointe Biltmore Village",
@@ -5899,7 +6112,7 @@
   "audit": {
    "status": "ssl-error",
    "notes": [
-    23
+    "ECONNRESET"
    ]
   },
   "wScore": 4,
@@ -5951,14 +6164,14 @@
   "audit": {
    "status": "down",
    "notes": [
-    "EAI_AGAIN"
+    "UND_ERR_CONNECT_TIMEOUT"
    ]
   },
   "wScore": 5,
   "itScore": 2,
   "need": "Website",
   "confidence": "Verify",
-  "evidence": "Listed website unreachable on every variant we tried (EAI_AGAIN) — verify before pitching: the listing may point to an old domain"
+  "evidence": "Listed website unreachable on every variant we tried (UND_ERR_CONNECT_TIMEOUT) — verify before pitching: the listing may point to an old domain"
  },
  {
   "name": "RJEB Construction",
@@ -7032,6 +7245,38 @@
   "evidence": "Copyright stuck at 2022; Pre-2010 page framework (XHTML/HTML4 doctype)"
  },
  {
+  "name": "Sabeing",
+  "vertical": "food",
+  "website": "https://sabeingbooneking.com/",
+  "phone": "+1-828-832-8189",
+  "email": "sabeing454@gmail.com",
+  "hours": "11:00-21:30",
+  "address": "454 West King Street",
+  "town": "Boone",
+  "st": "NC",
+  "region": "wnc",
+  "lat": 36.2174,
+  "lng": -81.68099,
+  "source": "OSM",
+  "audit": {
+   "status": "ok",
+   "viewport": true,
+   "year": null,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)"
+   ],
+   "freeEmail": "sabeing454@gmail.com",
+   "oldServer": "",
+   "finalUrl": "https://www.sabeingbooneking.com/",
+   "https": true
+  },
+  "wScore": 4,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "2000s-era HTML (font/center/marquee markup); Uses free email for business (sabeing454@gmail.com); Business email is sabeing454@gmail.com"
+ },
+ {
   "name": "Premiere Roofing & Gutters",
   "vertical": "trades",
   "website": "https://premiereroofingnc.com/",
@@ -8087,7 +8332,7 @@
   "audit": {
    "status": "ssl-error",
    "notes": [
-    23
+    "unreachable"
    ]
   },
   "wScore": 3,
@@ -8741,6 +8986,39 @@
   "need": "Website",
   "confidence": "High",
   "evidence": "GoDaddy site builder; Uses free email for business (foggymountaingems@gmail.com); Business email is foggymountaingems@gmail.com"
+ },
+ {
+  "name": "Ashe Memorial Hospital",
+  "vertical": "healthcare",
+  "website": "https://www.ashememorial.org/",
+  "phone": "+1 336 846 7101",
+  "email": "",
+  "hours": "24/7",
+  "address": "200 Hospital Avenue",
+  "town": "West Jefferson",
+  "st": "NC",
+  "region": "wnc",
+  "lat": 36.4235,
+  "lng": -81.45798,
+  "source": "OSM",
+  "audit": {
+   "status": "ok",
+   "viewport": true,
+   "year": 2026,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)",
+    "Ancient jQuery library (1.x)"
+   ],
+   "freeEmail": "",
+   "oldServer": "",
+   "finalUrl": "https://www.ashememorial.org/",
+   "https": true
+  },
+  "wScore": 3,
+  "itScore": 2,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x)"
  },
  {
   "name": "Rio Doce Gem Mine",
@@ -9651,6 +9929,38 @@
   "evidence": "Facebook/Instagram page instead of a real website"
  },
  {
+  "name": "Virginia Tire and Auto Repair",
+  "vertical": "auto",
+  "website": "https://www.vatire1.com/",
+  "phone": "+1-276-964-4061",
+  "email": "",
+  "hours": "",
+  "address": "1142 Claypool Hill Mall Road",
+  "town": "Richlands",
+  "st": "VA",
+  "region": "swva",
+  "lat": 37.06699,
+  "lng": -81.75584,
+  "source": "OSM",
+  "audit": {
+   "status": "ok",
+   "viewport": false,
+   "year": 2026,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)"
+   ],
+   "freeEmail": "",
+   "oldServer": "",
+   "finalUrl": "https://www.vatire1.com/",
+   "https": true
+  },
+  "wScore": 4,
+  "itScore": 0,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "Not mobile-friendly (no viewport meta); 2000s-era HTML (font/center/marquee markup)"
+ },
+ {
   "name": "Wikiteria Market & Cafe",
   "vertical": "food",
   "website": "https://wikiteriacafe.com/",
@@ -10073,7 +10383,7 @@
    "flags": [],
    "freeEmail": "",
    "oldServer": "",
-   "finalUrl": "https://tonicavedamtl.com/",
+   "finalUrl": "https://expertcomputeracademy.com/",
    "https": true
   },
   "wScore": 3,
@@ -11612,38 +11922,6 @@
   "evidence": "No website listed (OSM) — verify with a quick Google/call"
  },
  {
-  "name": "New Life Thrift Shop",
-  "vertical": "retail",
-  "website": "https://www.abingdonfaithinaction.com/",
-  "phone": "+1-276-525-4220",
-  "email": "",
-  "hours": "Tu 13:00-17:00; We-Fr 10:00-17:00; Sa 10:00-16:00",
-  "address": "246 West Main Street",
-  "town": "Abingdon",
-  "st": "VA",
-  "region": "swva",
-  "lat": 36.70917,
-  "lng": -81.97873,
-  "source": "OSM",
-  "audit": {
-   "status": "ok",
-   "viewport": true,
-   "year": 2017,
-   "flags": [
-    "Wix builder"
-   ],
-   "freeEmail": "",
-   "oldServer": "",
-   "finalUrl": "https://www.abingdonfaithinaction.com/",
-   "https": true
-  },
-  "wScore": 3,
-  "itScore": 0,
-  "need": "Website",
-  "confidence": "High",
-  "evidence": "Copyright stuck at 2017; Wix builder"
- },
- {
   "name": "American Mountain Technologies LLC",
   "vertical": "trades",
   "website": "",
@@ -12422,6 +12700,39 @@
   "need": "Website",
   "confidence": "Verify",
   "evidence": "No website listed (OSM) — verify with a quick Google/call"
+ },
+ {
+  "name": "Sawasdee Thai Cuisine",
+  "vertical": "food",
+  "website": "https://sawasdeethaicuisine-asheville.com/",
+  "phone": "+1-828-676-2995",
+  "email": "",
+  "hours": "Tu-Sa 11:00-14:00, 16:30-20:00",
+  "address": "1950-5 Hendersonville Road",
+  "town": "Asheville",
+  "st": "NC",
+  "region": "wnc",
+  "lat": 35.49116,
+  "lng": -82.52243,
+  "source": "OSM",
+  "audit": {
+   "status": "ok",
+   "viewport": true,
+   "year": null,
+   "flags": [
+    "2000s-era HTML (font/center/marquee markup)",
+    "Ancient jQuery library (1.x)"
+   ],
+   "freeEmail": "",
+   "oldServer": "",
+   "finalUrl": "https://www.sawasdeethaicuisine-asheville.com/",
+   "https": true
+  },
+  "wScore": 3,
+  "itScore": 0,
+  "need": "Website",
+  "confidence": "High",
+  "evidence": "2000s-era HTML (font/center/marquee markup); Ancient jQuery library (1.x)"
  },
  {
   "name": "Cox Auto Service",
@@ -13828,38 +14139,6 @@
   "evidence": "No website listed (OSM) — verify with a quick Google/call"
  },
  {
-  "name": "Coyote Kitchen",
-  "vertical": "food",
-  "website": "https://coyotekitchen.com/",
-  "phone": "+1-828-265-4041",
-  "email": "",
-  "hours": "Su-Th 11:00-21:00; Fr-Sa 11:00-21:30",
-  "address": "200 Southgate Drive",
-  "town": "Boone",
-  "st": "NC",
-  "region": "wnc",
-  "lat": 36.19845,
-  "lng": -81.66022,
-  "source": "OSM",
-  "audit": {
-   "status": "ok",
-   "viewport": true,
-   "year": 2023,
-   "flags": [
-    "Wix builder"
-   ],
-   "freeEmail": "",
-   "oldServer": "",
-   "finalUrl": "https://www.coyotekitchen.com/",
-   "https": true
-  },
-  "wScore": 3,
-  "itScore": 0,
-  "need": "Website",
-  "confidence": "High",
-  "evidence": "Copyright stuck at 2023; Wix builder"
- },
- {
   "name": "RubiTrux",
   "vertical": "auto",
   "website": "",
@@ -14414,6 +14693,36 @@
   "need": "Website",
   "confidence": "High",
   "evidence": "Copyright stuck at 2017; GoDaddy site builder"
+ },
+ {
+  "name": "Joel B. Miller, PLC, Attorney At Law",
+  "vertical": "legal",
+  "website": "http://joelbmillerlaw.com",
+  "phone": "+1-540-992-1245",
+  "email": "",
+  "hours": "Mo-Fr 09:00-17:00",
+  "address": "40 British Woods Drive",
+  "town": "Roanoke",
+  "st": "VA",
+  "region": "swva",
+  "lat": 37.357,
+  "lng": -79.88421,
+  "source": "OSM",
+  "audit": {
+   "status": "http-only",
+   "viewport": false,
+   "year": null,
+   "flags": [],
+   "freeEmail": "joelmillerlaw@yahoo.com",
+   "oldServer": "",
+   "finalUrl": "http://www.joelbmillerlaw.com/",
+   "https": false
+  },
+  "wScore": 3,
+  "itScore": 5,
+  "need": "IT",
+  "confidence": "High",
+  "evidence": "No HTTPS (insecure site); Uses free email for business (joelmillerlaw@yahoo.com)"
  },
  {
   "name": "ETSU Department of Psychiatry and Behavioral Sciences",
@@ -15226,32 +15535,6 @@
   "evidence": "Ancient jQuery library (1.x); Uses free email for business (beaverchiropractic@yahoo.com); Business email is beaverchiropractic@yahoo.com"
  },
  {
-  "name": "PMC Paint Management & Outpatient Pharmacy",
-  "vertical": "healthcare",
-  "website": "https://www.pikevillehospital.org",
-  "phone": "+1-606-218-2217",
-  "email": "",
-  "hours": "",
-  "address": "231 Hibbard Street",
-  "town": "Pikeville",
-  "st": "KY",
-  "region": "seky",
-  "lat": 37.4726,
-  "lng": -82.52615,
-  "source": "OSM",
-  "audit": {
-   "status": "ssl-error",
-   "notes": [
-    "UND_ERR_CONNECT_TIMEOUT"
-   ]
-  },
-  "wScore": 3,
-  "itScore": 4,
-  "need": "IT",
-  "confidence": "High",
-  "evidence": "SSL certificate broken/expired"
- },
- {
   "name": "Roper Law Firm",
   "vertical": "legal",
   "website": "",
@@ -15826,32 +16109,6 @@
   "need": "IT",
   "confidence": "Verify",
   "evidence": "No website listed (OSM) — verify with a quick Google/call; healthcare business with no web presence — likely no IT partner either"
- },
- {
-  "name": "Joel B. Miller, PLC, Attorney At Law",
-  "vertical": "legal",
-  "website": "http://joelbmillerlaw.com",
-  "phone": "+1-540-992-1245",
-  "email": "",
-  "hours": "Mo-Fr 09:00-17:00",
-  "address": "40 British Woods Drive",
-  "town": "Roanoke",
-  "st": "VA",
-  "region": "swva",
-  "lat": 37.357,
-  "lng": -79.88421,
-  "source": "OSM",
-  "audit": {
-   "status": "ssl-error",
-   "notes": [
-    "HTTP 429"
-   ]
-  },
-  "wScore": 3,
-  "itScore": 4,
-  "need": "IT",
-  "confidence": "High",
-  "evidence": "SSL certificate broken/expired"
  },
  {
   "name": "Roanoke Dental Care",

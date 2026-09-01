@@ -1,66 +1,66 @@
 {
-  "ranAt": "2026-09-01T02:59:11.570Z",
+  "ranAt": "2026-09-01T15:10:00.672Z",
   "mode": "osm",
   "regions": {
     "NE Tennessee": {
       "total": 945,
-      "website": 78,
+      "website": 84,
       "it": 10,
-      "both": 6,
-      "healthy": 293,
+      "both": 9,
+      "healthy": 284,
       "noSiteListed": 573,
       "noPhone": 470
     },
     "SW Virginia": {
       "total": 2333,
-      "website": 116,
+      "website": 114,
       "it": 31,
-      "both": 17,
-      "healthy": 534,
+      "both": 20,
+      "healthy": 532,
       "noSiteListed": 1636,
-      "noPhone": 1458
+      "noPhone": 1459
     },
     "Southern WV": {
       "total": 489,
-      "website": 30,
+      "website": 31,
       "it": 1,
-      "both": 1,
-      "healthy": 70,
+      "both": 3,
+      "healthy": 66,
       "noSiteListed": 392,
-      "noPhone": 357
+      "noPhone": 358
     },
     "Western NC": {
       "total": 3846,
-      "website": 194,
+      "website": 193,
       "it": 51,
-      "both": 23,
-      "healthy": 783,
+      "both": 18,
+      "healthy": 786,
       "noSiteListed": 2905,
-      "noPhone": 1675
+      "noPhone": 1678
     },
     "SE Kentucky": {
       "total": 516,
-      "website": 21,
-      "it": 8,
+      "website": 20,
+      "it": 7,
       "both": 6,
-      "healthy": 67,
+      "healthy": 69,
       "noSiteListed": 420,
       "noPhone": 390
     },
     "Upstate/N SC": {
       "total": 5230,
-      "website": 56,
+      "website": 57,
       "it": 34,
-      "both": 26,
-      "healthy": 1654,
+      "both": 29,
+      "healthy": 1651,
       "noSiteListed": 3425,
-      "noPhone": 3291
+      "noPhone": 3290
     }
   },
-  "totalLeads": 709,
+  "totalLeads": 718,
   "byNeed": {
-    "Both": 79,
-    "Website": 495,
-    "IT": 135
+    "Both": 85,
+    "Website": 499,
+    "IT": 134
   }
 }
