@@ -677,6 +677,7 @@
 
   function headlineOf(d) {
     const ev = (d.evidence + '; ' + (d.x || '')).toLowerCase();
+    if (ev.includes('domain registration expires')) return 'your domain registration is about to expire';
     if (ev.includes('unreachable')) return 'your website isn’t loading';
     if (ev.includes('domain parked')) return 'your old website domain is showing a parked page';
     if (ev.includes('ssl certificate broken') || ev.includes('certificate expired')) return 'your website is showing visitors a security warning';
@@ -699,7 +700,8 @@
     const brand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
     const intro = 'Hey, this is Peyton with ' + brand + ' — we’re a local team here in the Tri-Cities. ';
     let hook;
-    if (ev.includes('down/unreachable')) hook = 'I was looking up ' + d.vertical + ' businesses around ' + d.town + ' and noticed your website isn’t loading at all — wanted to make sure y’all knew before more customers run into it.';
+    if (ev.includes('domain registration expires')) hook = 'This one’s time-sensitive — your domain registration is about to expire' + (d.xd != null ? ' in about ' + d.xd + ' days' : '') + '. If it lapses, the website and your email both go dark, and domain squatters snap these up. Wanted to make sure it doesn’t slip.';
+    else if (ev.includes('down/unreachable')) hook = 'I was looking up ' + d.vertical + ' businesses around ' + d.town + ' and noticed your website isn’t loading at all — wanted to make sure y’all knew before more customers run into it.';
     else if (ev.includes('domain parked')) hook = 'I noticed your old website domain is showing a "parked" page now — anyone who Googles you hits a dead end. Wanted to give you a heads up.';
     else if (ev.includes('ssl certificate broken') || ev.includes('certificate expired')) hook = 'I noticed your website is showing visitors a security warning — the "not secure" full-screen one. It’s usually a 10-minute fix, but it’s costing you customers every day it’s up.';
     else if (ev.includes('facebook/instagram')) hook = 'I noticed y’all are running on just a Facebook page — no actual website. You’re invisible on Google for folks searching "' + d.vertical + ' near me." That’s fixable for a lot less than most people think.';
@@ -754,6 +756,17 @@
 
     const pi = document.createElement('p'); pi.textContent = p.pitch;
     row('Pitch', pi);
+
+    if (d.mx) {
+      const mp = document.createElement('p');
+      const spoof = ((d.x || '') + (d.evidence || '')).toLowerCase().includes('spoofable');
+      mp.textContent = 'Email stack: ' + d.mx + (spoof ? ' — and it’s spoofable. Clean Ignite opener.' : '.');
+      row('Their stack', mp);
+    }
+    if (d.cg) {
+      const cgp = document.createElement('p'); cgp.textContent = d.cg;
+      row('Competitive angle', cgp);
+    }
 
     const wh = document.createElement('p');
     wh.textContent = p.when + (d.hours ? ' Posted hours: ' + d.hours + '.' : '');

@@ -23,6 +23,31 @@ const retired = prevLeads
   ? prevLeads.filter((p) => !leads.some((l) => keyOf(l) === keyOf(p))).length
   : 0;
 
+// Competitor-gap cohorts: same town+vertical (fallback: region+vertical).
+const coAll = {}, coWeb = {}, coFlagWeb = {};
+const ck1 = (b) => b.region + '|' + b.town + '|' + b.vertical;
+const ck2 = (b) => b.region + '|' + b.vertical;
+for (const b of inventory) {
+  for (const ck of [ck1(b), ck2(b)]) {
+    coAll[ck] = (coAll[ck] || 0) + 1;
+    if (b.website) coWeb[ck] = (coWeb[ck] || 0) + 1;
+  }
+}
+for (const l of leads) {
+  if (!l.website) continue;
+  for (const ck of [ck1(l), ck2(l)]) coFlagWeb[ck] = (coFlagWeb[ck] || 0) + 1;
+}
+function competitorGap(l) {
+  if (l.vertical === 'other' || l.vertical === 'professional') return '';
+  let ck = ck1(l), place = l.town;
+  if ((coAll[ck] || 0) < 3) { ck = ck2(l); place = 'the ' + (REGIONS[l.region]?.label || l.region) + ' region'; }
+  const total = coAll[ck] || 0;
+  if (total < 3) return '';
+  const solid = Math.max(0, (coWeb[ck] || 0) - (coFlagWeb[ck] || 0));
+  if (solid === 0) return `None of the ${total} ${l.vertical} businesses in ${place} has a solid website — the first one to fix that owns the market.`;
+  return `${solid} of the ${total} ${l.vertical} businesses in ${place} have solid websites — this one is falling behind.`;
+}
+
 // Multi-location detection: same normalized name in 2+ towns across the full
 // inventory → probably a regional operation, ask for the owner/head office.
 const nameCounts = {};
@@ -52,7 +77,16 @@ for (const l of leads) {
   if (deep?.ok) {
     if (!deep.title || (deep.title || '').length < 8) extra.push('Homepage missing a real title (invisible to Google)');
     if (deep.desc === false) extra.push('No search description');
+    if (deep.localSchema === false) extra.push('No local-business schema (weak Google Maps signal)');
+    if (deep.cFound && deep.cForm === false && deep.cMailto === false) extra.push('Contact page has no working form or email link');
   }
+  let expDays = null;
+  if (deep?.exp) {
+    expDays = Math.round((Date.parse(deep.exp) - Date.now()) / 86400000);
+    if (expDays >= 0 && expDays < 60) extra.push(`Domain registration expires ${deep.exp} (${expDays} days)`);
+  }
+  if (deep?.wbSince) extra.push(`Homepage unchanged since ${deep.wbSince} (archive.org)`);
+  else if (deep?.wbLast) extra.push(`Not even archived since ${deep.wbLast} (archive.org)`);
   const slug = slugOf(l);
   const locs = nameCounts[l.name.toLowerCase().replace(/[^a-z0-9]/g, '')];
   const k = keyOf(l);
@@ -71,6 +105,9 @@ for (const l of leads) {
     slug: auditSlugs[slug] ? slug : '',
     multi: locs && locs.size > 1 ? locs.size : 0,
     chg,
+    mx: deep?.mxp || '',
+    cg: competitorGap(l),
+    xd: expDays !== null && expDays >= 0 && expDays < 60 ? expDays : null,
     r: rat && rat.matched ? rat.r : 0,
     rc: rat && rat.matched ? rat.rc : 0,
     g: rat && rat.matched ? 1 : 0,                                  // places-verified

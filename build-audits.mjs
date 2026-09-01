@@ -176,6 +176,41 @@ function buildFindings(l, deep) {
       'Move to maintained, updated hosting.');
   }
 
+  // Domain / neglect / contact-path (deep, cached weekly)
+  if (deep?.exp) {
+    const days = Math.round((Date.parse(deep.exp) - Date.now()) / 86400000);
+    if (days >= 0 && days < 45) {
+      add('crit', 'Your domain registration expires very soon',
+        `${apex(host)} is registered only through ${deep.exp} — ${days} days from now.`,
+        'If it lapses, the website and any email on the domain go dark at once, and expired domains get snapped up by squatters within days.',
+        'Renew now and turn on auto-renew — five minutes that prevents a very bad week.');
+    }
+  }
+  if (deep?.wbSince) {
+    add('imp', 'The site hasn’t changed in years',
+      `The Internet Archive shows this homepage byte-for-byte identical since ${deep.wbSince}.`,
+      'Customers and search engines both read a frozen site as an inactive business.',
+      'A refresh with a site that’s easy to keep current.');
+  }
+  if (deep?.cFound && deep.cForm === false && deep.cMailto === false) {
+    add('imp', 'The contact page can’t take a message',
+      'Your contact page has no working form and no email link.',
+      'Customers who want to reach you hit a dead end at the exact moment they’ve decided to get in touch.',
+      'A working contact form (with spam protection) wired to your business email.');
+  }
+  if (deep?.ok && deep.localSchema === false) {
+    add('rec', 'Missing local-business markup',
+      'The site has no LocalBusiness structured data.',
+      'This markup is how Google connects your site to your map listing, hours, and reviews — without it you’re easier to overlook in local search.',
+      'Add schema markup — an hour of work.');
+  }
+  if (deep?.ok && deep.smOk === false) {
+    add('rec', 'No sitemap for search engines',
+      'The site has no sitemap.xml.',
+      'A sitemap tells search engines what to index; small sites without one get crawled less and rank slower.',
+      'Generate one — trivial on any modern platform.');
+  }
+
   // SEO basics (deep)
   if (deep?.ok) {
     if (!deep.title || deep.title.length < 8) {
@@ -224,7 +259,7 @@ function grade(F) {
 
 // ---------- page ----------
 const SEV_LABEL = { crit: 'Critical', imp: 'Important', rec: 'Recommended' };
-function page(l, F, deep) {
+function page(l, F, deep, slug) {
   const g = l.website ? grade(F) : null;
   const host = l.website ? hostnameOf(l.website) : null;
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -278,6 +313,9 @@ function page(l, F, deep) {
   .gmeta { font-size: 14px; color: var(--soft); }
   .gmeta b { color: var(--ink); }
   .angle { margin: 18px 0 26px; padding: 14px 18px; border-left: 3px solid var(--ember); background: var(--card); border-radius: 0 6px 6px 0; }
+  .shotwrap { margin: 18px 0 6px; }
+  .shotwrap img { width: 100%; border: 1px solid var(--line); border-radius: 8px; display: block; }
+  .shotwrap figcaption { font-size: 12px; color: var(--soft); margin-top: 6px; text-align: center; }
   h2 { font: 600 13px/1 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--soft); margin: 30px 0 12px; }
   .card { background: var(--card); border: 1px solid var(--line); border-left-width: 4px; border-radius: 6px; padding: 16px 18px 6px; margin-bottom: 12px; }
   .card.sev-crit { border-left-color: var(--crit); }
@@ -325,6 +363,12 @@ function page(l, F, deep) {
     <div class="gmeta"><b>We couldn’t find a website for your business.</b><br>If you have one we missed, we’d love to check it — otherwise, that’s the finding.</div>
   </div>`}
 
+  ${l.website && !SOCIAL_RE.test(l.website) ? `<figure class="shotwrap">
+    <img src="/shot/${esc(slug)}.jpg" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
+      onerror="this.closest('figure').style.display='none'">
+    <figcaption>Your website as visitors see it today</figcaption>
+  </figure>` : ''}
+
   <div class="angle">${esc(VERTICAL_ANGLE[l.vertical] || VERTICAL_ANGLE.other)}</div>
 
   <h2>What we found</h2>
@@ -371,7 +415,7 @@ for (const l of leads) {
   const F = buildFindings(l, deep);
   if (!F.length) continue; // nothing to say — no audit page
   const slug = slugOf(l);
-  fs.writeFileSync(path.join(adir, slug + '.html'), page(l, F, deep));
+  fs.writeFileSync(path.join(adir, slug + '.html'), page(l, F, deep, slug));
   slugMap[slug] = true;
   built++;
 }
