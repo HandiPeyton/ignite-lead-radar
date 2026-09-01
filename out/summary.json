@@ -1,66 +1,66 @@
 {
-  "ranAt": "2026-08-31T05:12:41.760Z",
+  "ranAt": "2026-09-01T02:59:11.570Z",
   "mode": "osm",
   "regions": {
     "NE Tennessee": {
-      "total": 1006,
-      "website": 81,
-      "it": 13,
-      "both": 15,
-      "healthy": 290,
-      "noSiteListed": 620,
-      "noPhone": 519
+      "total": 945,
+      "website": 78,
+      "it": 10,
+      "both": 6,
+      "healthy": 293,
+      "noSiteListed": 573,
+      "noPhone": 470
     },
     "SW Virginia": {
-      "total": 2421,
-      "website": 105,
-      "it": 36,
-      "both": 23,
-      "healthy": 562,
-      "noSiteListed": 1708,
-      "noPhone": 1518
+      "total": 2333,
+      "website": 116,
+      "it": 31,
+      "both": 17,
+      "healthy": 534,
+      "noSiteListed": 1636,
+      "noPhone": 1458
     },
     "Southern WV": {
-      "total": 520,
-      "website": 34,
-      "it": 9,
+      "total": 489,
+      "website": 30,
+      "it": 1,
       "both": 1,
-      "healthy": 67,
-      "noSiteListed": 420,
-      "noPhone": 379
+      "healthy": 70,
+      "noSiteListed": 392,
+      "noPhone": 357
     },
     "Western NC": {
-      "total": 3906,
-      "website": 178,
-      "it": 52,
-      "both": 34,
-      "healthy": 800,
-      "noSiteListed": 2957,
-      "noPhone": 1713
+      "total": 3846,
+      "website": 194,
+      "it": 51,
+      "both": 23,
+      "healthy": 783,
+      "noSiteListed": 2905,
+      "noPhone": 1675
     },
     "SE Kentucky": {
-      "total": 561,
-      "website": 22,
+      "total": 516,
+      "website": 21,
       "it": 8,
-      "both": 7,
-      "healthy": 68,
-      "noSiteListed": 463,
-      "noPhone": 432
+      "both": 6,
+      "healthy": 67,
+      "noSiteListed": 420,
+      "noPhone": 390
     },
     "Upstate/N SC": {
-      "total": 5345,
-      "website": 45,
-      "it": 36,
-      "both": 34,
-      "healthy": 1680,
-      "noSiteListed": 3504,
-      "noPhone": 3381
+      "total": 5230,
+      "website": 56,
+      "it": 34,
+      "both": 26,
+      "healthy": 1654,
+      "noSiteListed": 3425,
+      "noPhone": 3291
     }
   },
-  "totalLeads": 733,
+  "totalLeads": 709,
   "byNeed": {
-    "Both": 114,
-    "Website": 465,
-    "IT": 154
+    "Both": 79,
+    "Website": 495,
+    "IT": 135
   }
 }
