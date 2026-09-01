@@ -66,7 +66,7 @@ let i = 0, done = 0, ok = 0, metriced = 0;
 async function worker() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
-  page.setDefaultNavigationTimeout(22000);
+  page.setDefaultNavigationTimeout(18000);
   while (i < targets.length) {
     const t = targets[i++];
     const host = hostOf(t.url);
@@ -85,7 +85,7 @@ async function worker() {
       const t0 = Date.now();
       await page.goto(t.url, { waitUntil: 'load' });
       const loadMs = Date.now() - t0;
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 800));
       const buf = await page.screenshot({ type: 'jpeg', quality: 52 });
       await store.set(t.slug, buf);
       ok++;
@@ -119,7 +119,7 @@ async function worker() {
   }
   await page.close();
 }
-await Promise.all(Array.from({ length: 4 }, worker));
+await Promise.all(Array.from({ length: 8 }, worker));
 await browser.close();
 
 // merge over any prior deepscan (sites that failed this run keep last-known metrics)

@@ -52,7 +52,7 @@ const todo = leads.filter((l) => {
 });
 log(`Google check (rating + operational status) for ${todo.length} leads (${leads.length - todo.length} already done)...`);
 
-let done = 0, matched = 0;
+let done = 0, matched = 0, authFails = 0;
 for (const l of todo) {
   const k = keyOf(l);
   try {
@@ -67,7 +67,15 @@ for (const l of todo) {
       signal: AbortSignal.timeout(20000),
     });
     if (res.status === 429) { log('Rate limited — stopping here; re-run to resume.'); break; }
-    if (!res.ok) { ratings[k] = { matched: false, err: res.status }; continue; }
+    if (!res.ok) {
+      ratings[k] = { matched: false, err: res.status };
+      if (res.status === 403 || res.status === 400) {
+        authFails++;
+        if (authFails >= 3) { log(`Google key rejected ${authFails}× (HTTP ${res.status}) — billing not active; stopping to save time.`); break; }
+      }
+      continue;
+    }
+    authFails = 0;
     const data = await res.json();
     const p = (data.places || [])[0];
     if (p && nameMatch(l.name, p.displayName?.text || '')) {

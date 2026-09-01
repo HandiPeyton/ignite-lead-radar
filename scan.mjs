@@ -54,7 +54,7 @@ const MAX_NOSITE = parseInt(flagVal('--max-nosite', '400'), 10);  // per state
 const TILES_CAP = parseInt(flagVal('--tiles', '0'), 10);          // smoke tests: stop after N tiles
 const WEBHOOK = flagVal('--webhook', process.env.SHEET_WEBHOOK || '');
 const USE_GOOGLE = args.includes('--google') && !!process.env.GOOGLE_PLACES_API_KEY;
-const AUDIT_CONCURRENCY = parseInt(flagVal('--concurrency', '10'), 10);
+const AUDIT_CONCURRENCY = parseInt(flagVal('--concurrency', '24'), 10); // distinct hosts — IO-bound, CI runner handles it
 const SKIP_ENUM = args.includes('--skip-enum'); // light mode: reuse last enumeration, re-audit only
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -149,14 +149,24 @@ function makeTiles() {
   const tiles = [];
   const latSpan = RADIUS_KM / 111.32;
   const lngSpan = RADIUS_KM / (111.32 * Math.cos((CENTER.lat * Math.PI) / 180));
-  for (let lat = CENTER.lat - latSpan; lat < CENTER.lat + latSpan; lat += TILE_LAT) {
-    for (let lng = CENTER.lng - lngSpan; lng < CENTER.lng + lngSpan; lng += TILE_LNG) {
+  const lat0 = CENTER.lat - latSpan, lng0 = CENTER.lng - lngSpan;
+  // A tile with no city/town/village in it or in any neighboring tile is
+  // national forest / lake — skip it (saves ~a third of the queries).
+  const live = new Set();
+  for (const p of PLACES) {
+    const r = Math.floor((p.lat - lat0) / TILE_LAT), c = Math.floor((p.lng - lng0) / TILE_LNG);
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) live.add((r + dr) + ':' + (c + dc));
+  }
+  let skipped = 0;
+  for (let r = 0, lat = lat0; lat < CENTER.lat + latSpan; r++, lat += TILE_LAT) {
+    for (let c = 0, lng = lng0; lng < CENTER.lng + lngSpan; c++, lng += TILE_LNG) {
       const cLat = lat + TILE_LAT / 2, cLng = lng + TILE_LNG / 2;
-      if (haversineKm(CENTER.lat, CENTER.lng, cLat, cLng) <= RADIUS_KM + 18) {
-        tiles.push({ s: lat, w: lng, n: lat + TILE_LAT, e: lng + TILE_LNG });
-      }
+      if (haversineKm(CENTER.lat, CENTER.lng, cLat, cLng) > RADIUS_KM + 18) continue;
+      if (PLACES.length && !live.has(r + ':' + c)) { skipped++; continue; }
+      tiles.push({ s: lat, w: lng, n: lat + TILE_LAT, e: lng + TILE_LNG });
     }
   }
+  if (skipped) log(`Skipping ${skipped} empty-wilderness tiles (no settlements nearby).`);
   return tiles;
 }
 const bboxStr = (t) => `${t.s.toFixed(4)},${t.w.toFixed(4)},${t.n.toFixed(4)},${t.e.toFixed(4)}`;
@@ -166,16 +176,20 @@ function buildBboxQuery(t) {
 }
 
 const epCooldown = new Map(); // endpoint -> timestamp when usable again
+// Parallel tile workers share the mirrors politely: at most ONE in-flight
+// request per endpoint, so 3 workers = 3 mirrors each seeing a serial stream.
+const epInFlight = new Map();
 async function overpass(query) {
   let lastErr;
   for (let attempt = 0; attempt < 10; attempt++) {
-    // pick the first endpoint not cooling down; if all are, wait for the soonest
-    let ep = OVERPASS_ENDPOINTS.find((e) => (epCooldown.get(e) || 0) <= Date.now());
-    if (!ep) {
-      const soonest = Math.min(...OVERPASS_ENDPOINTS.map((e) => epCooldown.get(e) || 0));
-      await sleep(Math.max(1000, soonest - Date.now()));
-      ep = OVERPASS_ENDPOINTS.find((e) => (epCooldown.get(e) || 0) <= Date.now()) || OVERPASS_ENDPOINTS[0];
+    // pick a free endpoint (not cooling down, nothing in flight); wait if none
+    let ep = null;
+    for (let w = 0; w < 720 && !ep; w++) {
+      ep = OVERPASS_ENDPOINTS.find((e) => (epCooldown.get(e) || 0) <= Date.now() && !epInFlight.get(e));
+      if (!ep) await sleep(500);
     }
+    if (!ep) ep = OVERPASS_ENDPOINTS[0];
+    epInFlight.set(ep, true);
     try {
       const res = await fetch(ep, {
         method: 'POST',
@@ -207,7 +221,9 @@ async function overpass(query) {
     } catch (e) {
       lastErr = e;
       log(`  overpass attempt ${attempt + 1} failed (${e.message}); backing off...`);
-      await sleep(6000);
+      await sleep(4000);
+    } finally {
+      epInFlight.set(ep, false);
     }
   }
   throw lastErr;
@@ -313,7 +329,7 @@ async function tryFetch(url) {
   const res = await fetch(url, {
     headers: { 'User-Agent': UA, Accept: 'text/html,*/*' },
     redirect: 'follow',
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(9000),
   });
   const text = (await res.text()).slice(0, 300000);
   return { res, text };
@@ -422,7 +438,7 @@ async function auditPool(items) {
       // watchdog race: no single site may stall a worker (a silent exit-0
       // mid-audit was observed once in CI when the pool never completed)
       let timer;
-      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 60000); });
+      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 45000); });
       try { item.audit = await Promise.race([auditSite(item.website), guard]); }
       catch { item.audit = { status: 'down', notes: ['audit error'] }; }
       finally { clearTimeout(timer); }
@@ -550,7 +566,7 @@ async function main() {
   }
   if (!reused) {
     indexPlaces(await loadPlaces());
-    const pace = parseInt(flagVal('--pace', '4000'), 10);
+    const pace = parseInt(flagVal('--pace', '2000'), 10); // per worker; each mirror still sees ≥ ~7 s between queries
     const addAll = (biz) => {
       let kept = 0;
       for (const b of biz) {
@@ -571,33 +587,37 @@ async function main() {
       }
     } else {
       const queue = makeTiles();
-      let total = queue.length, tileNo = 0, splits = 0;
-      log(`Enumerating ${total} grid tiles covering ${RADIUS_KM.toFixed(0)} km around ${CENTER.name} (pace ${pace} ms)...`);
-      while (queue.length) {
-        const t = queue.shift();
-        tileNo++;
-        if (TILES_CAP && tileNo > TILES_CAP) { log(`  --tiles cap reached (${TILES_CAP}); stopping enumeration early`); break; }
-        if (LIMIT && all.length >= LIMIT) break;
-        let data;
-        try {
-          data = await overpass(buildBboxQuery(t));
-        } catch (e) {
-          if (t.n - t.s > TILE_LAT / 3) {
-            const mLat = (t.s + t.n) / 2, mLng = (t.w + t.e) / 2;
-            queue.push({ s: t.s, w: t.w, n: mLat, e: mLng }, { s: t.s, w: mLng, n: mLat, e: t.e },
-              { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
-            total += 4; splits++;
-            log(`  tile ${tileNo} too heavy (${e.message}) — split into 4`);
-          } else {
-            log(`  tile ${tileNo} FAILED after retries: ${e.message}`);
+      const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.length, parseInt(flagVal('--enum-workers', '3'), 10));
+      let total = queue.length, tileNo = 0, splits = 0, stop = false;
+      log(`Enumerating ${total} grid tiles covering ${RADIUS_KM.toFixed(0)} km around ${CENTER.name} (${ENUM_WORKERS} workers, one in flight per mirror, pace ${pace} ms)...`);
+      const tileWorker = async () => {
+        while (queue.length && !stop) {
+          const t = queue.shift();
+          const n = ++tileNo;
+          if (TILES_CAP && n > TILES_CAP) { stop = true; log(`  --tiles cap reached (${TILES_CAP}); stopping enumeration early`); break; }
+          if (LIMIT && all.length >= LIMIT) { stop = true; break; }
+          let data;
+          try {
+            data = await overpass(buildBboxQuery(t));
+          } catch (e) {
+            if (t.n - t.s > TILE_LAT / 3) {
+              const mLat = (t.s + t.n) / 2, mLng = (t.w + t.e) / 2;
+              queue.push({ s: t.s, w: t.w, n: mLat, e: mLng }, { s: t.s, w: mLng, n: mLat, e: t.e },
+                { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
+              total += 4; splits++;
+              log(`  tile ${n} too heavy (${e.message}) — split into 4`);
+            } else {
+              log(`  tile ${n} FAILED after retries: ${e.message}`);
+            }
+            continue;
           }
-          continue;
+          const parsed = parseElements(data.elements || []);
+          const kept = addAll(parsed);
+          if (kept) log(`  tile ${n}/${total}: ${data.elements.length} elements → ${kept} new businesses (running total ${all.length})`);
+          await sleep(pace);
         }
-        const parsed = parseElements(data.elements || []);
-        const kept = addAll(parsed);
-        if (kept) log(`  tile ${tileNo}/${total}: ${data.elements.length} elements → ${kept} new businesses (running total ${all.length})`);
-        await sleep(pace);
-      }
+      };
+      await Promise.all(Array.from({ length: ENUM_WORKERS }, tileWorker));
       log(`Enumeration done: ${all.length} businesses across ${tileNo} tiles (${splits} splits).`);
     }
     if (REGION_KEYS.length < Object.keys(REGIONS).length) {

@@ -243,7 +243,7 @@ async function worker() {
     if (done % 40 === 0) log(`  ${done}/${hosts.length} domains...`);
   }
 }
-await Promise.all(Array.from({ length: 12 }, worker));
+await Promise.all(Array.from({ length: 20 }, worker));
 
 fs.writeFileSync(path.join(out, 'audits.json'), JSON.stringify(results, null, 1));
 const withDns = Object.values(results).filter((a) => a.spf !== undefined);
