@@ -262,6 +262,22 @@
   .prow .warn { color: var(--verify); font-weight: 600; }
   @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
 
+  .today {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+    border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px;
+    background: var(--surface); padding: 10px 14px; margin-top: 12px; font-size: 13px;
+  }
+  .today .tstat { color: var(--ink-soft); }
+  .today .tstat b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .duetag.overdue3 { font-weight: 700; text-decoration: underline; }
+  .openline { display: none; }
+  @media print {
+    .tabs, .rail, .count, .tablewrap, .pager, .today, .toast, .outc, .slot .minibtn, footer { display: none !important; }
+    .slot { border: none; border-bottom: 1px solid #bbb; border-radius: 0; margin: 0; padding: 6px 2px; grid-template-columns: 70px 1fr auto; }
+    .slot .openline { display: block; color: #444; font-size: 11px; margin-top: 2px; }
+    body { background: #fff; color: #000; }
+  }
+
   .tabs { display: flex; gap: 8px; margin-top: 14px; }
   .tab {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
@@ -351,6 +367,8 @@
     <button class="tab" id="tabSched" aria-selected="false">Call schedule</button>
   </div>
 
+  <div class="today" id="todayStrip" hidden></div>
+
   <div class="rail" role="toolbar" aria-label="Filters">
     <span class="lbl">Region</span>
     <span id="regionChips"></span>
@@ -377,6 +395,7 @@
         <option value="15">15 min</option>
       </select>
       <span id="schedSummary"></span>
+      <button class="chip" id="printBtn" title="Print a one-page day sheet: times, names, numbers, openers">Print day sheet</button>
     </div>
     <div id="slots"></div>
   </section>
@@ -418,7 +437,8 @@
     <strong>Need</strong> = what the evidence points to: a new <em>website</em> (Ridge Web Designs pitch), an <em>IT</em> partner (Ignite Cyber pitch), or <em>both</em>.
     Rows marked <em>verify</em> came from listings without a website on file &mdash; do a 30-second Google check before dialing.
     Click any row for the call-prep brief, progress label, and call notes.
-    Every lead has a phone number. Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
+    Every lead has a phone number. Hotkeys: <em>N</em> = next lead &middot; <em>1&ndash;8</em> = set status on the open lead.
+    Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
   </footer>
 </div>
 
@@ -472,6 +492,55 @@
     return res.json();
   }
 
+  function renderToday() {
+    if (!TRACKING || !unlocked) return;
+    const el = document.getElementById('todayStrip');
+    el.hidden = false; el.textContent = '';
+    const due = DATA.filter(isDue).length;
+    const newC = DATA.filter((d) => d.chg === 'new').length;
+    const expC = DATA.filter((d) => d.xd != null).length;
+    let dials = 0, convos = 0, wonC = 0, pipe = 0;
+    for (const k in trackState) {
+      const e = trackState[k]; if (!e) continue;
+      const dt = e.t ? new Date(e.t) : null;
+      const isTodayT = dt && dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth() && dt.getDate() === now.getDate();
+      if (isTodayT && e.s && e.s !== 'new') {
+        dials++;
+        if (['interested', 'quoted', 'won', 'lost'].includes(e.s)) convos++;
+      }
+      if (e.s === 'won') { wonC++; pipe += parseFloat(e.v || 0) || 0; }
+    }
+    const mk = (label, val) => {
+      const s = document.createElement('span'); s.className = 'tstat';
+      const b = document.createElement('b'); b.textContent = val;
+      s.append(b, ' ' + label); el.append(s);
+    };
+    mk('worked today', dials);
+    mk('conversations', convos);
+    mk('follow-ups due', due);
+    if (expC) mk('domains expiring soon', expC);
+    if (newC) mk('new since last scan', newC);
+    if (wonC) mk('won' + (pipe ? ' · $' + pipe.toLocaleString() : ''), wonC);
+    const start = document.createElement('button');
+    start.className = 'chip'; start.setAttribute('aria-pressed', 'true');
+    start.textContent = 'Start calling ›';
+    start.addEventListener('click', () => setView('schedule'));
+    el.append(start);
+    if (due > 0) {
+      const sz = document.createElement('button'); sz.className = 'minibtn';
+      sz.textContent = 'Push due → tomorrow';
+      sz.title = 'Move every follow-up dated today or earlier to tomorrow';
+      sz.addEventListener('click', async () => {
+        if (!confirm('Move all ' + due + ' due follow-ups to tomorrow?')) return;
+        sz.disabled = true;
+        for (const d of DATA.filter(isDue)) await saveLead(keyOf(d), { d: plusDays(1) });
+        buildStatusChips(); render(); renderToday();
+        showToast('Snoozed to tomorrow');
+      });
+      el.append(sz);
+    }
+  }
+
   async function initTracking() {
     try {
       trackState = await api('GET');
@@ -483,6 +552,7 @@
       document.getElementById('progressTh').hidden = false;
       buildStatusChips();
       render();
+      renderToday();
       if (state.view === 'schedule') renderSchedule();
     } catch {
       showToast('Tracking service unreachable — board is read-only right now');
@@ -496,11 +566,12 @@
     if (metaEl) metaEl.innerHTML = 'Saving&hellip;';
     try {
       const cur = trackState[key] || {};
-      const body = { key, s: patch.s ?? cur.s ?? 'new', n: patch.n ?? cur.n ?? '', d: patch.d ?? cur.d ?? '', w: patch.w ?? cur.w ?? '' };
+      const body = { key, s: patch.s ?? cur.s ?? 'new', n: patch.n ?? cur.n ?? '', d: patch.d ?? cur.d ?? '', w: patch.w ?? cur.w ?? '', v: patch.v ?? cur.v ?? '' };
       const r = await api('POST', body);
-      trackState[key] = { s: body.s, n: body.n, d: body.d, w: body.w, t: r.t };
+      trackState[key] = { s: body.s, n: body.n, d: body.d, w: body.w, v: body.v, t: r.t };
       if (metaEl) metaEl.innerHTML = '<span class="saved">Saved</span> &middot; ' + new Date(r.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
       buildStatusChips();
+      renderToday();
     } catch (e) {
       if (metaEl) metaEl.innerHTML = '<span class="fail">Couldn&rsquo;t save — check connection</span>';
       showToast('Save failed — check connection');
@@ -889,7 +960,13 @@
       fuIn.value = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
       fuIn.dispatchEvent(new Event('change'));
     });
-    fu.append(fuLbl, fuIn, quick, fuClear);
+    const vLbl = document.createElement('span'); vLbl.textContent = '· $ if won:';
+    const vIn = document.createElement('input');
+    vIn.type = 'number'; vIn.min = '0'; vIn.step = '50'; vIn.placeholder = '0';
+    vIn.className = 'schedctl'; vIn.style.width = '96px';
+    vIn.value = (trackState[key] && trackState[key].v) || '';
+    vIn.addEventListener('change', () => saveLead(key, { v: vIn.value }, meta));
+    fu.append(fuLbl, fuIn, quick, fuClear, vLbl, vIn);
 
     // Wrong-domain correction: what goes here overrides the scanned website and
     // is re-audited on the next monthly rescan.
@@ -926,8 +1003,9 @@
     const dd = dueOf(d);
     if (dd && !['won', 'lost', 'bad', 'gone'].includes(s)) {
       const tag = document.createElement('div');
-      tag.className = 'duetag' + (dd < TODAY ? ' overdue' : '');
-      tag.textContent = (dd < TODAY ? 'overdue ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/');
+      const odDays = dd < TODAY ? Math.round((Date.parse(TODAY) - Date.parse(dd)) / 86400000) : 0;
+      tag.className = 'duetag' + (odDays > 0 ? ' overdue' : '') + (odDays >= 3 ? ' overdue3' : '');
+      tag.textContent = (odDays > 0 ? 'overdue ' + odDays + 'd — ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/');
       cell.append(tag);
     }
   }
@@ -1065,7 +1143,7 @@
   const slotsEl = document.getElementById('slots');
   const schedSummaryEl = document.getElementById('schedSummary');
   const EVENING_VERTS = new Set(['hospitality', 'fitness']);
-  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 3:00 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
+  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 3:45 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
 
   function setView(v) {
     state.view = v;
@@ -1096,7 +1174,7 @@
     const [y, m, d] = dateStr.split('-').map(Number);
     if (!y) return [];
     const mk = (h, mi) => new Date(y, m - 1, d, h, mi);
-    const windows = [[mk(10, 0), mk(15, 0), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
+    const windows = [[mk(10, 0), mk(15, 45), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
     const nowT = Date.now();
     const out = [];
     for (const [start, end, kind] of windows) {
@@ -1173,6 +1251,9 @@
       const meta = document.createElement('div'); meta.className = 'meta';
       meta.textContent = lead.town + ', ' + lead.st + ' · ' + lead.vertical;
       who.append(meta);
+      const ol = document.createElement('div'); ol.className = 'openline';
+      ol.textContent = makePrep(lead).opener.slice(0, 170) + '…';
+      who.append(ol);
       const ph = document.createElement('span'); ph.className = 'phone';
       const pa = document.createElement('a'); pa.href = 'tel:' + lead.phone.replace(/[^+\d]/g, ''); pa.textContent = lead.phone;
       ph.append(pa);
@@ -1234,6 +1315,27 @@
     a.download = 'leads-tracked.csv';
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  // Desktop hotkeys: N = next lead; 1–8 set status on the open lead's editor.
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'n' || e.key === 'N') {
+      const b = document.getElementById('nextBtn');
+      if (!b.hidden) { e.preventDefault(); b.click(); }
+      return;
+    }
+    const order = ['noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad', 'gone'];
+    const sk = order[parseInt(e.key, 10) - 1];
+    if (sk && openKey) {
+      const ed = document.querySelector('tr.edrow');
+      if (!ed) return;
+      const idx = STATUSES.findIndex((s) => s[0] === sk);
+      const btn = ed.querySelectorAll('.stbtn')[idx];
+      if (btn) { e.preventDefault(); btn.click(); }
+    }
   });
 
   function refresh() {

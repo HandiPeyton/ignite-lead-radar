@@ -31,6 +31,7 @@ export default async (req) => {
       n: typeof body.n === 'string' ? body.n.slice(0, 8000) : (cur.n || ''),
       d: typeof body.d === 'string' && /^(\d{4}-\d{2}-\d{2})?$/.test(body.d) ? body.d : (cur.d || ''),
       w: typeof body.w === 'string' && /^(https?:\/\/\S{4,300})?$/.test(body.w) ? body.w : (cur.w || ''),
+      v: typeof body.v === 'string' && /^(\d{0,9}(\.\d{0,2})?)?$/.test(body.v) ? body.v : (cur.v || ''),
       t: Date.now(),
     };
     data[body.key] = next;
