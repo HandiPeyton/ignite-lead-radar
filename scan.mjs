@@ -148,7 +148,7 @@ function parseElements(elements) {
     const lng = el.lon ?? el.center?.lon;
     if (lat == null || lng == null) continue;
     const vertical = classifyVertical(tags);
-    if (vertical === 'itcompany') continue;
+    if (vertical === 'itcompany' || vertical === 'bank') continue;
     let website = (tags.website || tags['contact:website'] || tags.url || '').split(';')[0].trim();
     if (website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
     const town = nearestTown(lat, lng);

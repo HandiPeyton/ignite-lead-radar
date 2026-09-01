@@ -110,7 +110,7 @@ export const SELECTORS = [
   '["office"]["name"]',
   '["craft"]["name"]',
   '["healthcare"]["name"]',
-  '["amenity"~"^(dentist|doctors|clinic|veterinary|pharmacy|restaurant|cafe|nursing_home|bank|car_repair|childcare)$"]["name"]',
+  '["amenity"~"^(dentist|doctors|clinic|veterinary|pharmacy|restaurant|cafe|nursing_home|car_repair|childcare)$"]["name"]',
   '["tourism"~"^(hotel|motel|guest_house|chalet|apartment|caravan_site)$"]["name"]',
   '["leisure"~"^(fitness_centre|sports_centre)$"]["name"]',
   '["man_made"="works"]["name"]',
@@ -179,7 +179,8 @@ export function classifyVertical(tags) {
   if (amenity === 'veterinary') return 'veterinary';
   if (office === 'lawyer' || office === 'notary') return 'legal';
   if (office === 'accountant' || office === 'tax_advisor') return 'accounting';
-  if (['financial', 'financial_advisor', 'insurance'].includes(office) || amenity === 'bank') return 'finance';
+  if (amenity === 'bank') return 'bank'; // excluded — no banks/credit unions; advisors & insurance stay
+  if (['financial', 'financial_advisor', 'insurance'].includes(office)) return 'finance';
   if (['architect', 'engineer', 'engineering', 'surveyor'].includes(office)) return 'engineering';
   if (office === 'estate_agent') return 'realestate';
   if (office === 'it' || office === 'telecommunication') return 'itcompany'; // competitors — excluded
