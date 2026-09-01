@@ -74,7 +74,7 @@ jobs:
           FOURSQUARE_API_KEY: ${{ secrets.FOURSQUARE_API_KEY }}
         run: node enrich-fsq.mjs
 
-      - name: Screenshots for checkup pages (weekly full only)
+      - name: Deep render scan + screenshots (weekly full only)
         if: steps.mode.outputs.mode == 'full'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
@@ -106,6 +106,7 @@ jobs:
           git add -f out/ratings.json 2>/dev/null || true
           git add -f out/inventory.json 2>/dev/null || true
           git add -f out/audits.json 2>/dev/null || true
+          git add -f out/deepscan.json 2>/dev/null || true
           git commit -m "scan snapshot $(date -u +%F)" || echo "nothing to commit"
           git pull --rebase -q || true   # survive pushes that landed mid-run
           git push || true

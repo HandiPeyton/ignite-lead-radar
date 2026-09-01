@@ -54,25 +54,74 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--ignore-certificate-errors'],
 });
 
-let i = 0, done = 0, ok = 0;
+// Deep per-site metrics captured on the SAME page load as the screenshot:
+// real load time, total page weight, image weight, request count, mobile
+// horizontal overflow, tiny tap targets. Written to out/deepscan.json (host-keyed).
+const deep = {};
+let existingDeep = {};
+try { existingDeep = JSON.parse(fs.readFileSync(path.join(out, 'deepscan.json'), 'utf8')); } catch { /* first run */ }
+const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return null; } };
+
+let i = 0, done = 0, ok = 0, metriced = 0;
 async function worker() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
-  page.setDefaultNavigationTimeout(18000);
+  page.setDefaultNavigationTimeout(22000);
   while (i < targets.length) {
     const t = targets[i++];
+    const host = hostOf(t.url);
+    let bytes = 0, imgBytes = 0, imgCount = 0, reqCount = 0;
+    const onResp = (res) => {
+      reqCount++;
+      try {
+        const h = res.headers();
+        const len = parseInt(h['content-length'] || '0', 10) || 0;
+        bytes += len;
+        if (/^image\//.test(h['content-type'] || '')) { imgBytes += len; imgCount++; }
+      } catch { /* ignore */ }
+    };
+    page.on('response', onResp);
     try {
-      await page.goto(t.url, { waitUntil: 'domcontentloaded' });
-      await new Promise((r) => setTimeout(r, 1500));
+      const t0 = Date.now();
+      await page.goto(t.url, { waitUntil: 'load' });
+      const loadMs = Date.now() - t0;
+      await new Promise((r) => setTimeout(r, 1200));
       const buf = await page.screenshot({ type: 'jpeg', quality: 52 });
       await store.set(t.slug, buf);
       ok++;
-    } catch { /* site refused to render — checkup page hides the figure */ }
+      // mobile-breakage pass: real 390px render, not just a meta tag
+      try {
+        await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        const m = await page.evaluate(() => {
+          const de = document.documentElement;
+          const overflow = de.scrollWidth - window.innerWidth;
+          const taps = [...document.querySelectorAll('a,button,input,select')].filter((e) => {
+            const r = e.getBoundingClientRect();
+            return r.width > 0 && r.height > 0 && (r.width < 30 || r.height < 30);
+          }).length;
+          return { overflowPx: Math.max(0, overflow), tinyTaps: taps };
+        });
+        if (host) {
+          deep[host] = {
+            loadMs, weightKB: Math.round(bytes / 1024), imgKB: Math.round(imgBytes / 1024),
+            imgCount, reqCount, mobileOverflow: m.overflowPx > 12, overflowPx: m.overflowPx,
+            tinyTaps: m.tinyTaps, at: Date.now(),
+          };
+          metriced++;
+        }
+      } catch { /* mobile pass failed — keep the screenshot anyway */ }
+    } catch { /* site refused to render */ }
+    page.off('response', onResp);
+    await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
     done++;
-    if (done % 50 === 0) log(`  ${done}/${targets.length} (${ok} captured)...`);
+    if (done % 50 === 0) log(`  ${done}/${targets.length} (${ok} shots, ${metriced} metrics)...`);
   }
   await page.close();
 }
 await Promise.all(Array.from({ length: 4 }, worker));
 await browser.close();
-log(`Done: ${ok}/${targets.length} screenshots stored.`);
+
+// merge over any prior deepscan (sites that failed this run keep last-known metrics)
+fs.writeFileSync(path.join(out, 'deepscan.json'), JSON.stringify({ ...existingDeep, ...deep }, null, 0));
+log(`Done: ${ok}/${targets.length} screenshots, ${metriced} deep-metric captures.`);

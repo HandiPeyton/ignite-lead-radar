@@ -17,6 +17,7 @@ const audits = readOpt('audits.json') || {};
 const auditSlugs = readOpt('audit-slugs.json') || {};
 const inventory = readOpt('inventory.json') || [];
 const ratings = readOpt('ratings.json') || {};
+const deepscan = readOpt('deepscan.json') || {};
 const prevLeads = readOpt('prev-leads.json');
 const prevMap = prevLeads ? new Map(prevLeads.map((l) => [keyOf(l), l.wScore + l.itScore])) : null;
 const retired = prevLeads
@@ -87,6 +88,19 @@ for (const l of leads) {
   }
   if (deep?.wbSince) extra.push(`Homepage unchanged since ${deep.wbSince} (archive.org)`);
   else if (deep?.wbLast) extra.push(`Not even archived since ${deep.wbLast} (archive.org)`);
+  if (deep?.tech && deep.tech.length) { /* surfaced in prep, not as a flag */ }
+  if (deep?.analytics === false) extra.push('No analytics installed — they can’t see who visits');
+
+  // Rendered performance (Sunday deep scan)
+  const ds = host ? deepscan[host] : null;
+  if (ds) {
+    if (ds.loadMs >= 6000) extra.push(`Slow site: takes ${(ds.loadMs / 1000).toFixed(1)}s to load`);
+    else if (ds.loadMs >= 4000) extra.push(`Sluggish load (${(ds.loadMs / 1000).toFixed(1)}s)`);
+    if (ds.weightKB >= 6000) extra.push(`Heavy page: ${(ds.weightKB / 1024).toFixed(1)} MB to load`);
+    if (ds.imgKB >= 3500) extra.push(`Unoptimized images (${(ds.imgKB / 1024).toFixed(1)} MB of images)`);
+    if (ds.mobileOverflow) extra.push(`Broken on phones: content runs ${ds.overflowPx}px off-screen (real render)`);
+    if (ds.tinyTaps >= 8) extra.push(`${ds.tinyTaps} buttons/links too small to tap on a phone`);
+  }
   const slug = slugOf(l);
   const locs = nameCounts[l.name.toLowerCase().replace(/[^a-z0-9]/g, '')];
   const k = keyOf(l);
@@ -107,6 +121,8 @@ for (const l of leads) {
     chg,
     em: l.email || (l.audit && l.audit.freeEmail) || (rat && rat.e) || (deep && deep.cEmails && deep.cEmails[0]) || '',
     mx: deep?.mxp || '',
+    tech: (deep?.tech || []).join(', '),
+    perf: ds ? { load: +(ds.loadMs / 1000).toFixed(1), mb: +(ds.weightKB / 1024).toFixed(1), mob: ds.mobileOverflow ? 1 : 0 } : null,
     cg: competitorGap(l),
     xd: expDays !== null && expDays >= 0 && expDays < 60 ? expDays : null,
     r: rat && rat.matched ? rat.r : 0,

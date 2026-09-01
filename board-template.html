@@ -911,11 +911,22 @@
     const pi = document.createElement('p'); pi.textContent = p.pitch;
     row('Pitch', pi);
 
-    if (d.mx) {
+    if (d.mx || d.tech) {
       const mp = document.createElement('p');
       const spoof = ((d.x || '') + (d.evidence || '')).toLowerCase().includes('spoofable');
-      mp.textContent = 'Email stack: ' + d.mx + (spoof ? ' — and it’s spoofable. Clean Ignite opener.' : '.');
+      const bits = [];
+      if (d.tech) bits.push('Built on ' + d.tech);
+      if (d.mx) bits.push('email on ' + d.mx + (spoof ? ' (spoofable — clean Ignite opener)' : ''));
+      mp.textContent = bits.join('; ') + '.';
       row('Their stack', mp);
+    }
+    if (d.perf) {
+      const pf = document.createElement('p');
+      const parts = ['Loads in ' + d.perf.load + 's', d.perf.mb + ' MB page'];
+      if (d.perf.mob) parts.push('content runs off-screen on phones (measured)');
+      pf.textContent = parts.join(' · ') + '. Real numbers from our own render — use them.';
+      if (d.perf.load >= 5 || d.perf.mob) pf.className = 'warn';
+      row('Measured performance', pf);
     }
     if (d.cg) {
       const cgp = document.createElement('p'); cgp.textContent = d.cg;

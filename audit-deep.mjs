@@ -145,6 +145,21 @@ async function auditHost(host) {
     a.finalHttps = (res.url || '').startsWith('https://');
     a.ld = /<script[^>]+ld\+json/i.test(text);
     a.localSchema = a.ld && /LocalBusiness|Dentist|Restaurant|Attorney|AutoRepair|MedicalBusiness|Plumber|Electrician|HomeAndConstructionBusiness|ProfessionalService|Store\b/i.test(text);
+
+    // Tech-stack + analytics fingerprint (from homepage HTML — cheap, every run)
+    const tech = [];
+    if (/wp-content|wp-includes|wp-json/i.test(text)) tech.push('WordPress');
+    if (/wixstatic|_wix|wix\.com/i.test(text)) tech.push('Wix');
+    if (/squarespace|sqsp\.net/i.test(text)) tech.push('Squarespace');
+    if (/cdn\.shopify|shopify/i.test(text)) tech.push('Shopify');
+    if (/wsimg\.com|godaddy.*(website ?builder)?/i.test(text)) tech.push('GoDaddy Builder');
+    if (/weebly/i.test(text)) tech.push('Weebly');
+    if (/dudamobile|dudaone|\.duda\b/i.test(text)) tech.push('Duda');
+    if (/joomla/i.test(text)) tech.push('Joomla');
+    if (/drupal/i.test(text)) tech.push('Drupal');
+    if (/webflow/i.test(text)) tech.push('Webflow');
+    a.tech = tech;
+    a.analytics = /gtag\(|google-analytics\.com|googletagmanager\.com|\bga\.js|analytics\.js|fbevents\.js|fbq\(|clarity\.ms|hotjar/i.test(text);
   } else {
     a.ok = false;
   }

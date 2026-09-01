@@ -45,7 +45,7 @@ const VERTICAL_ANGLE = {
 };
 
 // ---------- findings ----------
-function buildFindings(l, deep) {
+function buildFindings(l, deep, ds) {
   const F = [];
   const add = (sev, title, found, why, fix) => F.push({ sev, title, found, why, fix });
   const a = l.audit || {};
@@ -209,6 +209,34 @@ function buildFindings(l, deep) {
       'The site has no sitemap.xml.',
       'A sitemap tells search engines what to index; small sites without one get crawled less and rank slower.',
       'Generate one — trivial on any modern platform.');
+  }
+
+  // Rendered performance (Sunday deep scan — real numbers from our own browser)
+  if (ds) {
+    if (ds.loadMs >= 5000) {
+      add('imp', `Your website takes ${(ds.loadMs / 1000).toFixed(1)} seconds to load`,
+        `We loaded your homepage in a real browser and timed it at ${(ds.loadMs / 1000).toFixed(1)} seconds${ds.weightKB >= 4000 ? `, pulling ${(ds.weightKB / 1024).toFixed(1)} MB` : ''}.`,
+        'Studies put the drop-off at about half of visitors once a page passes 3 seconds — most of them leave before they ever see you.',
+        'Optimize images and hosting, or rebuild lean — a local site should open in under two seconds.');
+    }
+    if (ds.mobileOverflow) {
+      add('imp', 'Your site is visibly broken on phones',
+        `Rendered on a real phone screen, your content runs about ${ds.overflowPx} pixels off the edge — visitors have to scroll sideways to read it.`,
+        'Over half of local searches are on a phone; a site that spills off the screen reads as broken and they bounce.',
+        'A responsive rebuild that fits every screen automatically.');
+    }
+    if (ds.imgKB >= 3500 && ds.loadMs < 5000) {
+      add('rec', 'Oversized images are slowing you down',
+        `Your homepage loads ${(ds.imgKB / 1024).toFixed(1)} MB of images across ${ds.imgCount} files.`,
+        'Unoptimized photos are the most common cause of slow local sites, especially on cell connections.',
+        'Compress and right-size images — often cuts load time in half with no visible quality loss.');
+    }
+  }
+  if (deep?.analytics === false && deep?.ok) {
+    add('rec', 'You have no way to see who visits',
+      'The site has no analytics installed (no Google Analytics, Tag Manager, or pixel).',
+      'You’re flying blind — no idea how many people find you, what they look at, or where they drop off.',
+      'Install analytics so every marketing dollar can be measured.');
   }
 
   // SEO basics (deep)
@@ -400,6 +428,8 @@ let audits = {};
 try { audits = JSON.parse(fs.readFileSync(path.join(out, 'audits.json'), 'utf8')); } catch { /* deep pass not run */ }
 let gstatus = {};
 try { gstatus = JSON.parse(fs.readFileSync(path.join(out, 'ratings.json'), 'utf8')); } catch { /* no Google pass */ }
+let deepscan = {};
+try { deepscan = JSON.parse(fs.readFileSync(path.join(out, 'deepscan.json'), 'utf8')); } catch { /* no Sunday scan yet */ }
 
 const adir = path.join(dir, 'site', 'public', 'a');
 fs.rmSync(adir, { recursive: true, force: true });
@@ -412,7 +442,8 @@ for (const l of leads) {
   if (g && g.bs === 'CLOSED_PERMANENTLY') continue; // no checkup pages for closed businesses
   const host = l.website ? hostnameOf(l.website) : null;
   const deep = host ? audits[host] : null;
-  const F = buildFindings(l, deep);
+  const ds = host ? deepscan[host] : null;
+  const F = buildFindings(l, deep, ds);
   if (!F.length) continue; // nothing to say — no audit page
   const slug = slugOf(l);
   fs.writeFileSync(path.join(adir, slug + '.html'), page(l, F, deep, slug));
