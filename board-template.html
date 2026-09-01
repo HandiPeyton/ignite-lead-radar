@@ -184,6 +184,7 @@
   .st-won        { color: var(--bg); background: var(--need-it); }
   .st-lost       { color: var(--need-both); background: var(--need-both-bg); }
   .st-bad        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line); border-style: dashed; opacity: .8; }
+  .st-gone       { color: var(--err); background: var(--surface-2); border: 1px dashed var(--err); opacity: .85; }
   .notedot {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%;
     background: var(--accent); margin-left: 6px; vertical-align: middle;
@@ -433,7 +434,7 @@
   const STATUSES = [
     ['new', 'To call'], ['noanswer', 'No answer'], ['callback', 'Call back'],
     ['interested', 'Interested'], ['quoted', 'Quoted'], ['won', 'Won'],
-    ['lost', 'Not interested'], ['bad', 'Bad number'],
+    ['lost', 'Not interested'], ['bad', 'Bad number'], ['gone', 'Closed down'],
   ];
   const ST_LABEL = Object.fromEntries(STATUSES);
 
@@ -451,7 +452,7 @@
   const dueOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].d) || '';
   const isDue = (d) => {
     const dd = dueOf(d);
-    return !!dd && dd <= TODAY && !['won', 'lost', 'bad'].includes(stOf(d));
+    return !!dd && dd <= TODAY && !['won', 'lost', 'bad', 'gone'].includes(stOf(d));
   };
 
   const toast = document.getElementById('toast');
@@ -910,7 +911,7 @@
     cell.append(chipEl);
     if (noteOf(d)) { const dot = document.createElement('span'); dot.className = 'notedot'; dot.title = 'Has notes'; cell.append(dot); }
     const dd = dueOf(d);
-    if (dd && !['won', 'lost', 'bad'].includes(s)) {
+    if (dd && !['won', 'lost', 'bad', 'gone'].includes(s)) {
       const tag = document.createElement('div');
       tag.className = 'duetag' + (dd < TODAY ? ' overdue' : '');
       tag.textContent = (dd < TODAY ? 'overdue ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/');
@@ -1163,7 +1164,7 @@
       const pa = document.createElement('a'); pa.href = 'tel:' + lead.phone.replace(/[^+\d]/g, ''); pa.textContent = lead.phone;
       ph.append(pa);
       const outc = document.createElement('div'); outc.className = 'outc';
-      const OUTCOMES = [['noanswer', 'N/A'], ['callback', 'Call back'], ['interested', 'Interested'], ['bad', 'Bad #']];
+      const OUTCOMES = [['noanswer', 'N/A'], ['callback', 'Call back'], ['interested', 'Interested'], ['bad', 'Bad #'], ['gone', 'Closed']];
       for (const [sk, label] of OUTCOMES) {
         const ob = document.createElement('button'); ob.className = 'minibtn'; ob.textContent = label;
         ob.title = 'Mark ' + ST_LABEL[sk] + ' and stay on the schedule';

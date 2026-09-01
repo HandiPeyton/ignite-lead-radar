@@ -6,7 +6,7 @@
 // person call workflow; not built for heavy concurrent editing.
 import { getStore } from '@netlify/blobs';
 
-const STATUSES = new Set(['new', 'noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad']);
+const STATUSES = new Set(['new', 'noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad', 'gone']);
 
 export default async (req) => {
   // strong consistency: the doc is read-modify-write on every save, so a stale
