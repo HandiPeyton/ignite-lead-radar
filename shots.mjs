@@ -48,7 +48,11 @@ for (const l of leads) {
 log(`Screenshotting ${targets.length} lead sites...`);
 
 const store = getStore({ name: 'shots', siteID: SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN });
-const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const browser = await puppeteer.launch({
+  // ignore-certificate-errors: broken-SSL sites are our best leads — their
+  // screenshot is the whole point
+  args: ['--no-sandbox', '--disable-dev-shm-usage', '--ignore-certificate-errors'],
+});
 
 let i = 0, done = 0, ok = 0;
 async function worker() {
