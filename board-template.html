@@ -300,6 +300,12 @@
     background: var(--surface); margin-bottom: 6px;
   }
   .slot.done { opacity: .55; }
+  .slotpanel {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 0 0 6px 6px; background: var(--surface-2);
+    padding: 14px 16px; margin: -6px 0 10px;
+  }
+  @media print { .slotpanel { display: none !important; } }
   .outc { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
   .slot .time { font: 600 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
   .slot .who b { font-weight: 600; }
@@ -848,6 +854,10 @@
     if (d.multi) who.className = 'warn';
     row('Who to ask for', who);
 
+    const gk = document.createElement('p');
+    gk.textContent = 'If a gatekeeper answers, leave with three things: the owner’s direct email (“what’s the best address for them?”), the staffer’s name (“who am I thanking?” — use it next call), and a time window (“do they take calls before you open?”). Then email same-day referencing the call, and set a +3–4 day follow-up here.';
+    row('Gatekeeper play', gk);
+
     const sc = document.createElement('p');
     if (d.ct) { sc.className = 'warn'; sc.textContent = 'Listings mark this business as TEMPORARILY or POSSIBLY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
     else if (d.g) sc.textContent = 'Listed as operational (places data' + (d.dv ? ', record verified ' + d.dv : '') + ').';
@@ -905,12 +915,8 @@
     if (ed) ed.remove();
     openKey = null;
   }
-  function openEditor(tr, d) {
-    closeEditor();
+  function buildLeadPanel(d, onStatus) {
     const key = keyOf(d);
-    openKey = key;
-    const ed = document.createElement('tr'); ed.className = 'edrow';
-    const cell = document.createElement('td'); cell.colSpan = COLS;
     const wrap = document.createElement('div'); wrap.className = 'edwrap';
 
     const btns = document.createElement('div'); btns.className = 'stbtns';
@@ -927,7 +933,7 @@
       b.addEventListener('click', () => {
         btns.querySelectorAll('.stbtn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
-        saveLead(key, { s: sk }, meta).then(() => updateRowChip(tr, d));
+        saveLead(key, { s: sk }, meta).then(() => { if (onStatus) onStatus(); });
       });
       btns.append(b);
     }
@@ -939,7 +945,7 @@
       clearTimeout(noteTimers[key]);
       meta.innerHTML = 'Typing&hellip;';
       noteTimers[key] = setTimeout(() => {
-        saveLead(key, { n: ta.value }, meta).then(() => updateRowChip(tr, d));
+        saveLead(key, { n: ta.value }, meta).then(() => { if (onStatus) onStatus(); });
       }, 900);
     });
 
@@ -947,12 +953,12 @@
     const fuLbl = document.createElement('span'); fuLbl.textContent = 'Follow up on:';
     const fuIn = document.createElement('input'); fuIn.type = 'date'; fuIn.value = dueOf(d);
     fuIn.addEventListener('change', () => {
-      saveLead(key, { d: fuIn.value }, meta).then(() => { updateRowChip(tr, d); buildStatusChips(); });
+      saveLead(key, { d: fuIn.value }, meta).then(() => { if (onStatus) onStatus(); });
     });
     const fuClear = document.createElement('button'); fuClear.className = 'minibtn'; fuClear.textContent = 'Clear';
     fuClear.addEventListener('click', () => {
       fuIn.value = '';
-      saveLead(key, { d: '' }, meta).then(() => { updateRowChip(tr, d); buildStatusChips(); });
+      saveLead(key, { d: '' }, meta).then(() => { if (onStatus) onStatus(); });
     });
     const quick = document.createElement('button'); quick.className = 'minibtn'; quick.textContent = '+1 week';
     quick.addEventListener('click', () => {
@@ -985,7 +991,14 @@
     cw.append(cwLbl, cwIn);
 
     wrap.append(prepBlock(d), btns, ta, fu, cw, meta);
-    cell.append(wrap);
+    return wrap;
+  }
+  function openEditor(tr, d) {
+    closeEditor();
+    openKey = keyOf(d);
+    const ed = document.createElement('tr'); ed.className = 'edrow';
+    const cell = document.createElement('td'); cell.colSpan = COLS;
+    cell.append(buildLeadPanel(d, () => updateRowChip(tr, d)));
     ed.append(cell);
     tr.after(ed);
   }
@@ -1288,7 +1301,20 @@
         outc.append(ob);
       }
       const open = document.createElement('button'); open.className = 'minibtn'; open.textContent = 'Prep';
-      open.addEventListener('click', () => gotoLead(lead));
+      open.title = 'Full call brief + notes, right here';
+      open.addEventListener('click', () => {
+        const next = row.nextElementSibling;
+        if (next && next.classList.contains('slotpanel')) { next.remove(); open.textContent = 'Prep'; return; }
+        document.querySelectorAll('.slotpanel').forEach((p) => {
+          const btn = p.previousElementSibling?.querySelector('.minibtn:last-of-type');
+          if (btn) btn.textContent = 'Prep';
+          p.remove();
+        });
+        const panel = document.createElement('div'); panel.className = 'slotpanel';
+        panel.append(buildLeadPanel(lead));
+        row.insertAdjacentElement('afterend', panel);
+        open.textContent = 'Close';
+      });
       row.append(time, who, outc, ph, open);
       frag.append(row);
     }
