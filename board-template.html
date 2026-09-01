@@ -912,6 +912,34 @@
       row('Checkup', lk);
     }
 
+    const checkupUrl = d.slug ? location.origin + '/a/' + d.slug + '.html' : '';
+    const h = headlineOf(d);
+    const subj = h.includes('domain registration') ? 'Time-sensitive heads-up about your domain'
+      : h.includes('couldn’t find a website') || h.includes('Facebook') ? 'Getting ' + d.name + ' findable on Google'
+      : 'Quick heads-up about your website';
+    const bodyCore = 'While looking at ' + d.vertical + ' businesses around ' + d.town + ' I noticed ' + h + '.'
+      + (checkupUrl ? ' I put everything I found on a one-page checkup here:\n' + checkupUrl : '')
+      + '\n\nIf it’s worth ten minutes, call or text me anytime at (423) 863-9727.\n\n— Peyton · Ridge Web Designs / Ignite Cyber Solutions';
+    const mailAfterCall = 'Hi — this is Peyton with Ridge Web Designs here in the Tri-Cities. I called earlier and your team suggested email was the best way to reach you, so I’ll keep it short.\n\n' + bodyCore;
+    const mailCold = 'Hi — this is Peyton with Ridge Web Designs / Ignite Cyber Solutions here in the Tri-Cities. I’ll keep it short.\n\n' + bodyCore;
+
+    const emWrap = document.createElement('div'); emWrap.className = 'pv';
+    const emP = document.createElement('p'); emP.textContent = mailAfterCall;
+    emP.style.whiteSpace = 'pre-wrap'; emP.style.fontSize = '12px'; emP.style.color = 'var(--ink-soft)';
+    const emBtns = document.createElement('div'); emBtns.className = 'pv';
+    const emA = document.createElement('a'); emA.className = 'minibtn';
+    emA.href = 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(mailAfterCall);
+    emA.textContent = 'Open in mail app';
+    emBtns.append(emA, copyBtn('Subject: ' + subj + '\n\n' + mailAfterCall, 'Copy (after a call)'), copyBtn('Subject: ' + subj + '\n\n' + mailCold, 'Copy (cold)'));
+    const emTo = document.createElement('p');
+    emTo.style.fontSize = '11px'; emTo.style.color = 'var(--ink-soft)';
+    emTo.textContent = d.em ? 'To: ' + d.em : 'No address on file — get their direct email from the gatekeeper, then send.';
+    const emCol = document.createElement('div');
+    emCol.style.display = 'flex'; emCol.style.flexDirection = 'column'; emCol.style.gap = '6px';
+    emCol.append(emTo, emP, emBtns);
+    emWrap.append(emCol);
+    row('Email draft', emWrap);
+
     const vmBrand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
     const vm = 'Hey, this is Peyton with ' + vmBrand + ' here in the Tri-Cities. Quick heads up — I ran a checkup on ' + d.name + '’s online presence and noticed ' + headlineOf(d) + '. Nothing scary, and it takes two minutes to explain. I’m at 423-863-9727 — again, that’s Peyton, 423-863-9727. Thanks!';
     const vmWrap = document.createElement('div'); vmWrap.className = 'pv';

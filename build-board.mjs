@@ -105,6 +105,7 @@ for (const l of leads) {
     slug: auditSlugs[slug] ? slug : '',
     multi: locs && locs.size > 1 ? locs.size : 0,
     chg,
+    em: l.email || (l.audit && l.audit.freeEmail) || (rat && rat.e) || (deep && deep.cEmails && deep.cEmails[0]) || '',
     mx: deep?.mxp || '',
     cg: competitorGap(l),
     xd: expDays !== null && expDays >= 0 && expDays < 60 ? expDays : null,
