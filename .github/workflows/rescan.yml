@@ -14,7 +14,13 @@ on:
         default: full
 
 permissions:
-  contents: write           # the run commits its scan snapshot back for next-run diffing
+  contents: read
+
+# Never let two scans overlap (a delayed cron landing on top of a full run
+# would double-hit Overpass and race the deploy) — later runs wait their turn.
+concurrency:
+  group: lead-rescan
+  cancel-in-progress: false
 
 jobs:
   rescan:
