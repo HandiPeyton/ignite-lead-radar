@@ -410,6 +410,25 @@
     <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence only</button>
     <input id="q" type="search" placeholder="Search name, town, notes&hellip;" aria-label="Search leads">
   </div>
+  <div class="rail second" id="toolsRail">
+    <span class="lbl">Vertical</span>
+    <select id="vertSel" class="schedctl"><option value="all">All verticals</option></select>
+    <span class="lbl">Town</span>
+    <input id="townIn" class="schedctl" list="townList" placeholder="Start typing a town…" style="min-width:200px">
+    <datalist id="townList"></datalist>
+    <span class="gap"></span>
+    <span class="lbl">Sort</span>
+    <select id="sortSel" class="schedctl">
+      <option value="priority">Priority (need, then score)</option>
+      <option value="closest">Closest to Bristol</option>
+      <option value="hottest">Hottest (highest score)</option>
+      <option value="newest">Newest since last scan</option>
+    </select>
+    <span class="lbl">Per page</span>
+    <select id="pageSel" class="schedctl">
+      <option value="15">15</option><option value="30">30</option><option value="50">50</option>
+    </select>
+  </div>
   <div class="rail second" id="progressRail" hidden>
     <span class="lbl">Progress</span>
     <span id="statusChips"></span>
@@ -489,8 +508,27 @@
   ];
   const ST_LABEL = Object.fromEntries(STATUSES);
 
-  const state = { region: 'all', need: 'all', status: 'all', dist: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
-  const PAGE_SIZE = 15; // small pages: the board must stay light on modest hardware
+  const state = { region: 'all', need: 'all', status: 'all', dist: 'all', vert: 'all', town: '', sortMode: 'priority', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
+  let PAGE_SIZE = 15; // small pages by default: the board must stay light on modest hardware
+
+  // Filters live in the URL hash → bookmarkable views ("Kingsport dentists ≤50 mi")
+  const HASH_KEYS = ['region', 'need', 'dist', 'vert', 'town', 'status', 'sortMode'];
+  (function readHash() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    for (const k of HASH_KEYS) if (p.get(k)) state[k] = p.get(k);
+    if (p.get('due') === '1') state.due = true;
+    if (p.get('hc') === '1') state.highConf = true;
+    if (p.get('pp')) PAGE_SIZE = Math.max(15, Math.min(50, parseInt(p.get('pp'), 10) || 15));
+  })();
+  function writeHash() {
+    const p = new URLSearchParams();
+    for (const k of HASH_KEYS) if (state[k] && state[k] !== 'all' && state[k] !== 'priority') p.set(k, state[k]);
+    if (state.due) p.set('due', '1');
+    if (state.highConf) p.set('hc', '1');
+    if (PAGE_SIZE !== 15) p.set('pp', String(PAGE_SIZE));
+    const s = p.toString();
+    history.replaceState(null, '', s ? '#' + s : location.pathname + location.search);
+  }
   const now = new Date();
   const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
@@ -721,7 +759,39 @@
     });
   }
 
+  // vertical / town / sort / page-size controls (populated from the data)
+  const vertSel = document.getElementById('vertSel');
+  [...new Set(DATA.map((d) => d.vertical))].sort().forEach((v) => {
+    const o = document.createElement('option'); o.value = v; o.textContent = v; vertSel.append(o);
+  });
+  vertSel.value = state.vert;
+  vertSel.addEventListener('change', () => { state.vert = vertSel.value; refresh(); });
+  const townIn = document.getElementById('townIn');
+  const townList = document.getElementById('townList');
+  [...new Set(DATA.map((d) => d.town + ', ' + d.st))].sort().forEach((t) => {
+    const o = document.createElement('option'); o.value = t; townList.append(o);
+  });
+  townIn.value = state.town;
+  let townT;
+  townIn.addEventListener('input', () => { clearTimeout(townT); townT = setTimeout(() => { state.town = townIn.value.trim(); refresh(); }, 200); });
+  const sortSel = document.getElementById('sortSel');
+  sortSel.value = state.sortMode;
+  sortSel.addEventListener('change', () => {
+    state.sortMode = sortSel.value; state.sortK = null;
+    document.querySelectorAll('th.sortable .dir').forEach((el) => { el.textContent = ''; });
+    refresh();
+  });
+  const pageSel = document.getElementById('pageSel');
+  pageSel.value = String(PAGE_SIZE);
+  pageSel.addEventListener('change', () => { PAGE_SIZE = parseInt(pageSel.value, 10); refresh(); });
+  const townMatch = (d) => {
+    if (!state.town) return true;
+    const t = state.town.toLowerCase();
+    return t.includes(',') ? (d.town + ', ' + d.st).toLowerCase() === t : d.town.toLowerCase().startsWith(t);
+  };
+
   const confChip = document.getElementById('confChip');
+  confChip.setAttribute('aria-pressed', String(state.highConf));
   confChip.addEventListener('click', () => {
     state.highConf = !state.highConf;
     confChip.setAttribute('aria-pressed', String(state.highConf));
@@ -776,8 +846,16 @@
     if (state.region !== 'all') rows = rows.filter((d) => d.region === state.region);
     if (state.need !== 'all') rows = rows.filter((d) => d.need === state.need);
     if (state.dist !== 'all') rows = rows.filter((d) => inBand(d, state.dist));
+    if (state.vert !== 'all') rows = rows.filter((d) => d.vertical === state.vert);
+    if (state.town) rows = rows.filter(townMatch);
     if (state.status !== 'all') rows = rows.filter((d) => stOf(d) === state.status);
     if (state.due) rows = rows.filter(isDue);
+    if (!state.sortK && state.sortMode !== 'priority') {
+      const cmp = state.sortMode === 'closest' ? (a, b) => ((a.mi ?? 9999) - (b.mi ?? 9999)) || (a.idx - b.idx)
+        : state.sortMode === 'hottest' ? (a, b) => ((b.wScore + b.itScore) - (a.wScore + a.itScore)) || (a.idx - b.idx)
+        : (a, b) => ((b.chg === 'new') - (a.chg === 'new')) || (a.idx - b.idx);
+      rows = rows.slice().sort(cmp);
+    }
     if (state.highConf) rows = rows.filter((d) => d.confidence === 'High');
     if (state.q) {
       const needle = state.q;
@@ -1384,7 +1462,10 @@
     if (state.region !== 'all') pool = pool.filter((d) => d.region === state.region);
     if (state.need !== 'all') pool = pool.filter((d) => d.need === state.need);
     if (state.dist !== 'all') pool = pool.filter((d) => inBand(d, state.dist));
+    if (state.vert !== 'all') pool = pool.filter((d) => d.vertical === state.vert);
+    if (state.town) pool = pool.filter(townMatch);
     if (state.highConf) pool = pool.filter((d) => d.confidence === 'High');
+    if (state.sortMode === 'closest') pool = pool.slice().sort((a, b) => ((a.mi ?? 9999) - (b.mi ?? 9999)) || (a.idx - b.idx));
     const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
     const dueKeys = new Set(due.map(keyOf));
     const freshAll = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
@@ -1555,6 +1636,7 @@
 
   function refresh() {
     state.page = 1;
+    writeHash();
     render();
     if (state.view === 'schedule') renderSchedule();
   }

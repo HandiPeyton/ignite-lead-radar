@@ -65,6 +65,11 @@ plus a redeploy.
   Interested / Quoted / Won / Not interested / Bad number), call notes, and a
   **follow-up date** (with a "+1 week" shortcut); saves automatically. The **Due** chip
   filters to follow-ups dated today or earlier (overdue shows red on the row).
+- **Finding leads at 200-mile scale**: region (state) chips, need chips, miles-from-Bristol
+  bands, a **vertical dropdown**, a **town typeahead**, **sort modes** (priority / closest /
+  hottest / newest since last scan), and 15/30/50 per page. Every filter combination is
+  written to the URL hash, so a view like "Kingsport dentists ≤ 50 mi, Both" is a
+  bookmark you can reopen or send. The schedule builder honors the same filters.
 - **Next lead ›** opens the best untouched lead (respects the region/need chips,
   prefers High confidence) with its prep panel ready — dial, mark, repeat.
 - **Backup** downloads all progress/notes as JSON; `rescan.cmd` also snapshots it to

@@ -63,8 +63,8 @@ for (const l of leads) {
 }
 function competitorGap(l) {
   if (l.vertical === 'other' || l.vertical === 'professional') return '';
-  let ck = ck1(l), place = l.town;
-  if ((coAll[ck] || 0) < 3) { ck = ck2(l); place = 'the ' + (REGIONS[l.region]?.label || l.region) + ' region'; }
+  // town-level only: with states as regions, a state-wide cohort says nothing useful
+  const ck = ck1(l), place = l.town;
   const total = coAll[ck] || 0;
   if (total < 3) return '';
   const solid = Math.max(0, (coWeb[ck] || 0) - (coFlagWeb[ck] || 0));
@@ -204,7 +204,7 @@ const header = ['Region', 'Town', 'State', 'Business', 'Vertical', 'Need', 'Conf
   'Rating', 'Reviews', 'Listing status', 'Maps'];
 const csvRows = keptLeads.map((l, i) => {
   const row = rows[i];
-  return [REGIONS[l.region].label, l.town, l.st, l.name, l.vertical, l.need, l.confidence,
+  return [(REGIONS[l.region] && REGIONS[l.region].label) || l.region, l.town, l.st, l.name, l.vertical, l.need, l.confidence,
     l.wScore, l.itScore, row.x ? l.evidence + '; ' + row.x : l.evidence, l.phone, l.website, l.address || '',
     row.r || '', row.rc || '', row.g ? (row.ct ? 'Possibly/temporarily closed' : 'Operational') : 'Not found',
     'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${l.name} ${l.town} ${l.st}`)];
