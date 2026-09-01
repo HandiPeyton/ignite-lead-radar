@@ -261,6 +261,42 @@
   .prow .warn { color: var(--verify); font-weight: 600; }
   @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
 
+  .tabs { display: flex; gap: 8px; margin-top: 14px; }
+  .tab {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+    font: 600 13px/1 "Barlow", sans-serif; padding: 9px 16px; border-radius: 5px; cursor: pointer;
+  }
+  .tab:hover { border-color: var(--ink-soft); }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .schedctl {
+    border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px;
+    background: var(--surface); color: var(--ink); font: 400 13px/1 "Barlow", sans-serif;
+  }
+  #schedSummary { font-size: 13px; color: var(--ink-soft); }
+  .windowhdr {
+    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--ink-soft); margin: 20px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;
+  }
+  .slot {
+    display: grid; grid-template-columns: 88px minmax(0,1fr) auto auto; gap: 12px; align-items: center;
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); margin-bottom: 6px;
+  }
+  .slot .time { font: 600 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
+  .slot .who b { font-weight: 600; }
+  .slot .meta { color: var(--ink-soft); font-size: 12px; }
+  .slot .fchip {
+    display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 3px;
+    background: var(--verify-bg); color: var(--verify);
+    font: 600 10px/1.3 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .slot .phone { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
+  .slot .phone a { color: var(--need-web); text-decoration: none; }
+  @media (max-width: 680px) {
+    .slot { grid-template-columns: 70px minmax(0,1fr); }
+    .slot .phone, .slot .minibtn { grid-column: 2; justify-self: start; }
+  }
+
   .pager { display: inline-flex; gap: 6px; align-items: center; }
   .pager button {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink);
@@ -307,6 +343,11 @@
     <div class="scanmeta" id="scanmeta"></div>
   </header>
 
+  <div class="tabs" id="tabs" hidden>
+    <button class="tab" id="tabLeads" aria-selected="true">Lead board</button>
+    <button class="tab" id="tabSched" aria-selected="false">Call schedule</button>
+  </div>
+
   <div class="rail" role="toolbar" aria-label="Filters">
     <span class="lbl">Region</span>
     <span id="regionChips"></span>
@@ -321,6 +362,21 @@
     <span class="lbl">Progress</span>
     <span id="statusChips"></span>
   </div>
+
+  <section id="schedView" hidden>
+    <div class="rail">
+      <span class="lbl">Day</span>
+      <input type="date" id="schedDate" class="schedctl">
+      <span class="lbl">Spacing</span>
+      <select id="schedGap" class="schedctl">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+      </select>
+      <span id="schedSummary"></span>
+    </div>
+    <div id="slots"></div>
+  </section>
 
   <div class="count">
     <span id="count"></span>
@@ -379,7 +435,7 @@
   ];
   const ST_LABEL = Object.fromEntries(STATUSES);
 
-  const state = { region: 'all', need: 'all', status: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1 };
+  const state = { region: 'all', need: 'all', status: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
   const PAGE_SIZE = 15; // small pages: the board must stay light on modest hardware
   const now = new Date();
   const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -424,11 +480,12 @@
       document.getElementById('progressTh').hidden = false;
       buildStatusChips();
       render();
+      if (state.view === 'schedule') renderSchedule();
     } catch {
       showToast('Tracking service unreachable — board is read-only right now');
     }
   }
-  if (TRACKING) initTracking();
+  if (TRACKING) { initTracking(); document.getElementById('tabs').hidden = false; }
 
   // save queue: status saves immediately, notes debounced per lead
   const noteTimers = {};
@@ -909,7 +966,11 @@
     const high = cand.filter((d) => d.confidence === 'High');
     if (high.length) cand = high;
     if (!cand.length) { showToast('No untouched leads match the current region/need filters'); return; }
-    const target = cand[0];
+    gotoLead(cand[0]);
+  });
+
+  function gotoLead(target) {
+    setView('leads');
     state.status = 'all'; state.due = false; state.q = ''; q.value = '';
     state.sortK = null;
     document.querySelectorAll('th.sortable .dir').forEach((el) => { el.textContent = ''; });
@@ -920,7 +981,7 @@
     render();
     const tr = rowsEl.querySelector('tr[data-key="' + CSS.escape(keyOf(target)) + '"]');
     if (tr) { openEditor(tr, target); tr.scrollIntoView({ block: 'center' }); }
-  });
+  }
 
   // ---- backup: download the whole tracking doc ----
   document.getElementById('backupBtn').addEventListener('click', async () => {
@@ -934,6 +995,137 @@
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     } catch { showToast('Backup failed — check connection'); }
   });
+
+  // ---- call schedule tab ----
+  // Fills the daily windows (10 AM–3 PM, 8–10 PM) from To-call prospects under
+  // the current region/need filters. Due follow-ups slot first; hospitality and
+  // fitness are held for the evening block when possible. For today, only slots
+  // still ahead of the clock are shown.
+  const schedDateEl = document.getElementById('schedDate');
+  const schedGapEl = document.getElementById('schedGap');
+  const slotsEl = document.getElementById('slots');
+  const schedSummaryEl = document.getElementById('schedSummary');
+  const EVENING_VERTS = new Set(['hospitality', 'fitness']);
+  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 3:00 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
+
+  function setView(v) {
+    state.view = v;
+    document.getElementById('tabLeads').setAttribute('aria-selected', String(v === 'leads'));
+    document.getElementById('tabSched').setAttribute('aria-selected', String(v === 'schedule'));
+    const leadsOnly = [document.getElementById('progressRail'), document.querySelector('.count'), document.querySelector('.tablewrap'), pagerBottom];
+    leadsOnly.forEach((el) => { if (el) el.hidden = v !== 'leads'; });
+    if (v === 'leads' && TRACKING && unlocked) document.getElementById('progressRail').hidden = false;
+    document.getElementById('schedView').hidden = v !== 'schedule';
+    if (v === 'schedule') renderSchedule();
+  }
+  document.getElementById('tabLeads').addEventListener('click', () => setView('leads'));
+  document.getElementById('tabSched').addEventListener('click', () => setView('schedule'));
+
+  function localDateStr(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  (function initSchedDate() {
+    const now = new Date();
+    const d = new Date(now);
+    if (now.getHours() >= 21 && now.getMinutes() >= 45 || now.getHours() >= 22) d.setDate(d.getDate() + 1);
+    schedDateEl.value = localDateStr(d);
+  })();
+  schedDateEl.addEventListener('change', renderSchedule);
+  schedGapEl.addEventListener('change', renderSchedule);
+
+  function slotsFor(dateStr, gapMin) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y) return [];
+    const mk = (h, mi) => new Date(y, m - 1, d, h, mi);
+    const windows = [[mk(10, 0), mk(15, 0), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
+    const nowT = Date.now();
+    const out = [];
+    for (const [start, end, kind] of windows) {
+      for (let t = start.getTime(); t < end.getTime(); t += gapMin * 60000) {
+        if (t <= nowT) continue;
+        out.push({ t, kind });
+      }
+    }
+    return out;
+  }
+
+  function renderSchedule() {
+    if (!schedDateEl.value) return;
+    slotsEl.textContent = '';
+    const slots = slotsFor(schedDateEl.value, parseInt(schedGapEl.value, 10));
+
+    let pool = DATA;
+    if (state.region !== 'all') pool = pool.filter((d) => d.region === state.region);
+    if (state.need !== 'all') pool = pool.filter((d) => d.need === state.need);
+    if (state.highConf) pool = pool.filter((d) => d.confidence === 'High');
+    const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
+    const dueKeys = new Set(due.map(keyOf));
+    const fresh = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
+
+    if (!slots.length) {
+      const p = document.createElement('div'); p.className = 'empty';
+      p.textContent = 'No calling windows left on this day — pick another date.';
+      slotsEl.append(p);
+      schedSummaryEl.textContent = '';
+      return;
+    }
+    if (!due.length && !fresh.length) {
+      const p = document.createElement('div'); p.className = 'empty';
+      p.textContent = 'Nothing tagged "To call" under the current region/need filters.';
+      slotsEl.append(p);
+      schedSummaryEl.textContent = '';
+      return;
+    }
+
+    const dayQ = due.concat(fresh.filter((d) => !EVENING_VERTS.has(d.vertical)));
+    const eveQ = fresh.filter((d) => EVENING_VERTS.has(d.vertical));
+    let di = 0, ei = 0;
+    const assigned = [];
+    for (const s of slots) {
+      let lead = null;
+      if (s.kind === 'eve') lead = ei < eveQ.length ? eveQ[ei++] : dayQ[di++];
+      else lead = di < dayQ.length ? dayQ[di++] : eveQ[ei++];
+      if (!lead) break;
+      assigned.push({ s, lead });
+    }
+
+    let lastKind = null;
+    const frag = document.createDocumentFragment();
+    for (const { s, lead } of assigned) {
+      if (s.kind !== lastKind) {
+        lastKind = s.kind;
+        const h = document.createElement('div'); h.className = 'windowhdr';
+        h.textContent = WINDOW_LABEL[s.kind];
+        frag.append(h);
+      }
+      const row = document.createElement('div'); row.className = 'slot';
+      const time = document.createElement('span'); time.className = 'time';
+      time.textContent = new Date(s.t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      const who = document.createElement('div'); who.className = 'who';
+      const nm = document.createElement('b'); nm.textContent = lead.name;
+      const chipEl = document.createElement('span');
+      chipEl.className = 'needchip need-' + lead.need; chipEl.textContent = lead.need;
+      chipEl.style.marginLeft = '8px';
+      who.append(nm, chipEl);
+      if (dueKeys.has(keyOf(lead))) { const f = document.createElement('span'); f.className = 'fchip'; f.textContent = 'follow-up'; who.append(f); }
+      const meta = document.createElement('div'); meta.className = 'meta';
+      meta.textContent = lead.town + ', ' + lead.st + ' · ' + lead.vertical;
+      who.append(meta);
+      const ph = document.createElement('span'); ph.className = 'phone';
+      const pa = document.createElement('a'); pa.href = 'tel:' + lead.phone.replace(/[^+\d]/g, ''); pa.textContent = lead.phone;
+      ph.append(pa);
+      const open = document.createElement('button'); open.className = 'minibtn'; open.textContent = 'Prep';
+      open.addEventListener('click', () => gotoLead(lead));
+      row.append(time, who, ph, open);
+      frag.append(row);
+    }
+    slotsEl.append(frag);
+
+    const remaining = (dayQ.length - di) + (eveQ.length - Math.min(ei, eveQ.length));
+    schedSummaryEl.textContent = assigned.length + ' calls scheduled' +
+      (due.length ? ' (' + due.length + ' follow-ups first)' : '') +
+      (remaining > 0 ? ' · ' + remaining + ' more roll to the next day' : '');
+  }
 
   // ---- export (current filters, with progress + notes) ----
   document.getElementById('exportBtn').addEventListener('click', () => {
@@ -952,6 +1144,10 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   });
 
-  function refresh() { state.page = 1; render(); }
+  function refresh() {
+    state.page = 1;
+    render();
+    if (state.view === 'schedule') renderSchedule();
+  }
   render();
 </script>
