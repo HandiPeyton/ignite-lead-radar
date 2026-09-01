@@ -137,6 +137,7 @@ for (const l of leads) {
     name: l.name, town: l.town, st: l.st, region: l.region, vertical: l.vertical,
     need: l.need, confidence: l.confidence, wScore: l.wScore, itScore: l.itScore,
     evidence: l.evidence, phone: l.phone, website: l.website,
+    mi: l.mi == null ? null : l.mi,                                  // miles from Bristol
     hours: l.hours || '',
     x: extra.join('; '),
     slug: auditSlugs[slug] ? slug : '',

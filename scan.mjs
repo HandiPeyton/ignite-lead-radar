@@ -26,7 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REGIONS, SELECTORS, CHAIN_RE, IT_HEAVY, VERTICAL_PRIORITY, classifyVertical } from './regions.mjs';
+import { REGIONS, SELECTORS, CHAIN_RE, IT_HEAVY, VERTICAL_PRIORITY, classifyVertical, CENTER, RADIUS_KM, TILE_LAT, TILE_LNG } from './regions.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, 'out');
@@ -48,9 +48,10 @@ function flagVal(name, dflt) {
 }
 const REGION_KEYS = (flagVal('--region', flagVal('--regions', Object.keys(REGIONS).join(','))))
   .split(',').map((s) => s.trim()).filter((k) => REGIONS[k]);
-const MAX_AUDIT = parseInt(flagVal('--max-audit', '500'), 10);
+const MAX_AUDIT = parseInt(flagVal('--max-audit', '1500'), 10);   // per state
 const LIMIT = parseInt(flagVal('--limit', '0'), 10);
-const MAX_NOSITE = parseInt(flagVal('--max-nosite', '150'), 10);
+const MAX_NOSITE = parseInt(flagVal('--max-nosite', '400'), 10);  // per state
+const TILES_CAP = parseInt(flagVal('--tiles', '0'), 10);          // smoke tests: stop after N tiles
 const WEBHOOK = flagVal('--webhook', process.env.SHEET_WEBHOOK || '');
 const USE_GOOGLE = args.includes('--google') && !!process.env.GOOGLE_PLACES_API_KEY;
 const AUDIT_CONCURRENCY = parseInt(flagVal('--concurrency', '10'), 10);
@@ -66,28 +67,102 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * d2r) * Math.cos(lat2 * d2r) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
-const ALL_TOWNS = REGION_KEYS.flatMap((rk) => REGIONS[rk].towns.map((t) => ({ ...t, region: rk })));
-function nearestTown(lat, lng) {
-  let best = null, bd = Infinity;
-  for (const t of ALL_TOWNS) {
-    const d = haversineKm(lat, lng, t.lat, t.lng);
-    if (d < bd) { bd = d; best = t; }
+// ---------- Places (every city/town/village inside the circle) ----------
+// Pulled per state from OSM so each place carries its state; cached ~30 days.
+let PLACES = [];
+const placeBuckets = new Map();
+const CELL = 0.25; // degrees; ~27 km buckets for fast nearest-place lookup
+const cellKey = (lat, lng) => Math.floor(lat / CELL) + ':' + Math.floor(lng / CELL);
+
+async function loadPlaces() {
+  const cachePath = path.join(OUT_DIR, 'places.json');
+  try {
+    const c = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+    if (Date.now() - c.at < 30 * 86400000 && c.places.length > 100) {
+      log(`Places: ${c.places.length} cities/towns/villages (cached)`);
+      return c.places;
+    }
+  } catch { /* fetch fresh */ }
+  const places = [];
+  for (const rk of Object.keys(REGIONS)) {
+    const q = `[out:json][timeout:180];` +
+      `area["boundary"="administrative"]["admin_level"="4"]["name"="${REGIONS[rk].osm}"]->.s;` +
+      `node(area.s)["place"~"^(city|town|village)$"](around:${Math.round(RADIUS_KM * 1000)},${CENTER.lat},${CENTER.lng});out;`;
+    try {
+      const data = await overpass(q);
+      let n = 0;
+      for (const el of data.elements || []) {
+        if (!el.tags || !el.tags.name || el.lat == null) continue;
+        places.push({
+          name: el.tags.name, lat: el.lat, lng: el.lon, type: el.tags.place,
+          pop: parseInt(el.tags.population || '0', 10) || 0, region: rk, st: rk.toUpperCase(),
+        });
+        n++;
+      }
+      log(`  ${REGIONS[rk].label}: ${n} places`);
+    } catch (e) {
+      log(`  ${REGIONS[rk].label}: places query FAILED (${e.message})`);
+    }
+    await sleep(2500);
   }
+  fs.writeFileSync(cachePath, JSON.stringify({ at: Date.now(), places }));
+  log(`Places: ${places.length} cities/towns/villages within ${RADIUS_KM.toFixed(0)} km of ${CENTER.name}`);
+  return places;
+}
+
+function indexPlaces(places) {
+  PLACES = places;
+  placeBuckets.clear();
+  for (const p of places) {
+    const k = cellKey(p.lat, p.lng);
+    if (!placeBuckets.has(k)) placeBuckets.set(k, []);
+    placeBuckets.get(k).push(p);
+  }
+}
+
+function nearestPlace(lat, lng) {
+  let best = null, bd = Infinity;
+  const ci = Math.floor(lat / CELL), cj = Math.floor(lng / CELL);
+  for (let ring = 1; ring <= 6; ring++) {
+    for (let i = ci - ring; i <= ci + ring; i++) {
+      for (let j = cj - ring; j <= cj + ring; j++) {
+        const arr = placeBuckets.get(i + ':' + j);
+        if (!arr) continue;
+        for (const p of arr) {
+          const d = haversineKm(lat, lng, p.lat, p.lng);
+          if (d < bd) { bd = d; best = p; }
+        }
+      }
+    }
+    // everything within `ring` cells has been checked; a closer place can't be further out
+    if (best && bd <= ring * CELL * 100) return best;
+  }
+  if (best) return best;
+  for (const p of PLACES) { const d = haversineKm(lat, lng, p.lat, p.lng); if (d < bd) { bd = d; best = p; } }
   return best;
 }
 
 // ---------- Overpass ----------
-// One query per town using a bounding box (cheaper for the server than
-// around-circles); region-sized unions draw 504s, town-sized ones are quick.
-function bboxOf(t) {
-  const dLat = t.r / 111320;
-  const dLng = t.r / (111320 * Math.cos((t.lat * Math.PI) / 180));
-  return `${(t.lat - dLat).toFixed(4)},${(t.lng - dLng).toFixed(4)},${(t.lat + dLat).toFixed(4)},${(t.lng + dLng).toFixed(4)}`;
+// The circle is tiled into ~24 km bounding boxes; each tile is one query.
+// Tiles that time out (dense metro cores) are split in four and retried.
+function makeTiles() {
+  const tiles = [];
+  const latSpan = RADIUS_KM / 111.32;
+  const lngSpan = RADIUS_KM / (111.32 * Math.cos((CENTER.lat * Math.PI) / 180));
+  for (let lat = CENTER.lat - latSpan; lat < CENTER.lat + latSpan; lat += TILE_LAT) {
+    for (let lng = CENTER.lng - lngSpan; lng < CENTER.lng + lngSpan; lng += TILE_LNG) {
+      const cLat = lat + TILE_LAT / 2, cLng = lng + TILE_LNG / 2;
+      if (haversineKm(CENTER.lat, CENTER.lng, cLat, cLng) <= RADIUS_KM + 18) {
+        tiles.push({ s: lat, w: lng, n: lat + TILE_LAT, e: lng + TILE_LNG });
+      }
+    }
+  }
+  return tiles;
 }
-function buildTownQuery(t) {
-  const bb = bboxOf(t);
-  const lines = SELECTORS.map((sel) => `nwr${sel}(${bb});`);
-  return `[out:json][timeout:90];(${lines.join('')});out center;`;
+const bboxStr = (t) => `${t.s.toFixed(4)},${t.w.toFixed(4)},${t.n.toFixed(4)},${t.e.toFixed(4)}`;
+function buildBboxQuery(t) {
+  const lines = SELECTORS.map((sel) => `nwr${sel}(${bboxStr(t)});`);
+  return `[out:json][timeout:120];(${lines.join('')});out center;`;
 }
 
 const epCooldown = new Map(); // endpoint -> timestamp when usable again
@@ -152,7 +227,9 @@ function parseElements(elements) {
     if (vertical === 'itcompany' || vertical === 'bank') continue;
     let website = (tags.website || tags['contact:website'] || tags.url || '').split(';')[0].trim();
     if (website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
-    const town = nearestTown(lat, lng);
+    const distKm = haversineKm(CENTER.lat, CENTER.lng, lat, lng);
+    if (distKm > RADIUS_KM) continue; // tile corners poke outside the circle
+    const town = nearestPlace(lat, lng);
     if (!town) continue;
     out.push({
       name,
@@ -163,6 +240,7 @@ function parseElements(elements) {
       hours: (tags.opening_hours || '').trim(),
       address: [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '),
       town: town.name, st: town.st, region: town.region,
+      mi: Math.round(distKm / 1.609344),
       lat: +lat.toFixed(5), lng: +lng.toFixed(5),
       source: 'OSM',
     });
@@ -176,10 +254,11 @@ const GOOGLE_QUERIES = [
   'manufacturer', 'machine shop', 'veterinarian', 'real estate agency', 'hvac contractor',
   'plumber', 'electrician', 'auto repair', 'restaurant', 'hotel', 'cabin rentals',
 ];
-async function googlePlaces(regionKey, region) {
+async function googlePlaces(regionKey) {
   const key = process.env.GOOGLE_PLACES_API_KEY;
   const out = [];
-  for (const t of region.towns) {
+  const towns = PLACES.filter((p) => p.region === regionKey && p.type !== 'village');
+  for (const t of towns) {
     for (const q of GOOGLE_QUERIES) {
       try {
         const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
@@ -469,38 +548,65 @@ async function main() {
       log(`Light mode requested but inventory looks partial (${inv.length} businesses, ${regionsPresent.size} regions) — running FULL enumeration instead.`);
     }
   }
-  if (!reused) for (const rk of REGION_KEYS) {
-    const region = REGIONS[rk];
-    log(`[${region.label}] querying ${USE_GOOGLE ? 'Google Places' : 'Overpass'} (${region.towns.length} towns)...`);
-    let biz = [];
-    try {
-      if (USE_GOOGLE) {
-        biz = await googlePlaces(rk, region);
-      } else {
-        for (const t of region.towns) {
-          const data = await overpass(buildTownQuery(t));
-          const parsed = parseElements(data.elements || []);
-          biz.push(...parsed);
-          log(`  ${t.name}, ${t.st}: ${data.elements?.length ?? 0} elements → ${parsed.length} local businesses`);
-          await sleep(parseInt(flagVal('--pace', '7000'), 10));
-        }
+  if (!reused) {
+    indexPlaces(await loadPlaces());
+    const pace = parseInt(flagVal('--pace', '4000'), 10);
+    const addAll = (biz) => {
+      let kept = 0;
+      for (const b of biz) {
+        // dedupe (same biz mapped as node+building, tile overlaps)
+        const key = b.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + b.lat.toFixed(3) + '|' + b.lng.toFixed(3);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        all.push(b);
+        kept++;
       }
-    } catch (e) {
-      log(`[${region.label}] FAILED: ${e.message}`);
-      continue;
+      return kept;
+    };
+
+    if (USE_GOOGLE) {
+      for (const rk of REGION_KEYS) {
+        log(`[${REGIONS[rk].label}] querying Google Places...`);
+        try { addAll(await googlePlaces(rk)); } catch (e) { log(`[${REGIONS[rk].label}] FAILED: ${e.message}`); }
+      }
+    } else {
+      const queue = makeTiles();
+      let total = queue.length, tileNo = 0, splits = 0;
+      log(`Enumerating ${total} grid tiles covering ${RADIUS_KM.toFixed(0)} km around ${CENTER.name} (pace ${pace} ms)...`);
+      while (queue.length) {
+        const t = queue.shift();
+        tileNo++;
+        if (TILES_CAP && tileNo > TILES_CAP) { log(`  --tiles cap reached (${TILES_CAP}); stopping enumeration early`); break; }
+        if (LIMIT && all.length >= LIMIT) break;
+        let data;
+        try {
+          data = await overpass(buildBboxQuery(t));
+        } catch (e) {
+          if (t.n - t.s > TILE_LAT / 3) {
+            const mLat = (t.s + t.n) / 2, mLng = (t.w + t.e) / 2;
+            queue.push({ s: t.s, w: t.w, n: mLat, e: mLng }, { s: t.s, w: mLng, n: mLat, e: t.e },
+              { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
+            total += 4; splits++;
+            log(`  tile ${tileNo} too heavy (${e.message}) — split into 4`);
+          } else {
+            log(`  tile ${tileNo} FAILED after retries: ${e.message}`);
+          }
+          continue;
+        }
+        const parsed = parseElements(data.elements || []);
+        const kept = addAll(parsed);
+        if (kept) log(`  tile ${tileNo}/${total}: ${data.elements.length} elements → ${kept} new businesses (running total ${all.length})`);
+        await sleep(pace);
+      }
+      log(`Enumeration done: ${all.length} businesses across ${tileNo} tiles (${splits} splits).`);
     }
-    // dedupe (same biz mapped as node+building, overlapping town radii)
-    let kept = 0;
-    for (const b of biz) {
-      const key = b.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + b.lat.toFixed(3) + '|' + b.lng.toFixed(3);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      all.push(b);
-      kept++;
-      if (LIMIT && kept >= LIMIT) break;
+    if (REGION_KEYS.length < Object.keys(REGIONS).length) {
+      const keep = new Set(REGION_KEYS);
+      const before = all.length;
+      for (let i = all.length - 1; i >= 0; i--) if (!keep.has(all[i].region)) all.splice(i, 1);
+      log(`Region filter kept ${all.length} of ${before}.`);
     }
-    log(`[${region.label}] ${kept} unique local businesses`);
-    if (!USE_GOOGLE) await sleep(3000); // be polite to Overpass
+    for (const rk of REGION_KEYS) log(`[${REGIONS[rk].label}] ${all.filter((b) => b.region === rk).length} local businesses`);
   }
 
   // Owner-corrected domains from the board ("Real website" field): rescan.cmd

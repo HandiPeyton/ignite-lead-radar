@@ -404,6 +404,9 @@
     <span class="lbl">Need</span>
     <span id="needChips"></span>
     <span class="gap"></span>
+    <span class="lbl">Miles from Bristol</span>
+    <span id="distChips"></span>
+    <span class="gap"></span>
     <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence only</button>
     <input id="q" type="search" placeholder="Search name, town, notes&hellip;" aria-label="Search leads">
   </div>
@@ -486,7 +489,7 @@
   ];
   const ST_LABEL = Object.fromEntries(STATUSES);
 
-  const state = { region: 'all', need: 'all', status: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
+  const state = { region: 'all', need: 'all', status: 'all', dist: 'all', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
   const PAGE_SIZE = 15; // small pages: the board must stay light on modest hardware
   const now = new Date();
   const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -682,6 +685,20 @@
   });
   function syncChips(chips, key) { chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.key === key))); }
 
+  // distance bands (miles from Bristol) — day-trip planning
+  const DIST_BANDS = [['all', 'All'], ['50', '≤ 50'], ['100', '50–100'], ['150', '100–150'], ['200', '150–200']];
+  const inBand = (d, band) => {
+    if (band === 'all' || d.mi == null) return band === 'all';
+    const hi = +band, lo = hi - 50;
+    return d.mi > lo && d.mi <= hi || (hi === 50 && d.mi <= 50);
+  };
+  const distWrap = document.getElementById('distChips');
+  const distChips = DIST_BANDS.map(([key, label]) => {
+    const b = chip(label, key === 'all' ? null : DATA.filter((d) => inBand(d, key)).length, String(state.dist === key));
+    b.addEventListener('click', () => { state.dist = key; syncChips(distChips, key); refresh(); });
+    b.dataset.key = key; distWrap.append(b); return b;
+  });
+
   let statusChips = [];
   function buildStatusChips() {
     const wrap = document.getElementById('statusChips');
@@ -758,6 +775,7 @@
     let rows = DATA;
     if (state.region !== 'all') rows = rows.filter((d) => d.region === state.region);
     if (state.need !== 'all') rows = rows.filter((d) => d.need === state.need);
+    if (state.dist !== 'all') rows = rows.filter((d) => inBand(d, state.dist));
     if (state.status !== 'all') rows = rows.filter((d) => stOf(d) === state.status);
     if (state.due) rows = rows.filter(isDue);
     if (state.highConf) rows = rows.filter((d) => d.confidence === 'High');
@@ -1201,7 +1219,7 @@
       if (d.brk && !/Newly listed/.test(d.brk)) { const b = document.createElement('span'); b.className = 'badge bbrk'; b.textContent = 'just broke'; b.title = d.brk; biz.append(b); }
       if (d.nw || /Newly listed/.test(d.brk || '')) { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new biz'; b.title = d.nw ? 'Listed on Foursquare since ' + d.nw : 'Just appeared on the map'; biz.append(b); }
       tr.append(biz);
-      tr.append(td('town', d.town + ', ' + d.st));
+      tr.append(td('town', d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '')));
       if (TRACKING && unlocked) {
         const p = td('progress'); fillProgressCell(p, d); tr.append(p);
       } else if (TRACKING) {
@@ -1365,6 +1383,7 @@
     let pool = DATA;
     if (state.region !== 'all') pool = pool.filter((d) => d.region === state.region);
     if (state.need !== 'all') pool = pool.filter((d) => d.need === state.need);
+    if (state.dist !== 'all') pool = pool.filter((d) => inBand(d, state.dist));
     if (state.highConf) pool = pool.filter((d) => d.confidence === 'High');
     const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
     const dueKeys = new Set(due.map(keyOf));

@@ -15,8 +15,18 @@ node tools/lead-scanner/scan.mjs --max-audit 200      # fewer site audits = fast
 node tools/lead-scanner/scan.mjs --webhook "<url>"    # also push rows to Google Sheets
 ```
 
-Region keys: `netn`, `swva`, `swv`, `wnc`, `seky`, `nsc` — towns/radii live in
-[regions.mjs](regions.mjs), edit freely.
+**Coverage = everything within 200 miles of Bristol TN/VA.** Towns are not hand-listed:
+the scanner pulls every city/town/village OSM knows inside the circle (per state, so
+each carries its state), tiles the circle into ~24 km grid boxes, and queries every
+tile — so businesses between towns are covered too. Tiles that time out on dense metro
+cores split in four automatically. Region keys are states: `tn`, `va`, `wv`, `nc`,
+`ky`, `sc`, `ga` (`--region tn,va` to limit). Every lead carries `mi` = miles from
+Bristol; the board has distance-band chips (≤50 / 50–100 / 100–150 / 150–200) for
+day-trip planning. Center/radius/tile size live in [regions.mjs](regions.mjs).
+
+Scan data (inventory, leads, audits, ratings, deep metrics, places) is **not committed**
+— in CI it lives in the GitHub Actions cache (rolling `radar-data-*` key), which keeps
+the public repo code-only and the lead database private. Locally it's just `out/`.
 
 ## What it does
 

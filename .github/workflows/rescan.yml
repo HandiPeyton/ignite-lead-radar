@@ -19,7 +19,7 @@ permissions:
 jobs:
   rescan:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v5
 
@@ -27,10 +27,22 @@ jobs:
         with:
           node-version: 22
 
+      # Scan data (inventory, leads, audits, ratings, deep metrics, places) lives
+      # in the Actions cache, not in git — keeps the public repo code-only and
+      # the lead database private. Rolling key: newest save wins.
+      - uses: actions/cache/restore@v4
+        with:
+          path: out
+          key: radar-data-${{ github.run_id }}
+          restore-keys: |
+            radar-data-
+
       - name: Snapshot tracking state (backup + owner corrections)
+        env:
+          LEAD_BOARD_KEY: ${{ secrets.LEAD_BOARD_KEY }}
         run: |
           mkdir -p out
-          curl -s https://ignite-lead-radar.netlify.app/api/state -o out/state-live.json
+          curl -s -H "x-board-key: $LEAD_BOARD_KEY" https://ignite-lead-radar.netlify.app/api/state -o out/state-live.json
 
       - name: Decide scan mode
         id: mode
@@ -95,21 +107,12 @@ jobs:
           npm install --no-fund --no-audit
           npx netlify-cli deploy --prod --site 565e77e6-a859-4b59-aa14-c268aa57071c --no-build --dir public --functions functions
 
-      - name: Commit scan snapshot (feeds new/hotter diffing next run)
-        run: |
-          git config user.name "lead-radar-bot"
-          git config user.email "bot@users.noreply.github.com"
-          # add individually: one missing file (e.g. ratings.json without the
-          # Google key) must not abort staging the others
-          git add -f out/leads.json || true
-          git add -f out/summary.json || true
-          git add -f out/ratings.json 2>/dev/null || true
-          git add -f out/inventory.json 2>/dev/null || true
-          git add -f out/audits.json 2>/dev/null || true
-          git add -f out/deepscan.json 2>/dev/null || true
-          git commit -m "scan snapshot $(date -u +%F)" || echo "nothing to commit"
-          git pull --rebase -q || true   # survive pushes that landed mid-run
-          git push || true
+      - name: Save scan data to cache (feeds light runs + next-run diffing)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: out
+          key: radar-data-${{ github.run_id }}
 
       - name: Upload leads CSV + tracking backup
         if: always()
