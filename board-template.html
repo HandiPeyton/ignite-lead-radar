@@ -822,6 +822,30 @@
       return b;
     };
 
+    const lf = document.createElement('div'); lf.className = 'pv';
+    const site = (trackState[keyOf(d)] && trackState[keyOf(d)].w) || d.website;
+    if (site) {
+      const sa = document.createElement('a');
+      sa.href = site; sa.target = '_blank'; sa.rel = 'noopener'; sa.className = 'minibtn';
+      sa.textContent = 'Open their site ↗';
+      lf.append(sa);
+    } else {
+      const none = document.createElement('span'); none.textContent = 'No website on file — that IS the pitch.';
+      lf.append(none);
+    }
+    if (d.fw) {
+      const fa = document.createElement('a');
+      fa.href = d.fw; fa.target = '_blank'; fa.rel = 'noopener'; fa.className = 'minibtn';
+      fa.textContent = 'FSQ-listed site ↗';
+      lf.append(fa);
+    }
+    const ma = document.createElement('a');
+    ma.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.name + ' ' + d.town + ' ' + d.st);
+    ma.target = '_blank'; ma.rel = 'noopener'; ma.className = 'minibtn';
+    ma.textContent = 'Map ↗';
+    lf.append(ma);
+    row('Look first', lf);
+
     const op = document.createElement('div'); op.className = 'pv';
     const opP = document.createElement('p'); opP.textContent = p.opener;
     op.append(opP, copyBtn(p.opener));
@@ -1156,7 +1180,7 @@
   const slotsEl = document.getElementById('slots');
   const schedSummaryEl = document.getElementById('schedSummary');
   const EVENING_VERTS = new Set(['hospitality', 'fitness']);
-  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 3:45 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
+  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 4:00 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
 
   function setView(v) {
     state.view = v;
@@ -1187,7 +1211,7 @@
     const [y, m, d] = dateStr.split('-').map(Number);
     if (!y) return [];
     const mk = (h, mi) => new Date(y, m - 1, d, h, mi);
-    const windows = [[mk(10, 0), mk(15, 45), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
+    const windows = [[mk(10, 0), mk(16, 0), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
     const nowT = Date.now();
     const out = [];
     for (const [start, end, kind] of windows) {
@@ -1262,7 +1286,14 @@
       who.append(nm, chipEl);
       if (dueKeys.has(keyOf(lead))) { const f = document.createElement('span'); f.className = 'fchip'; f.textContent = 'follow-up'; who.append(f); }
       const meta = document.createElement('div'); meta.className = 'meta';
-      meta.textContent = lead.town + ', ' + lead.st + ' · ' + lead.vertical;
+      meta.textContent = lead.town + ', ' + lead.st + ' · ' + lead.vertical + ' ';
+      const slotSite = (trackState[keyOf(lead)] && trackState[keyOf(lead)].w) || lead.website;
+      if (slotSite) {
+        const sl = document.createElement('a');
+        sl.href = slotSite; sl.target = '_blank'; sl.rel = 'noopener';
+        sl.textContent = slotSite.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        meta.append('· ', sl);
+      }
       who.append(meta);
       const ol = document.createElement('div'); ol.className = 'openline';
       ol.textContent = makePrep(lead).opener.slice(0, 170) + '…';
