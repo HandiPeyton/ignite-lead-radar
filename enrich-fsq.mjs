@@ -42,16 +42,18 @@ function nameMatch(a, b) {
   return shared / Math.min(ta.size, tb.size) >= 0.5;
 }
 
-const FIELDS = 'name,closed_bucket,date_closed,rating';
-let mode = 'v3'; // switches to 'new' automatically if v3 rejects the key
+// Free-tier fields only (rating/closed_bucket are premium or gone on the new API):
+// date_closed present = permanently closed; date_refreshed = when FSQ last verified.
+const FIELDS = 'name,date_closed,date_refreshed';
+let mode = 'new'; // new places-api host first (service keys 401 on classic v3)
 async function fsqSearch(l) {
   const q = encodeURIComponent(l.name);
   const ll = `${l.lat},${l.lng}`;
   const attempts = mode === 'v3' ? ['v3', 'new'] : ['new', 'v3'];
   for (const m of attempts) {
     const url = m === 'v3'
-      ? `https://api.foursquare.com/v3/places/search?query=${q}&ll=${ll}&radius=1600&limit=1&fields=${FIELDS}`
-      : `https://places-api.foursquare.com/places/search?query=${q}&ll=${ll}&radius=1600&limit=1&fields=${FIELDS}`;
+      ? `https://api.foursquare.com/v3/places/search?query=${q}&ll=${ll}&radius=1600&limit=5&fields=${FIELDS}`
+      : `https://places-api.foursquare.com/places/search?query=${q}&ll=${ll}&radius=1600&limit=5&fields=${FIELDS}`;
     const headers = m === 'v3'
       ? { Authorization: KEY, Accept: 'application/json' }
       : { Authorization: `Bearer ${KEY}`, Accept: 'application/json', 'X-Places-Api-Version': '2025-06-17' };
@@ -61,7 +63,7 @@ async function fsqSearch(l) {
     if (!res.ok) return { err: res.status };
     mode = m;
     const data = await res.json();
-    return { place: (data.results || [])[0] || null };
+    return { places: data.results || [] };
   }
   return { err: 'auth' };
 }
@@ -80,19 +82,16 @@ for (const l of todo) {
     const r = await fsqSearch(l);
     if (r.rateLimited) { log('Rate limited — stopping; re-run to resume.'); break; }
     if (r.err) { ratings[k] = { matched: false, f: 1, err: r.err }; if (r.err === 'auth') { log('Key rejected by both Foursquare endpoints — check the key.'); break; } continue; }
-    const p = r.place;
-    if (p && nameMatch(l.name, p.name || '')) {
-      const bucket = p.closed_bucket || '';
-      const bs = (p.date_closed || bucket === 'VeryLikelyClosed') ? 'CLOSED_PERMANENTLY'
-        : bucket === 'LikelyClosed' ? 'CLOSED_TEMPORARILY'
-        : 'OPERATIONAL';
+    const p = (r.places || []).find((c) => nameMatch(l.name, c.name || ''));
+    if (p) {
+      const bs = p.date_closed ? 'CLOSED_PERMANENTLY' : 'OPERATIONAL';
       if (bs !== 'OPERATIONAL') closed++;
       ratings[k] = {
         matched: true,
         src: 'fsq',
-        r: p.rating ? Math.round(p.rating * 5) / 10 : 0, // 0-10 → 5-star
-        rc: 0,
+        r: 0, rc: 0, // ratings are premium-tier on FSQ — none on the free plan
         bs,
+        dr: p.date_refreshed || '',
       };
       matched++;
     } else {

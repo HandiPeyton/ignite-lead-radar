@@ -687,7 +687,7 @@
 
     const sc = document.createElement('p');
     if (d.ct) { sc.className = 'warn'; sc.textContent = 'Listings mark this business as TEMPORARILY or POSSIBLY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
-    else if (d.g) sc.textContent = 'Listed as operational (places data).';
+    else if (d.g) sc.textContent = 'Listed as operational (places data' + (d.dv ? ', record verified ' + d.dv : '') + ').';
     else sc.textContent = 'Couldn’t cross-check against places data — confirm they’re still open when you call.';
     row('Still open?', sc);
 

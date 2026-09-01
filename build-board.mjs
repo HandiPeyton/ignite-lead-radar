@@ -73,7 +73,8 @@ for (const l of leads) {
     chg,
     r: rat && rat.matched ? rat.r : 0,
     rc: rat && rat.matched ? rat.rc : 0,
-    g: rat && rat.matched ? 1 : 0,                                  // Google-verified
+    g: rat && rat.matched ? 1 : 0,                                  // places-verified
+    dv: rat && rat.matched ? (rat.dr || '') : '',                   // record refresh date
     ct: rat && rat.bs === 'CLOSED_TEMPORARILY' ? 1 : 0,             // temp closed
     gone: rat && rat.bs === 'CLOSED_PERMANENTLY' ? 1 : 0,
   };
