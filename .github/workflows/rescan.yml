@@ -27,6 +27,18 @@ jobs:
       - name: Scan all six regions
         run: node scan.mjs --pace 4000
 
+      - name: Guard — refuse to ship a stale scan
+        run: |
+          node -e "
+            const s = require('./out/summary.json');
+            const ageMin = (Date.now() - Date.parse(s.ranAt)) / 60000;
+            if (!(ageMin >= 0 && ageMin < 120)) {
+              console.error('summary.json is ' + ageMin.toFixed(0) + ' min old — the scan did not write fresh output. Failing the run.');
+              process.exit(1);
+            }
+            console.log('fresh scan confirmed:', s.ranAt, '(' + s.totalLeads + ' leads)');
+          "
+
       - name: Deep audit (TLS / SPF / DMARC / SEO)
         run: node audit-deep.mjs
 

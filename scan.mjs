@@ -339,8 +339,13 @@ async function auditPool(items) {
   const worker = async () => {
     while (i < items.length) {
       const item = items[i++];
-      try { item.audit = await auditSite(item.website); }
+      // watchdog race: no single site may stall a worker (a silent exit-0
+      // mid-audit was observed once in CI when the pool never completed)
+      let timer;
+      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 60000); });
+      try { item.audit = await Promise.race([auditSite(item.website), guard]); }
       catch { item.audit = { status: 'down', notes: ['audit error'] }; }
+      finally { clearTimeout(timer); }
       done++;
       if (done % 50 === 0) log(`  audited ${done}/${items.length} sites...`);
     }
@@ -579,4 +584,9 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// keepalive interval: a drained event loop must never end the process
+// before main() finishes — better to hang visibly than deploy stale data.
+const keepalive = setInterval(() => {}, 30000);
+main()
+  .then(() => clearInterval(keepalive))
+  .catch((e) => { console.error(e); process.exit(1); });
