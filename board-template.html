@@ -1060,7 +1060,10 @@
     if (state.highConf) pool = pool.filter((d) => d.confidence === 'High');
     const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
     const dueKeys = new Set(due.map(keyOf));
-    const fresh = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
+    const freshAll = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
+    // High-confidence prospects book first; Verify-grade fill in only after
+    const fresh = freshAll.filter((d) => d.confidence === 'High')
+      .concat(freshAll.filter((d) => d.confidence !== 'High'));
 
     if (!slots.length) {
       const p = document.createElement('div'); p.className = 'empty';
