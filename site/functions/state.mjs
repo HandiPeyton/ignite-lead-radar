@@ -1,7 +1,7 @@
 // Lead-tracking state API for the Ignite Lead Radar board.
 // Storage: Netlify Blobs, one JSON doc keyed by lead ("name|town|st" lowercase).
-// Open by design (Peyton's call): anyone with the board link can read/edit
-// tracking — the unlisted URL is the only gate.
+// Gated by a PIN passcode (x-board-key header vs LEAD_BOARD_KEY env) — restored
+// when the repo went public. The PIN itself lives only in the env var.
 // Note: reads/writes are last-write-wins on the whole doc — fine for a one/two
 // person call workflow; not built for heavy concurrent editing.
 import { getStore } from '@netlify/blobs';
@@ -9,6 +9,11 @@ import { getStore } from '@netlify/blobs';
 const STATUSES = new Set(['new', 'noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad', 'gone']);
 
 export default async (req) => {
+  const supplied = req.headers.get('x-board-key') || '';
+  const expected = process.env.LEAD_BOARD_KEY || '';
+  if (!expected || supplied !== expected) {
+    return Response.json({ error: 'locked' }, { status: 401 });
+  }
   // strong consistency: the doc is read-modify-write on every save, so a stale
   // read here would silently drop a recent save.
   const store = getStore({ name: 'lead-state', consistency: 'strong' });

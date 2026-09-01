@@ -262,6 +262,19 @@
   .prow .warn { color: var(--verify); font-weight: 600; }
   @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
 
+  .unlockbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    border: 1px solid var(--verify); background: var(--verify-bg); color: var(--ink);
+    border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 13px;
+  }
+  .unlockbar b { color: var(--verify); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  #keyinput {
+    border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
+    background: var(--surface); color: var(--ink); font: 500 14px/1 "IBM Plex Mono", monospace;
+    letter-spacing: .2em; width: 140px;
+  }
+  .unlockbar .msg { color: var(--err); font-size: 12px; }
+
   .today {
     display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
     border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px;
@@ -371,6 +384,14 @@
   <div class="tabs" id="tabs" hidden>
     <button class="tab" id="tabLeads" aria-selected="true">Lead board</button>
     <button class="tab" id="tabSched" aria-selected="false">Call schedule</button>
+  </div>
+
+  <div class="unlockbar" id="unlockbar" hidden>
+    <b>PIN required</b>
+    <span>Enter the board PIN to unlock tracking, schedule, and call prep:</span>
+    <input id="keyinput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="········">
+    <button class="chip" id="unlockbtn">Unlock</button>
+    <span class="msg" id="unlockmsg"></span>
   </div>
 
   <div class="today" id="todayStrip" hidden></div>
@@ -491,11 +512,50 @@
   async function api(method, body) {
     const res = await fetch('/api/state', {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : {},
+      headers: {
+        'x-board-key': localStorage.getItem('lead-board-key') || '',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
       body: body ? JSON.stringify(body) : undefined,
     });
+    if (res.status === 401) { relock(); throw new Error('locked'); }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
+  }
+
+  const GATED = () => [
+    document.getElementById('progressRail'), document.getElementById('exportBtn'),
+    document.getElementById('backupBtn'), document.getElementById('nextBtn'),
+    document.getElementById('progressTh'), document.getElementById('todayStrip'),
+    document.getElementById('tabs'),
+  ];
+  function relock() {
+    unlocked = false;
+    document.getElementById('unlockbar').hidden = false;
+    GATED().forEach((el) => { if (el) el.hidden = true; });
+    setView('leads');
+  }
+  async function tryUnlock() {
+    const msg = document.getElementById('unlockmsg');
+    msg.textContent = '';
+    try {
+      trackState = await api('GET');
+      unlocked = true;
+      document.getElementById('unlockbar').hidden = true;
+      GATED().forEach((el) => { if (el) el.hidden = false; });
+      if (state.view !== 'leads') document.getElementById('progressRail').hidden = true;
+      buildStatusChips();
+      render();
+      renderToday();
+      if (state.view === 'schedule') renderSchedule();
+    } catch (e) {
+      if (e.message === 'locked') {
+        document.getElementById('unlockbar').hidden = false;
+        if (localStorage.getItem('lead-board-key')) msg.textContent = 'Wrong PIN.';
+      } else {
+        msg.textContent = 'Tracking service unreachable right now.';
+      }
+    }
   }
 
   function renderToday() {
@@ -547,24 +607,17 @@
     }
   }
 
-  async function initTracking() {
-    try {
-      trackState = await api('GET');
-      unlocked = true;
-      document.getElementById('progressRail').hidden = state.view !== 'leads';
-      document.getElementById('exportBtn').hidden = false;
-      document.getElementById('backupBtn').hidden = false;
-      document.getElementById('nextBtn').hidden = false;
-      document.getElementById('progressTh').hidden = false;
-      buildStatusChips();
-      render();
-      renderToday();
-      if (state.view === 'schedule') renderSchedule();
-    } catch {
-      showToast('Tracking service unreachable — board is read-only right now');
-    }
+  if (TRACKING) {
+    document.getElementById('unlockbtn').addEventListener('click', () => {
+      localStorage.setItem('lead-board-key', document.getElementById('keyinput').value.trim());
+      tryUnlock();
+    });
+    document.getElementById('keyinput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('unlockbtn').click();
+    });
+    if (localStorage.getItem('lead-board-key')) tryUnlock();
+    else document.getElementById('unlockbar').hidden = false;
   }
-  if (TRACKING) { initTracking(); document.getElementById('tabs').hidden = false; }
 
   // save queue: status saves immediately, notes debounced per lead
   const noteTimers = {};
