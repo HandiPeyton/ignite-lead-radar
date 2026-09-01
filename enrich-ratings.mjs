@@ -43,10 +43,11 @@ function nameMatch(a, b) {
   return shared / Math.min(ta.size, tb.size) >= 0.5;
 }
 
-// redo entries from the pre-businessStatus schema (matched but no bs field)
+// redo: unseen leads, pre-businessStatus schema entries, and past errors
+// (a bad-key run must not permanently poison the cache)
 const todo = leads.filter((l) => {
   const e = ratings[keyOf(l)];
-  return !e || (e.matched && !e.bs);
+  return !e || (e.matched && !e.bs) || e.err;
 });
 log(`Google check (rating + operational status) for ${todo.length} leads (${leads.length - todo.length} already done)...`);
 
