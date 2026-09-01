@@ -150,23 +150,15 @@ function makeTiles() {
   const latSpan = RADIUS_KM / 111.32;
   const lngSpan = RADIUS_KM / (111.32 * Math.cos((CENTER.lat * Math.PI) / 180));
   const lat0 = CENTER.lat - latSpan, lng0 = CENTER.lng - lngSpan;
-  // A tile with no city/town/village in it or in any neighboring tile is
-  // national forest / lake — skip it (saves ~a third of the queries).
-  const live = new Set();
-  for (const p of PLACES) {
-    const r = Math.floor((p.lat - lat0) / TILE_LAT), c = Math.floor((p.lng - lng0) / TILE_LNG);
-    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) live.add((r + dr) + ':' + (c + dc));
-  }
-  let skipped = 0;
-  for (let r = 0, lat = lat0; lat < CENTER.lat + latSpan; r++, lat += TILE_LAT) {
-    for (let c = 0, lng = lng0; lng < CENTER.lng + lngSpan; c++, lng += TILE_LNG) {
+  // Every tile inside the circle is queried — no "wilderness" skipping, so a
+  // lodge on a forest road counts just as much as a dentist downtown.
+  for (let lat = lat0; lat < CENTER.lat + latSpan; lat += TILE_LAT) {
+    for (let lng = lng0; lng < CENTER.lng + lngSpan; lng += TILE_LNG) {
       const cLat = lat + TILE_LAT / 2, cLng = lng + TILE_LNG / 2;
       if (haversineKm(CENTER.lat, CENTER.lng, cLat, cLng) > RADIUS_KM + 18) continue;
-      if (PLACES.length && !live.has(r + ':' + c)) { skipped++; continue; }
       tiles.push({ s: lat, w: lng, n: lat + TILE_LAT, e: lng + TILE_LNG });
     }
   }
-  if (skipped) log(`Skipping ${skipped} empty-wilderness tiles (no settlements nearby).`);
   return tiles;
 }
 const bboxStr = (t) => `${t.s.toFixed(4)},${t.w.toFixed(4)},${t.n.toFixed(4)},${t.e.toFixed(4)}`;
@@ -329,7 +321,7 @@ async function tryFetch(url) {
   const res = await fetch(url, {
     headers: { 'User-Agent': UA, Accept: 'text/html,*/*' },
     redirect: 'follow',
-    signal: AbortSignal.timeout(9000),
+    signal: AbortSignal.timeout(12000), // generous on purpose: slow hosts are leads, not noise
   });
   const text = (await res.text()).slice(0, 300000);
   return { res, text };
@@ -438,7 +430,7 @@ async function auditPool(items) {
       // watchdog race: no single site may stall a worker (a silent exit-0
       // mid-audit was observed once in CI when the pool never completed)
       let timer;
-      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 45000); });
+      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 60000); });
       try { item.audit = await Promise.race([auditSite(item.website), guard]); }
       catch { item.audit = { status: 'down', notes: ['audit error'] }; }
       finally { clearTimeout(timer); }
