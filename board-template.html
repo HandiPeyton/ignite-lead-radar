@@ -197,6 +197,7 @@
   }
   .badge.bnew { color: var(--need-web); border: 1px solid var(--need-web); }
   .badge.bup  { color: var(--accent-ink); background: var(--accent); }
+  .badge.bcl  { color: var(--verify); border: 1px dashed var(--verify); }
   .rstar { font-size: 11px; color: var(--verify); margin-left: 6px; white-space: nowrap; font-weight: 500; }
   .chip.due-on { background: var(--verify); border-color: var(--verify); color: var(--bg); }
 
@@ -460,6 +461,7 @@
   stat(Object.keys(REGION_LABELS).length, 'regions');
   stat(META.ranAt ? fmtDate(META.ranAt) : '—', 'last scan');
   if (META.retired) stat(META.retired, 'retired since last scan');
+  if (META.closedRemoved) stat(META.closedRemoved, 'closed businesses removed');
 
   // ---- filter chips ----
   function chip(label, count, pressed) {
@@ -683,6 +685,12 @@
     if (d.multi) who.className = 'warn';
     row('Who to ask for', who);
 
+    const sc = document.createElement('p');
+    if (d.ct) { sc.className = 'warn'; sc.textContent = 'Google lists this business as TEMPORARILY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
+    else if (d.g) sc.textContent = 'Verified operational on Google.';
+    else sc.textContent = 'Couldn’t cross-check on Google — confirm they’re still open when you call.';
+    row('Still open?', sc);
+
     if (d.r) {
       const rp = document.createElement('p');
       rp.textContent = d.r + '★ from ' + d.rc + ' Google reviews — ' + (
@@ -826,6 +834,7 @@
       if (d.r) { const st = document.createElement('span'); st.className = 'rstar'; st.textContent = d.r + '★'; st.title = d.rc + ' Google reviews'; biz.append(st); }
       if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
       else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
+      if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed for now'; b.title = 'Google lists this business as temporarily closed'; biz.append(b); }
       tr.append(biz);
       tr.append(td('town', d.town + ', ' + d.st));
       if (TRACKING && unlocked) {

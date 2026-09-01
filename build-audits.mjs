@@ -354,6 +354,8 @@ function page(l, F, deep) {
 const leads = JSON.parse(fs.readFileSync(path.join(out, 'leads.json'), 'utf8'));
 let audits = {};
 try { audits = JSON.parse(fs.readFileSync(path.join(out, 'audits.json'), 'utf8')); } catch { /* deep pass not run */ }
+let gstatus = {};
+try { gstatus = JSON.parse(fs.readFileSync(path.join(out, 'ratings.json'), 'utf8')); } catch { /* no Google pass */ }
 
 const adir = path.join(dir, 'site', 'public', 'a');
 fs.rmSync(adir, { recursive: true, force: true });
@@ -362,6 +364,8 @@ fs.mkdirSync(adir, { recursive: true });
 let built = 0;
 const slugMap = {};
 for (const l of leads) {
+  const g = gstatus[(l.name + '|' + l.town + '|' + l.st).toLowerCase()];
+  if (g && g.bs === 'CLOSED_PERMANENTLY') continue; // no checkup pages for closed businesses
   const host = l.website ? hostnameOf(l.website) : null;
   const deep = host ? audits[host] : null;
   const F = buildFindings(l, deep);

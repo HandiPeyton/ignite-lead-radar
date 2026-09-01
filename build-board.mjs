@@ -32,8 +32,13 @@ for (const b of inventory) {
   nameCounts[n].add(b.town + '|' + b.st);
 }
 
-// slim rows to what the board renders
-const rows = leads.map((l) => {
+// slim rows to what the board renders; Google-verified CLOSED_PERMANENTLY
+// businesses are removed entirely (the still-in-business verification).
+const rows = [];
+const keptLeads = [];
+let closedRemoved = 0;
+for (const l of leads) {
+  const row = ((l) => {
   const host = l.website ? hostnameOf(l.website) : null;
   const deep = host ? audits[host] : null;
   const extra = [];
@@ -68,15 +73,22 @@ const rows = leads.map((l) => {
     chg,
     r: rat && rat.matched ? rat.r : 0,
     rc: rat && rat.matched ? rat.rc : 0,
+    g: rat && rat.matched ? 1 : 0,                                  // Google-verified
+    ct: rat && rat.bs === 'CLOSED_TEMPORARILY' ? 1 : 0,             // temp closed
+    gone: rat && rat.bs === 'CLOSED_PERMANENTLY' ? 1 : 0,
   };
-});
+  })(l);
+  if (row.gone) { closedRemoved++; continue; }
+  rows.push(row);
+  keptLeads.push(l);
+}
 const regionLabels = Object.fromEntries(Object.entries(REGIONS).map(([k, v]) => [k, v.label]));
 
 const esc = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
 
 const base = fs.readFileSync(path.join(dir, 'board-template.html'), 'utf8')
   .split('/*__DATA__*/[]').join(esc(rows))
-  .split('/*__META__*/{}').join(esc({ ranAt: summary.ranAt, byNeed: summary.byNeed, mode: summary.mode, retired }))
+  .split('/*__META__*/{}').join(esc({ ranAt: summary.ranAt, byNeed: summary.byNeed, mode: summary.mode, retired, closedRemoved }))
   .split('/*__REGIONS__*/{}').join(esc(regionLabels));
 
 // Artifact copy: static, no tracking (claude.ai sandbox can't reach the API).
@@ -90,7 +102,21 @@ const siteHtml = base
   .replace('<!--CSV_LINK-->',
     ' <a href="leads.csv" download>Download the raw scan CSV</a> for Google Sheets/Excel.');
 fs.writeFileSync(path.join(sitePublic, 'index.html'), siteHtml);
-if (fs.existsSync(path.join(out, 'leads.csv'))) {
-  fs.copyFileSync(path.join(out, 'leads.csv'), path.join(sitePublic, 'leads.csv'));
-}
-console.log(`board built: ${rows.length} leads → out/board.html (artifact) + site/public/ (netlify, tracking on)`);
+
+// Site CSV regenerated from the FINAL lead set (closed businesses excluded,
+// Google verification columns included).
+const csvEsc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const header = ['Region', 'Town', 'State', 'Business', 'Vertical', 'Need', 'Confidence',
+  'Web score', 'IT score', 'Evidence', 'Phone', 'Website', 'Address',
+  'Google rating', 'Reviews', 'Google status', 'Maps'];
+const csvRows = keptLeads.map((l, i) => {
+  const row = rows[i];
+  return [REGIONS[l.region].label, l.town, l.st, l.name, l.vertical, l.need, l.confidence,
+    l.wScore, l.itScore, row.x ? l.evidence + '; ' + row.x : l.evidence, l.phone, l.website, l.address || '',
+    row.r || '', row.rc || '', row.g ? (row.ct ? 'Temporarily closed' : 'Operational') : 'Not found',
+    'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${l.name} ${l.town} ${l.st}`)];
+});
+fs.writeFileSync(path.join(sitePublic, 'leads.csv'),
+  '﻿' + [header, ...csvRows].map((r) => r.map(csvEsc).join(',')).join('\r\n'));
+
+console.log(`board built: ${rows.length} leads (${closedRemoved} permanently-closed removed) → out/board.html + site/public/`);

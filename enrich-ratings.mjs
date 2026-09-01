@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * Google-ratings enrichment for leads (rating + review count only).
- * Uses Places API (New) Text Search with a Pro-SKU field mask — rating and
- * userRatingCount only, NO website/phone fields — so ~733 lookups stay well
- * inside the 5,000/month Pro free tier.
+ * Google enrichment for leads: star rating, review count, and — the
+ * still-in-business verification — businessStatus (OPERATIONAL /
+ * CLOSED_TEMPORARILY / CLOSED_PERMANENTLY).
+ * Uses Places API (New) Text Search with a Pro-SKU field mask (no
+ * website/phone fields), so ~700 lookups stay well inside the
+ * 5,000/month Pro free tier.
  *
  * Needs GOOGLE_PLACES_API_KEY. Without it, exits cleanly (pipeline-safe).
- * Resumable: already-checked leads are skipped on re-runs.
+ * Resumable: leads already checked under the current schema are skipped.
  *
  * Reads out/leads.json → writes out/ratings.json (keyed by lead key).
  */
@@ -41,8 +43,12 @@ function nameMatch(a, b) {
   return shared / Math.min(ta.size, tb.size) >= 0.5;
 }
 
-const todo = leads.filter((l) => !(keyOf(l) in ratings));
-log(`Looking up Google ratings for ${todo.length} leads (${leads.length - todo.length} already done)...`);
+// redo entries from the pre-businessStatus schema (matched but no bs field)
+const todo = leads.filter((l) => {
+  const e = ratings[keyOf(l)];
+  return !e || (e.matched && !e.bs);
+});
+log(`Google check (rating + operational status) for ${todo.length} leads (${leads.length - todo.length} already done)...`);
 
 let done = 0, matched = 0;
 for (const l of todo) {
@@ -53,7 +59,7 @@ for (const l of todo) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': KEY,
-        'X-Goog-FieldMask': 'places.displayName,places.rating,places.userRatingCount',
+        'X-Goog-FieldMask': 'places.displayName,places.rating,places.userRatingCount,places.businessStatus',
       },
       body: JSON.stringify({ textQuery: `${l.name}, ${l.town}, ${l.st}`, pageSize: 1 }),
       signal: AbortSignal.timeout(20000),
@@ -62,8 +68,13 @@ for (const l of todo) {
     if (!res.ok) { ratings[k] = { matched: false, err: res.status }; continue; }
     const data = await res.json();
     const p = (data.places || [])[0];
-    if (p && nameMatch(l.name, p.displayName?.text || '') && p.rating != null) {
-      ratings[k] = { matched: true, r: p.rating, rc: p.userRatingCount || 0 };
+    if (p && nameMatch(l.name, p.displayName?.text || '')) {
+      ratings[k] = {
+        matched: true,
+        r: p.rating || 0,
+        rc: p.userRatingCount || 0,
+        bs: p.businessStatus || 'OPERATIONAL',
+      };
       matched++;
     } else {
       ratings[k] = { matched: false };
@@ -79,4 +90,8 @@ for (const l of todo) {
   await new Promise((r) => setTimeout(r, 120));
 }
 fs.writeFileSync(ratingsPath, JSON.stringify(ratings));
-log(`Done → out/ratings.json (${Object.values(ratings).filter((x) => x.matched).length} leads with ratings). Rebuild the board to show them.`);
+const vals = Object.values(ratings);
+log(`Done → out/ratings.json: ${vals.filter((x) => x.matched).length} verified on Google, ` +
+  `${vals.filter((x) => x.bs === 'CLOSED_PERMANENTLY').length} permanently closed, ` +
+  `${vals.filter((x) => x.bs === 'CLOSED_TEMPORARILY').length} temporarily closed, ` +
+  `${vals.filter((x) => !x.matched).length} not found on Google.`);

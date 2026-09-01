@@ -58,6 +58,7 @@ jobs:
           git add -f out/summary.json || true
           git add -f out/ratings.json 2>/dev/null || true
           git commit -m "scan snapshot $(date -u +%F)" || echo "nothing to commit"
+          git pull --rebase -q || true   # survive pushes that landed mid-run
           git push || true
 
       - name: Upload leads CSV + tracking backup
