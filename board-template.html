@@ -917,26 +917,49 @@
     const subj = h.includes('domain registration') ? 'Time-sensitive heads-up about your domain'
       : h.includes('couldn’t find a website') || h.includes('Facebook') ? 'Getting ' + d.name + ' findable on Google'
       : 'Quick heads-up about your website';
-    const bodyCore = 'While looking at ' + d.vertical + ' businesses around ' + d.town + ' I noticed ' + h + '.'
-      + (checkupUrl ? ' I put everything I found on a one-page checkup here:\n' + checkupUrl : '')
-      + '\n\nIf it’s worth ten minutes, call or text me anytime at (423) 863-9727.\n\n— Peyton · Ridge Web Designs / Ignite Cyber Solutions';
-    const mailAfterCall = 'Hi — this is Peyton with Ridge Web Designs here in the Tri-Cities. I called earlier and your team suggested email was the best way to reach you, so I’ll keep it short.\n\n' + bodyCore;
-    const mailCold = 'Hi — this is Peyton with Ridge Web Designs / Ignite Cyber Solutions here in the Tri-Cities. I’ll keep it short.\n\n' + bodyCore;
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    let gkName = '';
+    const draft = (afterCall) => {
+      const intro = afterCall
+        ? 'This is Peyton with Ridge Web Designs. I called earlier and ' + (gkName || 'your team') + ' suggested email was the best way to reach you.'
+        : 'This is Peyton with Ridge Web Designs / Ignite Cyber Solutions.';
+      return greet + ',\n\n' + intro + '\n\nWhile researching ' + d.vertical + ' businesses around ' + d.town +
+        ', I noticed ' + h + '. I have compiled the details into a one-page checkup here:\n\n' +
+        (checkupUrl || '(checkup page unavailable for this lead)') +
+        '\n\nIf you would like to discuss this, please feel free to call or text me at (423) 863-9727.\n\nBest regards,\n\nPeyton\nRidge Web Designs / Ignite Cyber Solutions';
+    };
 
-    const emWrap = document.createElement('div'); emWrap.className = 'pv';
-    const emP = document.createElement('p'); emP.textContent = mailAfterCall;
+    const emP = document.createElement('p');
     emP.style.whiteSpace = 'pre-wrap'; emP.style.fontSize = '12px'; emP.style.color = 'var(--ink-soft)';
+    const emA = document.createElement('a'); emA.className = 'minibtn'; emA.textContent = 'Open in mail app';
+    const refreshEmail = () => {
+      emP.textContent = draft(true);
+      emA.href = 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(draft(true));
+    };
+    const gkIn = document.createElement('input');
+    gkIn.className = 'schedctl'; gkIn.placeholder = 'Gatekeeper’s name (fills the draft)';
+    gkIn.style.width = '220px';
+    gkIn.addEventListener('input', () => { gkName = gkIn.value.trim(); refreshEmail(); });
+    const mkCopy = (label, fn) => {
+      const b = document.createElement('button'); b.className = 'minibtn'; b.textContent = label;
+      b.addEventListener('click', () => navigator.clipboard.writeText(fn())
+        .then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = label; }, 1500); })
+        .catch(() => showToast('Copy failed — select it manually')));
+      return b;
+    };
     const emBtns = document.createElement('div'); emBtns.className = 'pv';
-    const emA = document.createElement('a'); emA.className = 'minibtn';
-    emA.href = 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(mailAfterCall);
-    emA.textContent = 'Open in mail app';
-    emBtns.append(emA, copyBtn('Subject: ' + subj + '\n\n' + mailAfterCall, 'Copy (after a call)'), copyBtn('Subject: ' + subj + '\n\n' + mailCold, 'Copy (cold)'));
+    emBtns.append(gkIn, emA,
+      mkCopy('Copy (after a call)', () => 'Subject: ' + subj + '\n\n' + draft(true)),
+      mkCopy('Copy (cold)', () => 'Subject: ' + subj + '\n\n' + draft(false)));
     const emTo = document.createElement('p');
     emTo.style.fontSize = '11px'; emTo.style.color = 'var(--ink-soft)';
     emTo.textContent = d.em ? 'To: ' + d.em : 'No address on file — get their direct email from the gatekeeper, then send.';
     const emCol = document.createElement('div');
     emCol.style.display = 'flex'; emCol.style.flexDirection = 'column'; emCol.style.gap = '6px';
     emCol.append(emTo, emP, emBtns);
+    refreshEmail();
+    const emWrap = document.createElement('div'); emWrap.className = 'pv';
     emWrap.append(emCol);
     row('Email draft', emWrap);
 
