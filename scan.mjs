@@ -457,10 +457,19 @@ async function main() {
   const all = [];
 
   const invPath = path.join(OUT_DIR, 'inventory.json');
+  let reused = false;
   if (SKIP_ENUM && fs.existsSync(invPath)) {
-    all.push(...JSON.parse(fs.readFileSync(invPath, 'utf8')));
-    log(`Light mode: reusing ${all.length} businesses from the last enumeration (no Overpass queries).`);
-  } else for (const rk of REGION_KEYS) {
+    const inv = JSON.parse(fs.readFileSync(invPath, 'utf8'));
+    const regionsPresent = new Set(inv.map((b) => b.region));
+    if (inv.length >= 3000 && REGION_KEYS.every((rk) => regionsPresent.has(rk))) {
+      all.push(...inv);
+      reused = true;
+      log(`Light mode: reusing ${all.length} businesses from the last enumeration (no Overpass queries).`);
+    } else {
+      log(`Light mode requested but inventory looks partial (${inv.length} businesses, ${regionsPresent.size} regions) — running FULL enumeration instead.`);
+    }
+  }
+  if (!reused) for (const rk of REGION_KEYS) {
     const region = REGIONS[rk];
     log(`[${region.label}] querying ${USE_GOOGLE ? 'Google Places' : 'Overpass'} (${region.towns.length} towns)...`);
     let biz = [];
