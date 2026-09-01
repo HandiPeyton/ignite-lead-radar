@@ -54,6 +54,7 @@ const MAX_NOSITE = parseInt(flagVal('--max-nosite', '150'), 10);
 const WEBHOOK = flagVal('--webhook', process.env.SHEET_WEBHOOK || '');
 const USE_GOOGLE = args.includes('--google') && !!process.env.GOOGLE_PLACES_API_KEY;
 const AUDIT_CONCURRENCY = parseInt(flagVal('--concurrency', '10'), 10);
+const SKIP_ENUM = args.includes('--skip-enum'); // light mode: reuse last enumeration, re-audit only
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -455,7 +456,11 @@ async function main() {
   const seen = new Set();
   const all = [];
 
-  for (const rk of REGION_KEYS) {
+  const invPath = path.join(OUT_DIR, 'inventory.json');
+  if (SKIP_ENUM && fs.existsSync(invPath)) {
+    all.push(...JSON.parse(fs.readFileSync(invPath, 'utf8')));
+    log(`Light mode: reusing ${all.length} businesses from the last enumeration (no Overpass queries).`);
+  } else for (const rk of REGION_KEYS) {
     const region = REGIONS[rk];
     log(`[${region.label}] querying ${USE_GOOGLE ? 'Google Places' : 'Overpass'} (${region.towns.length} towns)...`);
     let biz = [];

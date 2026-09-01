@@ -2,8 +2,16 @@ name: Monthly lead rescan
 
 on:
   schedule:
-    - cron: '30 9 1 * *'   # 09:30 UTC on the 1st = 5:30 AM ET, before business hours
-  workflow_dispatch: {}     # manual "Run workflow" button (works from the GitHub phone app too)
+    - cron: '30 9 1 * *'    # monthly FULL scan (re-enumerate OSM): 1st of the month
+    - cron: '0 8 2-31 * *'  # daily LIGHT rescan ~4 AM ET (8:00 UTC; 3 AM in winter — DST)
+    - cron: '0 20 * * *'    # daily LIGHT rescan ~4 PM ET (20:00 UTC; 3 PM in winter — DST)
+  workflow_dispatch:        # manual runs (GitHub phone app works); pick the mode
+    inputs:
+      mode:
+        description: 'full = re-enumerate OSM; light = re-audit only'
+        type: choice
+        options: [full, light]
+        default: full
 
 permissions:
   contents: write           # the run commits its scan snapshot back for next-run diffing
@@ -24,8 +32,22 @@ jobs:
           mkdir -p out
           curl -s https://ignite-lead-radar.netlify.app/api/state -o out/state-live.json
 
-      - name: Scan all six regions
+      - name: Decide scan mode
+        id: mode
+        run: |
+          MODE=light
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.mode }}" != "light" ]; then MODE=full; fi
+          if [ "${{ github.event.schedule }}" = "30 9 1 * *" ]; then MODE=full; fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Scan mode: $MODE"
+
+      - name: Scan all six regions (full enumeration)
+        if: steps.mode.outputs.mode == 'full'
         run: node scan.mjs --pace 4000
+
+      - name: Re-audit from last enumeration (light)
+        if: steps.mode.outputs.mode == 'light'
+        run: node scan.mjs --skip-enum
 
       - name: Guard — refuse to ship a stale scan
         run: |
@@ -74,6 +96,7 @@ jobs:
           git add -f out/leads.json || true
           git add -f out/summary.json || true
           git add -f out/ratings.json 2>/dev/null || true
+          git add -f out/inventory.json 2>/dev/null || true
           git commit -m "scan snapshot $(date -u +%F)" || echo "nothing to commit"
           git pull --rebase -q || true   # survive pushes that landed mid-run
           git push || true
