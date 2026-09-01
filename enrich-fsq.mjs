@@ -44,7 +44,8 @@ function nameMatch(a, b) {
 
 // Free-tier fields only (rating/closed_bucket are premium or gone on the new API):
 // date_closed present = permanently closed; date_refreshed = when FSQ last verified.
-const FIELDS = 'name,date_closed,date_refreshed';
+// website/tel/email ride along free — used for backfill and phone cross-checks.
+const FIELDS = 'name,date_closed,date_refreshed,website,tel,email';
 let mode = 'new'; // new places-api host first (service keys 401 on classic v3)
 async function fsqSearch(l) {
   const q = encodeURIComponent(l.name);
@@ -71,7 +72,8 @@ async function fsqSearch(l) {
 // work on leads Google hasn't positively matched; skip ones FSQ already tried
 const todo = leads.filter((l) => {
   const e = ratings[keyOf(l)];
-  return !e || (!e.matched && !e.f) || e.err;
+  // last clause: refresh pre-backfill-schema fsq entries (no w field captured yet)
+  return !e || (!e.matched && !e.f) || e.err || (e.matched && e.src === 'fsq' && e.w === undefined);
 });
 log(`Foursquare check for ${todo.length} leads (${leads.length - todo.length} already covered)...`);
 
@@ -92,6 +94,9 @@ for (const l of todo) {
         r: 0, rc: 0, // ratings are premium-tier on FSQ — none on the free plan
         bs,
         dr: p.date_refreshed || '',
+        w: p.website || '',
+        t: p.tel || '',
+        e: p.email || '',
       };
       matched++;
     } else {

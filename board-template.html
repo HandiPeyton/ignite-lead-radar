@@ -278,10 +278,12 @@
     color: var(--ink-soft); margin: 20px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;
   }
   .slot {
-    display: grid; grid-template-columns: 88px minmax(0,1fr) auto auto; gap: 12px; align-items: center;
+    display: grid; grid-template-columns: 88px minmax(0,1fr) auto auto auto; gap: 12px; align-items: center;
     padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px;
     background: var(--surface); margin-bottom: 6px;
   }
+  .slot.done { opacity: .55; }
+  .outc { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
   .slot .time { font: 600 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
   .slot .who b { font-weight: 600; }
   .slot .meta { color: var(--ink-soft); font-size: 12px; }
@@ -294,7 +296,7 @@
   .slot .phone a { color: var(--need-web); text-decoration: none; }
   @media (max-width: 680px) {
     .slot { grid-template-columns: 70px minmax(0,1fr); }
-    .slot .phone, .slot .minibtn { grid-column: 2; justify-self: start; }
+    .slot .phone, .slot .minibtn, .slot .outc { grid-column: 2; justify-self: start; }
   }
 
   .pager { display: inline-flex; gap: 6px; align-items: center; }
@@ -672,6 +674,25 @@
     other: 'Mid-morning weekdays. Ask for the owner.',
   };
 
+  function headlineOf(d) {
+    const ev = (d.evidence + '; ' + (d.x || '')).toLowerCase();
+    if (ev.includes('unreachable')) return 'your website isn’t loading';
+    if (ev.includes('domain parked')) return 'your old website domain is showing a parked page';
+    if (ev.includes('ssl certificate broken') || ev.includes('certificate expired')) return 'your website is showing visitors a security warning';
+    if (ev.includes('facebook/instagram')) return 'you’re running on just a Facebook page';
+    if (ev.includes('no website listed')) return 'I couldn’t find a website for your business';
+    if (ev.includes('spoofable') || ev.includes('missing dmarc') || ev.includes('missing spf')) return 'your business email can be impersonated by scammers';
+    if (ev.includes('not mobile-friendly')) return 'your website doesn’t work right on phones';
+    if (ev.includes('wordpress')) return 'your website’s running software that’s years out of date';
+    if (ev.includes('2000s-era') || ev.includes('pre-2010') || ev.includes('table-based') || ev.includes('authoring tool')) return 'your website’s design is showing its age';
+    if (ev.includes('copyright stuck')) return 'your website looks like it hasn’t been touched in years';
+    return 'a few things on your website worth two minutes';
+  }
+  function plusDays(n) {
+    const t = new Date(); t.setDate(t.getDate() + n);
+    return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+  }
+
   function makePrep(d) {
     const ev = (d.evidence + '; ' + (d.x || '')).toLowerCase();
     const brand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
@@ -763,8 +784,32 @@
       a.href = '/a/' + d.slug + '.html'; a.target = '_blank'; a.rel = 'noopener';
       a.textContent = 'Open their checkup page';
       const full = location.origin + '/a/' + d.slug + '.html';
-      lk.append(a, copyBtn(full, 'Copy link to send'));
+      const smsBody = 'Hey, this is Peyton with Ridge Web Designs / Ignite Cyber — here’s that one-page checkup of your online presence I mentioned: ' + full + ' — happy to walk through it any time: (423) 863-9727';
+      const sms = document.createElement('a');
+      sms.className = 'minibtn';
+      sms.href = 'sms:' + d.phone.replace(/[^+\d]/g, '') + '?&body=' + encodeURIComponent(smsBody);
+      sms.textContent = 'Text it to them';
+      lk.append(a, sms, copyBtn(smsBody, 'Copy text msg'), copyBtn(full, 'Copy link'));
       row('Checkup', lk);
+    }
+
+    const vmBrand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
+    const vm = 'Hey, this is Peyton with ' + vmBrand + ' here in the Tri-Cities. Quick heads up — I ran a checkup on ' + d.name + '’s online presence and noticed ' + headlineOf(d) + '. Nothing scary, and it takes two minutes to explain. I’m at 423-863-9727 — again, that’s Peyton, 423-863-9727. Thanks!';
+    const vmWrap = document.createElement('div'); vmWrap.className = 'pv';
+    const vmP = document.createElement('p'); vmP.textContent = vm;
+    vmWrap.append(vmP, copyBtn(vm));
+    row('If voicemail', vmWrap);
+
+    if (d.fw) {
+      const f = document.createElement('p');
+      f.textContent = 'Foursquare lists a website we didn’t have on file: ' + d.fw + ' — worth a look before you call. It gets audited automatically next rescan.';
+      f.className = 'warn';
+      row('Heads up', f);
+    }
+    if (d.pm) {
+      const pmp = document.createElement('p');
+      pmp.textContent = 'Listings show a second phone number: ' + d.pm + ' — try it if the main one doesn’t connect.';
+      row('Number check', pmp);
     }
     return box;
   }
@@ -1117,9 +1162,39 @@
       const ph = document.createElement('span'); ph.className = 'phone';
       const pa = document.createElement('a'); pa.href = 'tel:' + lead.phone.replace(/[^+\d]/g, ''); pa.textContent = lead.phone;
       ph.append(pa);
+      const outc = document.createElement('div'); outc.className = 'outc';
+      const OUTCOMES = [['noanswer', 'N/A'], ['callback', 'Call back'], ['interested', 'Interested'], ['bad', 'Bad #']];
+      for (const [sk, label] of OUTCOMES) {
+        const ob = document.createElement('button'); ob.className = 'minibtn'; ob.textContent = label;
+        ob.title = 'Mark ' + ST_LABEL[sk] + ' and stay on the schedule';
+        ob.addEventListener('click', () => {
+          outc.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+          saveLead(keyOf(lead), { s: sk }).then(() => {
+            row.classList.add('done');
+            outc.textContent = '';
+            const chipD = document.createElement('span');
+            chipD.className = 'stchip st-' + sk; chipD.textContent = ST_LABEL[sk];
+            outc.append(chipD);
+            if (sk === 'noanswer' || sk === 'callback') {
+              for (const [days, lab] of [[3, '+3d'], [7, '+1w']]) {
+                const qb = document.createElement('button'); qb.className = 'minibtn'; qb.textContent = lab;
+                qb.title = 'Set follow-up date';
+                qb.addEventListener('click', () => {
+                  saveLead(keyOf(lead), { d: plusDays(days) }).then(() => {
+                    qb.textContent = '✓ ' + plusDays(days).slice(5).replace('-', '/');
+                    qb.disabled = true;
+                  });
+                });
+                outc.append(qb);
+              }
+            }
+          });
+        });
+        outc.append(ob);
+      }
       const open = document.createElement('button'); open.className = 'minibtn'; open.textContent = 'Prep';
       open.addEventListener('click', () => gotoLead(lead));
-      row.append(time, who, ph, open);
+      row.append(time, who, outc, ph, open);
       frag.append(row);
     }
     slotsEl.append(frag);

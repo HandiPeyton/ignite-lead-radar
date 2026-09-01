@@ -404,6 +404,7 @@ function scoreRow(b) {
 
   if (emailIsFree) { it += 1; w += 1; ev.push(`Business email is ${b.email}`); }
   if (b.corrected) ev.push('Using the corrected domain from the board');
+  if (b.fsqSite) ev.push('Website found via Foursquare (OSM listed none)');
 
   let need = '';
   if (w >= 4 && it >= 4) need = 'Both';
@@ -500,6 +501,19 @@ async function main() {
     }
     if (applied) log(`Applied ${applied} owner-corrected website domains from the board.`);
   } catch { /* no state snapshot — fine */ }
+
+  // Foursquare-discovered websites (free backfill): adopt for businesses OSM
+  // had no site for, so they get audited like everyone else this run.
+  try {
+    const fsq = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'ratings.json'), 'utf8'));
+    let adopted = 0;
+    for (const b of all) {
+      if (b.website) continue;
+      const e = fsq[(b.name + '|' + b.town + '|' + b.st).toLowerCase()];
+      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w)) { b.website = e.w; b.fsqSite = true; adopted++; }
+    }
+    if (adopted) log(`Adopted ${adopted} Foursquare-listed websites for no-site businesses.`);
+  } catch { /* no ratings yet — fine */ }
 
   fs.writeFileSync(path.join(OUT_DIR, 'inventory.json'), JSON.stringify(all, null, 1));
 

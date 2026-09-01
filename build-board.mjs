@@ -75,6 +75,13 @@ for (const l of leads) {
     rc: rat && rat.matched ? rat.rc : 0,
     g: rat && rat.matched ? 1 : 0,                                  // places-verified
     dv: rat && rat.matched ? (rat.dr || '') : '',                   // record refresh date
+    fw: rat && rat.matched && rat.w && !l.website ? rat.w : '',     // FSQ-only website
+    pm: (() => {                                                     // phone mismatch: FSQ's number
+      if (!(rat && rat.matched && rat.t && l.phone)) return '';
+      const a = l.phone.replace(/\D/g, '').slice(-10);
+      const b = rat.t.replace(/\D/g, '').slice(-10);
+      return a && b && a !== b ? rat.t : '';
+    })(),
     ct: rat && rat.bs === 'CLOSED_TEMPORARILY' ? 1 : 0,             // temp closed
     gone: rat && rat.bs === 'CLOSED_PERMANENTLY' ? 1 : 0,
   };
