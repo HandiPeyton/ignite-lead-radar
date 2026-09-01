@@ -2802,7 +2802,7 @@
  {
   "name": "787 Bar & Grill",
   "vertical": "food",
-  "website": "https://787bargrill.com/",
+  "website": "https://787bargrill.com",
   "phone": "+1-423-390-0984",
   "email": "",
   "address": "1000 South Roan Street",
@@ -2811,7 +2811,8 @@
   "region": "netn",
   "lat": 36.31318,
   "lng": -82.34736,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Groovy Grover's",
@@ -5952,7 +5953,7 @@
  {
   "name": "Diminick Dentistry",
   "vertical": "healthcare",
-  "website": "https://www.diminickdentistry.com/",
+  "website": "https://www.diminickdentistry.com",
   "phone": "+14232479196",
   "email": "",
   "address": "2975 Fort Henry Drive",
@@ -5961,7 +5962,8 @@
   "region": "netn",
   "lat": 36.51496,
   "lng": -82.51808,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "clarvida",
@@ -18356,7 +18358,7 @@
  {
   "name": "Skyview Mini Storage",
   "vertical": "retail",
-  "website": "https://skyviewministorage.com",
+  "website": "https://www.skyviewministorage.com",
   "phone": "+1-276-685-7285",
   "email": "",
   "address": "2045 Hwy 11",
@@ -18365,7 +18367,8 @@
   "region": "swva",
   "lat": 36.82846,
   "lng": -81.58113,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "The Wooden Pickle",
@@ -21884,7 +21887,7 @@
  {
   "name": "Fiddler’s Restaurant",
   "vertical": "food",
-  "website": "https://www.fiddlersva.com/",
+  "website": "https://www.fiddlersva.com",
   "phone": "+1-276-728-4977",
   "email": "",
   "address": "2042 Carrollton Pike",
@@ -21893,7 +21896,8 @@
   "region": "swva",
   "lat": 36.74422,
   "lng": -80.7792,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Cockerham Food Mart #6",
@@ -27078,7 +27082,7 @@
  {
   "name": "South Guard Advisors",
   "vertical": "finance",
-  "website": "https://www.southguardadvisors.com/",
+  "website": "https://www.southguardadvisors.com",
   "phone": "+1-276-963-6277",
   "email": "",
   "address": "2997 Steelsburg Highway",
@@ -27087,7 +27091,8 @@
   "region": "swva",
   "lat": 37.04829,
   "lng": -81.77975,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Kewloff Technology Group",
@@ -50220,7 +50225,7 @@
  {
   "name": "Fanning Funeral Home",
   "vertical": "retail",
-  "website": "https://www.fanningfuneralhomes.com/",
+  "website": "https://www.fanningfuneralhomes.com",
   "phone": "+1 304 875 4800",
   "email": "",
   "address": "11950 Main Street",
@@ -50229,7 +50234,8 @@
   "region": "swv",
   "lat": 37.30244,
   "lng": -81.68006,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Keystone Hardware & Building Supplies",
@@ -63268,7 +63274,7 @@
  {
   "name": "Andaaz",
   "vertical": "food",
-  "website": "https://www.andaazasheville.com/",
+  "website": "https://www.andaazasheville.com",
   "phone": "+1 828-552-3200",
   "email": "",
   "address": "15 Page Avenue",
@@ -63277,7 +63283,8 @@
   "region": "wnc",
   "lat": 35.59528,
   "lng": -82.55594,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Sweets & Seats Cafe",
@@ -76983,7 +76990,8 @@
   "region": "wnc",
   "lat": 35.53019,
   "lng": -82.91883,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Country Lane Animal Hospital",
@@ -103574,7 +103582,7 @@
  {
   "name": "Healthy Petz Veterinary Clinic",
   "vertical": "veterinary",
-  "website": "http://myhealthypetz.com/",
+  "website": "https://healthypetzfamilyvet.com/",
   "phone": "+1-828-437-4524",
   "email": "healthypetz109@gmail.com",
   "address": "109 Enola Road",
@@ -103583,7 +103591,8 @@
   "region": "wnc",
   "lat": 35.72311,
   "lng": -81.67298,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "China King Buffet",
@@ -113626,7 +113635,7 @@
  {
   "name": "Bolton's Towing & Repair",
   "vertical": "auto",
-  "website": "http://boltonstowingandrepair.com",
+  "website": "https://www.boltonstowingandrepair.net",
   "phone": "+1-606-523-1132",
   "email": "",
   "address": "235 West Cumberland Gap Parkway",
@@ -113635,7 +113644,8 @@
   "region": "seky",
   "lat": 36.9661,
   "lng": -84.0828,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Quality Suites",
@@ -154016,7 +154026,7 @@
  {
   "name": "Joint Pain Relief Center",
   "vertical": "healthcare",
-  "website": "https://jointpainreliefcenter.com/",
+  "website": "https://example-corrected.com",
   "phone": "+1-864-538-0090",
   "email": "jointpainreliefctrs@gmail.com",
   "address": "3 Webb Road",
@@ -154025,7 +154035,8 @@
   "region": "nsc",
   "lat": 34.84377,
   "lng": -82.32297,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Carter Agency",
@@ -162360,7 +162371,7 @@
  {
   "name": "Premier DOT Physicals",
   "vertical": "healthcare",
-  "website": "http://premierdotphysicalsllc.com/",
+  "website": "https://premierdotphysicalsllc.com",
   "phone": "+1-864-336-5275",
   "email": "",
   "address": "801 East Main Street",
@@ -162369,7 +162380,8 @@
   "region": "nsc",
   "lat": 34.92768,
   "lng": -82.12085,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Waste Connections",
@@ -163634,7 +163646,7 @@
  {
   "name": "Kinard-Barath Tax Group, LLC",
   "vertical": "accounting",
-  "website": "https://www.kinard-barath.com/home",
+  "website": "https://kbtaxgroup.com",
   "phone": "+1-864-439-0492",
   "email": "katie.barath@kinard-barath.com",
   "address": "812 East Main Street",
@@ -163643,7 +163655,8 @@
   "region": "nsc",
   "lat": 34.92604,
   "lng": -82.12053,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "The Beauty Hut",
@@ -175226,7 +175239,7 @@
  {
   "name": "The Forrester Center for Behavioral Health",
   "vertical": "healthcare",
-  "website": "https://www.theforrestercenter.org/",
+  "website": "https://theforrestercenter.org",
   "phone": "+1-864-582-7588",
   "email": "",
   "address": "129 Dillon Drive",
@@ -175235,7 +175248,8 @@
   "region": "nsc",
   "lat": 34.98137,
   "lng": -81.89678,
-  "source": "OSM"
+  "source": "OSM",
+  "corrected": true
  },
  {
   "name": "Boxcar Apartments leasing office",
