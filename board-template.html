@@ -199,6 +199,7 @@
   .badge.bnew { color: var(--need-web); border: 1px solid var(--need-web); }
   .badge.bup  { color: var(--accent-ink); background: var(--accent); }
   .badge.bcl  { color: var(--verify); border: 1px dashed var(--verify); }
+  .badge.bbrk { color: #fff; background: var(--err); }
   .rstar { font-size: 11px; color: var(--verify); margin-left: 6px; white-space: nowrap; font-weight: 500; }
   .chip.due-on { background: var(--verify); border-color: var(--verify); color: var(--bg); }
 
@@ -565,6 +566,7 @@
     const due = DATA.filter(isDue).length;
     const newC = DATA.filter((d) => d.chg === 'new').length;
     const expC = DATA.filter((d) => d.xd != null).length;
+    const brkC = DATA.filter((d) => d.brk && !/Newly listed/.test(d.brk) && stOf(d) === 'new').length;
     let dials = 0, convos = 0, wonC = 0, pipe = 0;
     for (const k in trackState) {
       const e = trackState[k]; if (!e) continue;
@@ -584,6 +586,9 @@
     mk('worked today', dials);
     mk('conversations', convos);
     mk('follow-ups due', due);
+    if (brkC) mk('sites broke since last scan — call now', brkC);
+    const nwC = DATA.filter((d) => (d.nw || /Newly listed/.test(d.brk || '')) && stOf(d) === 'new').length;
+    if (nwC) mk('recently opened / newly listed', nwC);
     if (expC) mk('domains expiring soon', expC);
     if (newC) mk('new since last scan', newC);
     if (wonC) mk('won' + (pipe ? ' · $' + pipe.toLocaleString() : ''), wonC);
@@ -899,6 +904,18 @@
     lf.append(ma);
     row('Look first', lf);
 
+    if (d.brk || d.nw) {
+      const tm = document.createElement('p');
+      const listed = /Newly listed/.test(d.brk || '');
+      tm.className = (d.brk && !listed) ? 'warn' : '';
+      tm.textContent = d.brk && !listed
+        ? d.brk + ' — it was working 12–24 hours ago. Call this week while it’s fresh; lead with “noticed your site just went down.”'
+        : d.nw
+          ? 'Recently opened — listed since ' + d.nw + '. New owners pick a web/IT partner in the first months; get in before someone else does.'
+          : 'Newly listed business — just appeared on the map. New owners decide on a website early; get in first.';
+      row('Timing', tm);
+    }
+
     const op = document.createElement('div'); op.className = 'pv';
     const opP = document.createElement('p'); opP.textContent = p.opener;
     op.append(opP, copyBtn(p.opener));
@@ -1181,6 +1198,8 @@
       if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
       else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
       if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed?'; b.title = 'Listings mark this business as temporarily or possibly closed'; biz.append(b); }
+      if (d.brk && !/Newly listed/.test(d.brk)) { const b = document.createElement('span'); b.className = 'badge bbrk'; b.textContent = 'just broke'; b.title = d.brk; biz.append(b); }
+      if (d.nw || /Newly listed/.test(d.brk || '')) { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new biz'; b.title = d.nw ? 'Listed on Foursquare since ' + d.nw : 'Just appeared on the map'; biz.append(b); }
       tr.append(biz);
       tr.append(td('town', d.town + ', ' + d.st));
       if (TRACKING && unlocked) {
@@ -1350,9 +1369,14 @@
     const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
     const dueKeys = new Set(due.map(keyOf));
     const freshAll = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
-    // High-confidence prospects book first; Verify-grade fill in only after
-    const fresh = freshAll.filter((d) => d.confidence === 'High')
-      .concat(freshAll.filter((d) => d.confidence !== 'High'));
+    // Just-broke leads first (timing beats everything), then High-confidence,
+    // then Verify-grade fill in only after
+    const broke = freshAll.filter((d) => d.brk && !/Newly listed/.test(d.brk));
+    const brokeKeys = new Set(broke.map(keyOf));
+    const rest = freshAll.filter((d) => !brokeKeys.has(keyOf(d)));
+    const fresh = broke
+      .concat(rest.filter((d) => d.confidence === 'High'))
+      .concat(rest.filter((d) => d.confidence !== 'High'));
 
     if (!slots.length) {
       const p = document.createElement('div'); p.className = 'empty';

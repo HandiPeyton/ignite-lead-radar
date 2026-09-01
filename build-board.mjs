@@ -20,6 +20,29 @@ const ratings = readOpt('ratings.json') || {};
 const deepscan = readOpt('deepscan.json') || {};
 const prevLeads = readOpt('prev-leads.json');
 const prevMap = prevLeads ? new Map(prevLeads.map((l) => [keyOf(l), l.wScore + l.itScore])) : null;
+const prevLeadMap = prevLeads ? new Map(prevLeads.map((l) => [keyOf(l), l])) : null;
+const prevInv = readOpt('prev-inventory.json');
+const prevInvKeys = prevInv ? new Set(prevInv.map(keyOf)) : null;
+
+// Break-timing: what changed for this business since the last scan.
+// Calling the week a site breaks is the warmest cold call there is.
+const BAD = new Set(['down', 'parked', 'ssl-error']);
+function breakOf(l) {
+  if (!prevLeadMap) return '';
+  const k = keyOf(l);
+  const st = l.audit && l.audit.status;
+  const p = prevLeadMap.get(k);
+  if (p) {
+    const pst = p.audit && p.audit.status;
+    if (BAD.has(st) && !BAD.has(pst)) {
+      return st === 'ssl-error' ? 'Security certificate broke since last scan' : 'Website went down since last scan';
+    }
+    return '';
+  }
+  if (prevInvKeys && !prevInvKeys.has(k)) return 'Newly listed business';
+  if (BAD.has(st)) return st === 'ssl-error' ? 'Certificate broke since last scan (site was healthy)' : 'Website went down since last scan (was healthy)';
+  return '';
+}
 const retired = prevLeads
   ? prevLeads.filter((p) => !leads.some((l) => keyOf(l) === keyOf(p))).length
   : 0;
@@ -119,6 +142,13 @@ for (const l of leads) {
     slug: auditSlugs[slug] ? slug : '',
     multi: locs && locs.size > 1 ? locs.size : 0,
     chg,
+    brk: breakOf(l),
+    nw: (() => {                                                     // recently opened (FSQ record age)
+      const dc = rat && rat.matched && rat.dc;
+      if (!dc) return '';
+      const days = (Date.now() - Date.parse(dc)) / 86400000;
+      return days >= 0 && days <= 120 ? dc : '';
+    })(),
     em: l.email || (l.audit && l.audit.freeEmail) || (rat && rat.e) || (deep && deep.cEmails && deep.cEmails[0]) || '',
     mx: deep?.mxp || '',
     tech: (deep?.tech || []).join(', '),

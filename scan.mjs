@@ -529,7 +529,10 @@ async function main() {
     if (adopted) log(`Adopted ${adopted} Foursquare-listed websites for no-site businesses.`);
   } catch { /* no ratings yet — fine */ }
 
-  fs.writeFileSync(path.join(OUT_DIR, 'inventory.json'), JSON.stringify(all, null, 1));
+  // Keep the previous inventory so the board can tell "newly listed" apart
+  // from "was healthy last run and just broke".
+  if (fs.existsSync(invPath)) fs.copyFileSync(invPath, path.join(OUT_DIR, 'prev-inventory.json'));
+  fs.writeFileSync(invPath, JSON.stringify(all, null, 1));
 
   // Pick audit set per region: businesses with real (non-social) websites,
   // prioritized by vertical, capped at MAX_AUDIT per region.

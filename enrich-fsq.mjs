@@ -45,7 +45,7 @@ function nameMatch(a, b) {
 // Free-tier fields only (rating/closed_bucket are premium or gone on the new API):
 // date_closed present = permanently closed; date_refreshed = when FSQ last verified.
 // website/tel/email ride along free — used for backfill and phone cross-checks.
-const FIELDS = 'name,date_closed,date_refreshed,website,tel,email';
+const FIELDS = 'name,date_closed,date_refreshed,date_created,website,tel,email';
 let mode = 'new'; // new places-api host first (service keys 401 on classic v3)
 async function fsqSearch(l) {
   const q = encodeURIComponent(l.name);
@@ -94,6 +94,7 @@ for (const l of todo) {
         r: 0, rc: 0, // ratings are premium-tier on FSQ — none on the free plan
         bs,
         dr: p.date_refreshed || '',
+        dc: p.date_created || '',   // recently created record ≈ recently opened business
         w: p.website || '',
         t: p.tel || '',
         e: p.email || '',
