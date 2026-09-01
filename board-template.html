@@ -686,14 +686,14 @@
     row('Who to ask for', who);
 
     const sc = document.createElement('p');
-    if (d.ct) { sc.className = 'warn'; sc.textContent = 'Google lists this business as TEMPORARILY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
-    else if (d.g) sc.textContent = 'Verified operational on Google.';
-    else sc.textContent = 'Couldn’t cross-check on Google — confirm they’re still open when you call.';
+    if (d.ct) { sc.className = 'warn'; sc.textContent = 'Listings mark this business as TEMPORARILY or POSSIBLY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
+    else if (d.g) sc.textContent = 'Listed as operational (places data).';
+    else sc.textContent = 'Couldn’t cross-check against places data — confirm they’re still open when you call.';
     row('Still open?', sc);
 
     if (d.r) {
       const rp = document.createElement('p');
-      rp.textContent = d.r + '★ from ' + d.rc + ' Google reviews — ' + (
+      rp.textContent = d.r + '★' + (d.rc ? ' from ' + d.rc + ' Google reviews' : ' rating') + ' — ' + (
         d.r >= 4.5 ? 'lead with it: “you’ve earned a great reputation, but nobody can see it online.”'
         : d.r >= 3.8 ? 'solid reputation; the online presence should match it.'
         : 'reputation needs work too — tread gently and focus on the fix.');
@@ -831,10 +831,10 @@
       tr.className = 'lead' + (TRACKING && unlocked ? ' trackable' : '');
       tr.dataset.key = keyOf(d);
       const biz = td('biz', d.name);
-      if (d.r) { const st = document.createElement('span'); st.className = 'rstar'; st.textContent = d.r + '★'; st.title = d.rc + ' Google reviews'; biz.append(st); }
+      if (d.r) { const st = document.createElement('span'); st.className = 'rstar'; st.textContent = d.r + '★'; st.title = d.rc ? d.rc + ' Google reviews' : 'Listing rating'; biz.append(st); }
       if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
       else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
-      if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed for now'; b.title = 'Google lists this business as temporarily closed'; biz.append(b); }
+      if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed?'; b.title = 'Listings mark this business as temporarily or possibly closed'; biz.append(b); }
       tr.append(biz);
       tr.append(td('town', d.town + ', ' + d.st));
       if (TRACKING && unlocked) {

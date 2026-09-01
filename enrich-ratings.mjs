@@ -47,7 +47,8 @@ function nameMatch(a, b) {
 // (a bad-key run must not permanently poison the cache)
 const todo = leads.filter((l) => {
   const e = ratings[keyOf(l)];
-  return !e || (e.matched && !e.bs) || e.err;
+  // also redo Foursquare-sourced entries: Google data wins when available
+  return !e || (e.matched && !e.bs) || e.err || e.src === 'fsq';
 });
 log(`Google check (rating + operational status) for ${todo.length} leads (${leads.length - todo.length} already done)...`);
 

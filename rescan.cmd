@@ -21,8 +21,9 @@ if errorlevel 1 goto :fail
 rem 2. Deep audit (TLS / SPF / DMARC / SEO)
 node audit-deep.mjs >> out\rescan.log 2>&1
 
-rem 3. Google ratings (skips itself if GOOGLE_PLACES_API_KEY is not set)
+rem 3. Google ratings + Foursquare verification (each skips itself without its key)
 node enrich-ratings.mjs >> out\rescan.log 2>&1
+node enrich-fsq.mjs >> out\rescan.log 2>&1
 
 rem 4. Build checkup pages + board
 node build-audits.mjs >> out\rescan.log 2>&1

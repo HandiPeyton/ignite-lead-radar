@@ -47,6 +47,11 @@ jobs:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
         run: node enrich-ratings.mjs
 
+      - name: Foursquare verification fallback (skips itself without the key)
+        env:
+          FOURSQUARE_API_KEY: ${{ secrets.FOURSQUARE_API_KEY }}
+        run: node enrich-fsq.mjs
+
       - name: Build checkup pages + board
         run: |
           node build-audits.mjs

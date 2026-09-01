@@ -108,12 +108,12 @@ fs.writeFileSync(path.join(sitePublic, 'index.html'), siteHtml);
 const csvEsc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 const header = ['Region', 'Town', 'State', 'Business', 'Vertical', 'Need', 'Confidence',
   'Web score', 'IT score', 'Evidence', 'Phone', 'Website', 'Address',
-  'Google rating', 'Reviews', 'Google status', 'Maps'];
+  'Rating', 'Reviews', 'Listing status', 'Maps'];
 const csvRows = keptLeads.map((l, i) => {
   const row = rows[i];
   return [REGIONS[l.region].label, l.town, l.st, l.name, l.vertical, l.need, l.confidence,
     l.wScore, l.itScore, row.x ? l.evidence + '; ' + row.x : l.evidence, l.phone, l.website, l.address || '',
-    row.r || '', row.rc || '', row.g ? (row.ct ? 'Temporarily closed' : 'Operational') : 'Not found',
+    row.r || '', row.rc || '', row.g ? (row.ct ? 'Possibly/temporarily closed' : 'Operational') : 'Not found',
     'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${l.name} ${l.town} ${l.st}`)];
 });
 fs.writeFileSync(path.join(sitePublic, 'leads.csv'),
