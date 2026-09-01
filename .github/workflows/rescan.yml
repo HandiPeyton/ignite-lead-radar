@@ -2,8 +2,8 @@ name: Monthly lead rescan
 
 on:
   schedule:
-    - cron: '30 9 1 * *'    # monthly FULL scan (re-enumerate OSM): 1st of the month
-    - cron: '0 8 2-31 * *'  # daily LIGHT rescan ~4 AM ET (8:00 UTC; 3 AM in winter — DST)
+    - cron: '30 9 * * 0'    # weekly FULL scan (re-enumerate OSM): Sundays ~5:30 AM ET
+    - cron: '0 8 * * 1-6'   # daily LIGHT rescan Mon–Sat ~4 AM ET (8:00 UTC; 3 AM in winter — DST)
     - cron: '0 20 * * *'    # daily LIGHT rescan ~4 PM ET (20:00 UTC; 3 PM in winter — DST)
   workflow_dispatch:        # manual runs (GitHub phone app works); pick the mode
     inputs:
@@ -37,7 +37,7 @@ jobs:
         run: |
           MODE=light
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.mode }}" != "light" ]; then MODE=full; fi
-          if [ "${{ github.event.schedule }}" = "30 9 1 * *" ]; then MODE=full; fi
+          if [ "${{ github.event.schedule }}" = "30 9 * * 0" ]; then MODE=full; fi
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
           echo "Scan mode: $MODE"
 
