@@ -682,7 +682,7 @@ async function main() {
       const failedTiles = []; // exhausted retries this run → retried at the end, then carried to the next run
       try {
         const prog = JSON.parse(fs.readFileSync(progPath, 'utf8'));
-        if (Date.now() - prog.at < 36 * 3600000 && Array.isArray(prog.all) && prog.all.length) {
+        if (Date.now() - prog.at < 36 * 3600000 && (prog.keys || []).length < queue.length /* a checkpoint covering every tile is a finished scan, not a crash: start fresh */ && Array.isArray(prog.all) && prog.all.length) {
           for (const b of prog.all) {
             const key = b.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + b.lat.toFixed(3) + '|' + b.lng.toFixed(3);
             if (!seen.has(key)) { seen.add(key); all.push(b); }
