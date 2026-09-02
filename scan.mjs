@@ -33,11 +33,12 @@ const OUT_DIR = path.join(__dirname, 'out');
 const UA = 'IgniteCyber-LeadScanner/1.0 (local business research; ignitecyber.io)';
 const CUR_YEAR = new Date().getFullYear();
 
+// Only mirrors that actually answer: private.coffee and kumi.systems were
+// returning HTTP 500 (2026-09-01); a worker bound to a dead mirror just burns
+// attempts. Re-add them here if they come back.
 const OVERPASS_ENDPOINTS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
 ];
 
 // ---------- CLI ----------
@@ -159,12 +160,36 @@ function makeTiles() {
       tiles.push({ s: lat, w: lng, n: lat + TILE_LAT, e: lng + TILE_LNG });
     }
   }
-  return tiles;
+  // Pre-split tiles that hold a city or a cluster of towns: those always time
+  // out at full size on a busy mirror, so start them at quarter size instead
+  // of paying a timeout first.
+  const dense = (t) => {
+    let n = 0;
+    for (const p of PLACES) {
+      if (p.lat >= t.s && p.lat < t.n && p.lng >= t.w && p.lng < t.e) {
+        if (p.type === 'city') return true;
+        if (++n >= 6) return true;
+      }
+    }
+    return false;
+  };
+  const out = [];
+  let pre = 0;
+  for (const t of tiles) {
+    if (PLACES.length && dense(t)) {
+      const mLat = (t.s + t.n) / 2, mLng = (t.w + t.e) / 2;
+      out.push({ s: t.s, w: t.w, n: mLat, e: mLng }, { s: t.s, w: mLng, n: mLat, e: t.e },
+        { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
+      pre++;
+    } else out.push(t);
+  }
+  if (pre) log(`Pre-split ${pre} dense tiles (cities / town clusters) into quarters.`);
+  return out;
 }
 const bboxStr = (t) => `${t.s.toFixed(4)},${t.w.toFixed(4)},${t.n.toFixed(4)},${t.e.toFixed(4)}`;
 function buildBboxQuery(t) {
   const lines = SELECTORS.map((sel) => `nwr${sel}(${bboxStr(t)});`);
-  return `[out:json][timeout:120];(${lines.join('')});out center;`;
+  return `[out:json][timeout:75];(${lines.join('')});out center;`; // fail fast into the split path
 }
 
 const epCooldown = new Map(); // endpoint -> timestamp when usable again
@@ -191,7 +216,7 @@ async function overpass(query) {
           Accept: 'application/json',
         },
         body: 'data=' + encodeURIComponent(query),
-        signal: AbortSignal.timeout(120000),
+        signal: AbortSignal.timeout(90000),
       });
       if (res.status === 429) {
         epCooldown.set(ep, Date.now() + 90000);
@@ -580,11 +605,31 @@ async function main() {
     } else {
       const queue = makeTiles();
       const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.length, parseInt(flagVal('--enum-workers', '3'), 10));
-      let total = queue.length, tileNo = 0, splits = 0, stop = false;
+      let total = queue.length, tileNo = 0, splits = 0, stop = false, doneCount = 0;
+      // Resumable enumeration: progress is checkpointed every 25 tiles so a job
+      // timeout (or a slow-mirror night) never throws away hours of work. The
+      // Actions cache carries out/ between runs; a checkpoint < 36 h old resumes.
+      const progPath = path.join(OUT_DIR, 'enum-progress.json');
+      const doneKeys = new Set();
+      try {
+        const prog = JSON.parse(fs.readFileSync(progPath, 'utf8'));
+        if (Date.now() - prog.at < 36 * 3600000 && Array.isArray(prog.all) && prog.all.length) {
+          for (const b of prog.all) {
+            const key = b.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + b.lat.toFixed(3) + '|' + b.lng.toFixed(3);
+            if (!seen.has(key)) { seen.add(key); all.push(b); }
+          }
+          for (const k of prog.keys || []) doneKeys.add(k);
+          log(`Resuming enumeration: ${doneKeys.size} tiles already done, ${all.length} businesses carried over.`);
+        }
+      } catch { /* no checkpoint — start fresh */ }
+      const saveProgress = () => {
+        try { fs.writeFileSync(progPath, JSON.stringify({ at: Date.now(), keys: [...doneKeys], all })); } catch { /* ignore */ }
+      };
       log(`Enumerating ${total} grid tiles covering ${RADIUS_KM.toFixed(0)} km around ${CENTER.name} (${ENUM_WORKERS} workers, one in flight per mirror, pace ${pace} ms)...`);
       const tileWorker = async () => {
         while (queue.length && !stop) {
           const t = queue.shift();
+          if (doneKeys.has(bboxStr(t))) continue; // finished in an earlier attempt
           const n = ++tileNo;
           if (TILES_CAP && n > TILES_CAP) { stop = true; log(`  --tiles cap reached (${TILES_CAP}); stopping enumeration early`); break; }
           if (LIMIT && all.length >= LIMIT) { stop = true; break; }
@@ -605,12 +650,15 @@ async function main() {
           }
           const parsed = parseElements(data.elements || []);
           const kept = addAll(parsed);
+          doneKeys.add(bboxStr(t));
+          if (++doneCount % 25 === 0) saveProgress();
           if (kept) log(`  tile ${n}/${total}: ${data.elements.length} elements → ${kept} new businesses (running total ${all.length})`);
           await sleep(pace);
         }
       };
       await Promise.all(Array.from({ length: ENUM_WORKERS }, tileWorker));
-      log(`Enumeration done: ${all.length} businesses across ${tileNo} tiles (${splits} splits).`);
+      saveProgress();
+      log(`Enumeration done: ${all.length} businesses across ${tileNo} tiles (${splits} splits, ${doneKeys.size} completed).`);
     }
     if (REGION_KEYS.length < Object.keys(REGIONS).length) {
       const keep = new Set(REGION_KEYS);

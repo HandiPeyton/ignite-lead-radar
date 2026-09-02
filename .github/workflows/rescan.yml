@@ -25,7 +25,7 @@ concurrency:
 jobs:
   rescan:
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v5
 
