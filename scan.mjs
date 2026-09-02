@@ -255,6 +255,10 @@ async function overpass(query) {
             body: 'data=' + encodeURIComponent(query),
             signal: AbortSignal.timeout(90000),
           });
+      if (res.status === 403) { // policy block (osm.fr) — bench 5 min instead of burning retries
+        epCooldown.set(ep, Date.now() + 300000);
+        throw new Error(`HTTP 403 from ${ep} (policy block — benched 5 min)`);
+      }
       if (res.status === 429) {
         epCooldown.set(ep, Date.now() + 90000);
         throw new Error(`HTTP 429 from ${ep} (cooling that endpoint 90s)`);
