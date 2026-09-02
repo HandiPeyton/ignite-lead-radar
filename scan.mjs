@@ -645,6 +645,7 @@ async function main() {
       // Actions cache carries out/ between runs; a checkpoint < 36 h old resumes.
       const progPath = path.join(OUT_DIR, 'enum-progress.json');
       const doneKeys = new Set();
+      const failedTiles = []; // exhausted retries this run → retried at the end, then carried to the next run
       try {
         const prog = JSON.parse(fs.readFileSync(progPath, 'utf8'));
         if (Date.now() - prog.at < 36 * 3600000 && Array.isArray(prog.all) && prog.all.length) {
@@ -653,11 +654,12 @@ async function main() {
             if (!seen.has(key)) { seen.add(key); all.push(b); }
           }
           for (const k of prog.keys || []) doneKeys.add(k);
-          log(`Resuming enumeration: ${doneKeys.size} tiles already done, ${all.length} businesses carried over.`);
+          for (const t of prog.failed || []) queue.unshift(t); // previous run's dropped tiles go first
+          log(`Resuming enumeration: ${doneKeys.size} tiles already done, ${all.length} businesses carried over, ${(prog.failed || []).length} previously-failed tiles requeued.`);
         }
       } catch { /* no checkpoint — start fresh */ }
       const saveProgress = () => {
-        try { fs.writeFileSync(progPath, JSON.stringify({ at: Date.now(), keys: [...doneKeys], all })); } catch { /* ignore */ }
+        try { fs.writeFileSync(progPath, JSON.stringify({ at: Date.now(), keys: [...doneKeys], all, failed: failedTiles })); } catch { /* ignore */ }
       };
       log(`Enumerating ${total} grid tiles covering ${RADIUS_KM.toFixed(0)} km around ${CENTER.name} (${ENUM_WORKERS} workers, one in flight per mirror, pace ${pace} ms)...`);
       const tileWorker = async () => {
@@ -677,8 +679,12 @@ async function main() {
                 { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
               total += 4; splits++;
               log(`  tile ${n} too heavy (${e.message}) — split into 4`);
+            } else if (!t.retried) {
+              t.retried = true; queue.push(t); total++;
+              log(`  tile ${n} exhausted retries (${e.message}) — parked for a second pass at the end`);
             } else {
-              log(`  tile ${n} FAILED after retries: ${e.message}`);
+              failedTiles.push({ s: t.s, w: t.w, n: t.n, e: t.e });
+              log(`  tile ${n} FAILED twice — recorded; the next run retries it first`);
             }
             continue;
           }
