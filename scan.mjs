@@ -47,9 +47,12 @@ const OVERPASS_ENDPOINTS = [
 ];
 // Per-mirror concurrency = what each server itself publishes. Workers never
 // exceed a mirror's capacity, so this stays inside every server's own policy.
+// z + lz4 are two front doors of ONE service with a shared 2-slot-per-IP
+// limit — 1 each keeps the whole cluster inside its policy (4 concurrent
+// requests got the runner's connections dropped: "fetch failed" storms).
 const EP_CAPACITY = {
-  'https://z.overpass-api.de/api/interpreter': 2,
-  'https://lz4.overpass-api.de/api/interpreter': 2,
+  'https://z.overpass-api.de/api/interpreter': 1,
+  'https://lz4.overpass-api.de/api/interpreter': 1,
 };
 const EP_GET = new Set(['https://overpass.openstreetmap.fr/api/interpreter']);
 const capOf = (e) => EP_CAPACITY[e] || 1;
@@ -213,6 +216,7 @@ const epInFlight = new Map();
 // (mail.ru's nightly window hit 23 s for a 3 km probe) is benched for 10 min
 // and retried later — no point feeding tiles to a server that will time out.
 const epRecent = new Map(); // endpoint -> last durations (ms)
+let netFailStreak = 0;        // consecutive connection-level failures (any mirror); reset on success
 function noteLatency(ep, ms) {
   const arr = epRecent.get(ep) || [];
   arr.push(ms); if (arr.length > 3) arr.shift();
@@ -260,6 +264,7 @@ async function overpass(query) {
         throw new Error(`HTTP ${res.status} from ${ep}`);
       }
       const data = await res.json();
+      netFailStreak = 0;
       noteLatency(ep, Date.now() - t0);
       if (data.remark) {
         log(`  overpass remark: ${data.remark}`);
@@ -271,7 +276,17 @@ async function overpass(query) {
       return data;
     } catch (e) {
       lastErr = e;
-      log(`  overpass attempt ${attempt + 1} failed (${e.message}); backing off...`);
+      const netFail = /fetch failed|ECONN|ENOTFOUND|EAI_AGAIN|socket|TLS/i.test(e.message) || e.name === 'TypeError';
+      if (netFail) {
+        netFailStreak++;
+        epCooldown.set(ep, Date.now() + 20000); // let a dropped-connection mirror breathe
+        if (netFailStreak >= 12) {
+          log(`  ${netFailStreak} consecutive connection failures across mirrors — pausing 120 s (likely rate-blocked)`);
+          await sleep(120000);
+          netFailStreak = 0;
+        }
+      }
+      log(`  overpass attempt ${attempt + 1} failed (${e.message} @ ${ep.split('/')[2]}); backing off...`);
       await sleep(4000);
     } finally {
       epInFlight.set(ep, Math.max(0, (epInFlight.get(ep) || 0) - 1));
@@ -673,7 +688,8 @@ async function main() {
           try {
             data = await overpass(buildBboxQuery(t));
           } catch (e) {
-            if (t.n - t.s > TILE_LAT / 3) {
+            const heavy = /timed out|timeout|HTTP 504|HTTP 429/i.test(e.message);
+            if (heavy && t.n - t.s > TILE_LAT / 3) {
               const mLat = (t.s + t.n) / 2, mLng = (t.w + t.e) / 2;
               queue.push({ s: t.s, w: t.w, n: mLat, e: mLng }, { s: t.s, w: mLng, n: mLat, e: t.e },
                 { s: mLat, w: t.w, n: t.n, e: mLng }, { s: mLat, w: mLng, n: t.n, e: t.e });
