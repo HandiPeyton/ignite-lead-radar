@@ -430,7 +430,9 @@ async function auditSite(rawUrl) {
   // variant fails — the URL exactly as listed, then www/apex × https/http.
   // Many small-business sites answer on only one of these.
   let u;
-  try { u = new URL(rawUrl); } catch { return { status: 'down', notes: ['Bad URL'] }; }
+  // places-data backfills often arrive as bare domains ("www.example.com") — that's a site, not a bad URL
+  const withScheme = String(rawUrl || '').trim().includes('://') ? String(rawUrl).trim() : 'https://' + String(rawUrl || '').trim();
+  try { u = new URL(withScheme); } catch { return { status: 'down', notes: ['Bad URL'] }; }
   const bare = u.hostname.replace(/^www\./, '');
   if (auditCache.has(bare)) return auditCache.get(bare);
 
@@ -765,7 +767,7 @@ async function main() {
     for (const b of all) {
       if (b.website) continue;
       const e = fsq[(b.name + '|' + b.town + '|' + b.st).toLowerCase()];
-      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w)) { b.website = e.w; b.fsqSite = true; adopted++; }
+      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w)) { b.website = e.w.includes('://') ? e.w : 'https://' + e.w; b.fsqSite = true; adopted++; }
     }
     if (adopted) log(`Adopted ${adopted} places-listed websites (Overture / Foursquare / Google) for no-site businesses.`);
   } catch { /* no ratings yet — fine */ }

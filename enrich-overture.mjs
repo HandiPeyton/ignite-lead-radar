@@ -190,6 +190,7 @@ function bestMatch(l) {
   return top;
 }
 const STATUS = { open: 'OPERATIONAL', permanently_closed: 'CLOSED_PERMANENTLY', temporarily_closed: 'CLOSED_TEMPORARILY' };
+const withScheme = (u) => { const t = String(u || '').trim(); return !t ? '' : t.includes('://') ? t : 'https://' + t; };
 
 // ---- merge ----------------------------------------------------------------------------
 let matched = 0, closed = 0, tempClosed = 0, webFill = 0, telFill = 0, kept = 0, unmatched = 0;
@@ -214,7 +215,7 @@ for (const l of todo) {
   const liveFresh = ex && ex.matched && ex.src !== 'overture' && ex.dr && (Date.now() - Date.parse(ex.dr)) < LIVE_FRESH_MS;
   const entry = {
     matched: true, src: 'overture', r: 0, rc: 0, bs,
-    dr: releaseDate, dc: '', w: c.web || '', t: c.tel || '', e: c.email || '',
+    dr: releaseDate, dc: '', w: withScheme(c.web), t: c.tel || '', e: c.email || '',
     conf: Math.round(conf * 100) / 100, oid: c.id, ocat: c.cat || '', ov: release,
   };
   if (ex && ex.matched && ex.src !== 'overture') {
