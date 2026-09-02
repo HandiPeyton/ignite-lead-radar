@@ -36,14 +36,22 @@ const CUR_YEAR = new Date().getFullYear();
 // Only mirrors that actually answer: private.coffee and kumi.systems were
 // returning HTTP 500 (2026-09-01); a worker bound to a dead mirror just burns
 // attempts. Re-add them here if they come back.
+// overpass-api.de's bare hostname is a load balancer that 504s under load;
+// its two named backends answer fine and each publishes 2 slots per IP.
+// openstreetmap.fr only accepts GET. mail.ru has nightly slow windows (auto-benched).
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',               // fast, grants 2 slots per IP
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter', // has nightly slow windows (~12 s/query)
+  'https://z.overpass-api.de/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://overpass.openstreetmap.fr/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
-// Per-mirror concurrency = what the mirror itself publishes (overpass-api.de:
-// 2 slots per IP). Workers never exceed a mirror's capacity, so this stays
-// inside each server's own policy.
-const EP_CAPACITY = { 'https://overpass-api.de/api/interpreter': 2 };
+// Per-mirror concurrency = what each server itself publishes. Workers never
+// exceed a mirror's capacity, so this stays inside every server's own policy.
+const EP_CAPACITY = {
+  'https://z.overpass-api.de/api/interpreter': 2,
+  'https://lz4.overpass-api.de/api/interpreter': 2,
+};
+const EP_GET = new Set(['https://overpass.openstreetmap.fr/api/interpreter']);
 const capOf = (e) => EP_CAPACITY[e] || 1;
 
 // ---------- CLI ----------
@@ -228,16 +236,21 @@ async function overpass(query) {
     epInFlight.set(ep, (epInFlight.get(ep) || 0) + 1);
     const t0 = Date.now();
     try {
-      const res = await fetch(ep, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': UA,
-          Accept: 'application/json',
-        },
-        body: 'data=' + encodeURIComponent(query),
-        signal: AbortSignal.timeout(90000),
-      });
+      const res = EP_GET.has(ep)
+        ? await fetch(ep + '?data=' + encodeURIComponent(query), {
+            headers: { 'User-Agent': UA, Accept: 'application/json' },
+            signal: AbortSignal.timeout(90000),
+          })
+        : await fetch(ep, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': UA,
+              Accept: 'application/json',
+            },
+            body: 'data=' + encodeURIComponent(query),
+            signal: AbortSignal.timeout(90000),
+          });
       if (res.status === 429) {
         epCooldown.set(ep, Date.now() + 90000);
         throw new Error(`HTTP 429 from ${ep} (cooling that endpoint 90s)`);
@@ -625,7 +638,7 @@ async function main() {
       }
     } else {
       const queue = makeTiles();
-      const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.reduce((n, e) => n + capOf(e), 0), parseInt(flagVal('--enum-workers', '3'), 10));
+      const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.reduce((n, e) => n + capOf(e), 0), parseInt(flagVal('--enum-workers', '5'), 10));
       let total = queue.length, tileNo = 0, splits = 0, stop = false, doneCount = 0;
       // Resumable enumeration: progress is checkpointed every 25 tiles so a job
       // timeout (or a slow-mirror night) never throws away hours of work. The
