@@ -216,7 +216,17 @@ const epInFlight = new Map();
 // (mail.ru's nightly window hit 23 s for a 3 km probe) is benched for 10 min
 // and retried later — no point feeding tiles to a server that will time out.
 const epRecent = new Map(); // endpoint -> last durations (ms)
-let netFailStreak = 0;        // consecutive connection-level failures (any mirror); reset on success
+let netFailStreak = 0; // consecutive connection-level failures (any mirror); reset on success
+// Overpass tells you when your next slot opens: "Slot available after: ..., in N seconds."
+async function slotWait(ep) {
+  try {
+    const r = await fetch(ep.replace('/api/interpreter', '/api/status'), { signal: AbortSignal.timeout(8000) });
+    const txt = await r.text();
+    const secs = [...txt.matchAll(/in ([0-9]+) seconds/g)].map(m => +m[1]);
+    if (/slots? available now/i.test(txt) && !secs.length) return 1;
+    return secs.length ? Math.min(...secs) : 0;
+  } catch { return 0; }
+}
 function noteLatency(ep, ms) {
   const arr = epRecent.get(ep) || [];
   arr.push(ms); if (arr.length > 3) arr.shift();
@@ -240,8 +250,11 @@ async function overpass(query) {
     epInFlight.set(ep, (epInFlight.get(ep) || 0) + 1);
     const t0 = Date.now();
     try {
+      // mail.ru's gateway cuts queries at ~35 s: declare 30 s there so a heavy tile comes back as
+      // Overpass's own 'timed out' (a real heaviness signal) instead of a gateway 504.
+      const q = ep.includes('mail.ru') ? query.replace('[timeout:75]', '[timeout:30]') : query;
       const res = EP_GET.has(ep)
-        ? await fetch(ep + '?data=' + encodeURIComponent(query), {
+        ? await fetch(ep + '?data=' + encodeURIComponent(q), {
             headers: { 'User-Agent': UA, Accept: 'application/json' },
             signal: AbortSignal.timeout(90000),
           })
@@ -252,7 +265,7 @@ async function overpass(query) {
               'User-Agent': UA,
               Accept: 'application/json',
             },
-            body: 'data=' + encodeURIComponent(query),
+            body: 'data=' + encodeURIComponent(q),
             signal: AbortSignal.timeout(90000),
           });
       if (res.status === 403) { // policy block (osm.fr) — bench 5 min instead of burning retries
@@ -260,6 +273,8 @@ async function overpass(query) {
         throw new Error(`HTTP 403 from ${ep} (policy block — benched 5 min)`);
       }
       if (res.status === 429) {
+        const wait = await slotWait(ep); // seconds until this IP's next slot, per the mirror itself
+        if (wait) { epCooldown.set(ep, Date.now() + (wait + 2) * 1000); throw new Error(`HTTP 429 from ${ep} (slot frees in ${wait}s)`); }
         epCooldown.set(ep, Date.now() + 90000);
         throw new Error(`HTTP 429 from ${ep} (cooling that endpoint 90s)`);
       }
