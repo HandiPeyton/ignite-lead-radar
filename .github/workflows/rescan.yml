@@ -96,6 +96,7 @@ jobs:
 
       - name: Deep render scan + screenshots (weekly full only)
         if: steps.mode.outputs.mode == 'full'
+        continue-on-error: true   # screenshots are a bonus; never let them block the build + deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |

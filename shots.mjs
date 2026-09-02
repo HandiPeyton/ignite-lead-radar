@@ -46,6 +46,9 @@ for (const l of leads) {
   allTargets.push({ slug, url: l.audit?.finalUrl || l.website, hi: l.confidence === 'High' ? 1 : 0, mi: typeof l.mi === 'number' ? l.mi : 999 });
 }
 
+// a stray rejection must never take down the stage — log it and keep shooting
+process.on('unhandledRejection', (e) => log('unhandled: ' + (e && e.message ? e.message : e)));
+
 const store = getStore({ name: 'shots', siteID: SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN });
 const browser = await puppeteer.launch({
   // ignore-certificate-errors: broken-SSL sites are our best leads — their
@@ -76,7 +79,7 @@ log(`Screenshotting ${targets.length} of ${allTargets.length} lead sites (High-c
 
 let i = 0, done = 0, ok = 0, metriced = 0;
 async function worker() {
-  const page = await browser.newPage();
+  let page = await browser.newPage();
   await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
   page.setDefaultNavigationTimeout(24000); // a 20-second site is a lead — measure it, don't skip it
   while (i < targets.length && Date.now() < deadline) {
@@ -125,7 +128,15 @@ async function worker() {
       } catch { /* mobile pass failed — keep the screenshot anyway */ }
     } catch { /* site refused to render */ }
     page.off('response', onResp);
-    await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
+    // setViewport reloads the page when emulation changes; a site that hangs on that reload
+    // used to throw out of the worker and kill the whole stage. Replace the wedged tab instead.
+    try { await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 }); }
+    catch {
+      try { await page.close(); } catch { /* already gone */ }
+      page = await browser.newPage();
+      await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
+      page.setDefaultNavigationTimeout(24000);
+    }
     done++;
     if (done % 50 === 0) log(`  ${done}/${targets.length} (${ok} shots, ${metriced} metrics)...`);
   }
