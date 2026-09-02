@@ -59,7 +59,7 @@ jobs:
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
           echo "Scan mode: $MODE"
 
-      - name: Scan all six regions (full enumeration)
+      - name: Scan every tile within 200 mi of Bristol (full enumeration)
         if: steps.mode.outputs.mode == 'full'
         run: node scan.mjs
 
