@@ -42,7 +42,7 @@ const CUR_YEAR = new Date().getFullYear();
 const OVERPASS_ENDPOINTS = [
   'https://z.overpass-api.de/api/interpreter',
   'https://lz4.overpass-api.de/api/interpreter',
-  'https://overpass.openstreetmap.fr/api/interpreter',
+  // overpass.openstreetmap.fr refuses our user agent by policy ("only available to white-listed usages") — not used.
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 // Per-mirror concurrency = what each server itself publishes. Workers never
@@ -54,7 +54,7 @@ const EP_CAPACITY = {
   'https://z.overpass-api.de/api/interpreter': 1,
   'https://lz4.overpass-api.de/api/interpreter': 1,
 };
-const EP_GET = new Set(['https://overpass.openstreetmap.fr/api/interpreter']);
+const EP_GET = new Set(); // mirrors that only accept GET (none currently)
 const capOf = (e) => EP_CAPACITY[e] || 1;
 
 // ---------- CLI ----------
