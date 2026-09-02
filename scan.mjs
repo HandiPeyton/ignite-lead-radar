@@ -757,8 +757,8 @@ async function main() {
     if (applied) log(`Applied ${applied} owner-corrected website domains from the board.`);
   } catch { /* no state snapshot — fine */ }
 
-  // Foursquare-discovered websites (free backfill): adopt for businesses OSM
-  // had no site for, so they get audited like everyone else this run.
+  // Places-data websites (Overture / Foursquare / Google backfill in ratings.json): adopt for
+  // businesses OSM had no site for, so they get audited like everyone else this run.
   try {
     const fsq = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'ratings.json'), 'utf8'));
     let adopted = 0;
@@ -767,7 +767,7 @@ async function main() {
       const e = fsq[(b.name + '|' + b.town + '|' + b.st).toLowerCase()];
       if (e && e.matched && e.w && !SOCIAL_RE.test(e.w)) { b.website = e.w; b.fsqSite = true; adopted++; }
     }
-    if (adopted) log(`Adopted ${adopted} Foursquare-listed websites for no-site businesses.`);
+    if (adopted) log(`Adopted ${adopted} places-listed websites (Overture / Foursquare / Google) for no-site businesses.`);
   } catch { /* no ratings yet — fine */ }
 
   // Keep the previous inventory so the board can tell "newly listed" apart
