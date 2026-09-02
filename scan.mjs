@@ -37,9 +37,14 @@ const CUR_YEAR = new Date().getFullYear();
 // returning HTTP 500 (2026-09-01); a worker bound to a dead mirror just burns
 // attempts. Re-add them here if they come back.
 const OVERPASS_ENDPOINTS = [
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
+  'https://overpass-api.de/api/interpreter',               // fast, grants 2 slots per IP
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter', // has nightly slow windows (~12 s/query)
 ];
+// Per-mirror concurrency = what the mirror itself publishes (overpass-api.de:
+// 2 slots per IP). Workers never exceed a mirror's capacity, so this stays
+// inside each server's own policy.
+const EP_CAPACITY = { 'https://overpass-api.de/api/interpreter': 2 };
+const capOf = (e) => EP_CAPACITY[e] || 1;
 
 // ---------- CLI ----------
 const args = process.argv.slice(2);
@@ -202,11 +207,11 @@ async function overpass(query) {
     // pick a free endpoint (not cooling down, nothing in flight); wait if none
     let ep = null;
     for (let w = 0; w < 720 && !ep; w++) {
-      ep = OVERPASS_ENDPOINTS.find((e) => (epCooldown.get(e) || 0) <= Date.now() && !epInFlight.get(e));
+      ep = OVERPASS_ENDPOINTS.find((e) => (epCooldown.get(e) || 0) <= Date.now() && (epInFlight.get(e) || 0) < capOf(e));
       if (!ep) await sleep(500);
     }
     if (!ep) ep = OVERPASS_ENDPOINTS[0];
-    epInFlight.set(ep, true);
+    epInFlight.set(ep, (epInFlight.get(ep) || 0) + 1);
     try {
       const res = await fetch(ep, {
         method: 'POST',
@@ -240,7 +245,7 @@ async function overpass(query) {
       log(`  overpass attempt ${attempt + 1} failed (${e.message}); backing off...`);
       await sleep(4000);
     } finally {
-      epInFlight.set(ep, false);
+      epInFlight.set(ep, Math.max(0, (epInFlight.get(ep) || 0) - 1));
     }
   }
   throw lastErr;
@@ -604,7 +609,7 @@ async function main() {
       }
     } else {
       const queue = makeTiles();
-      const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.length, parseInt(flagVal('--enum-workers', '3'), 10));
+      const ENUM_WORKERS = Math.min(OVERPASS_ENDPOINTS.reduce((n, e) => n + capOf(e), 0), parseInt(flagVal('--enum-workers', '3'), 10));
       let total = queue.length, tileNo = 0, splits = 0, stop = false, doneCount = 0;
       // Resumable enumeration: progress is checkpointed every 25 tiles so a job
       // timeout (or a slow-mirror night) never throws away hours of work. The
