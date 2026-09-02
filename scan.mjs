@@ -201,6 +201,20 @@ const epCooldown = new Map(); // endpoint -> timestamp when usable again
 // Parallel tile workers share the mirrors politely: at most ONE in-flight
 // request per endpoint, so 3 workers = 3 mirrors each seeing a serial stream.
 const epInFlight = new Map();
+// Adaptive mirror health: a mirror whose last few answers averaged > 30 s
+// (mail.ru's nightly window hit 23 s for a 3 km probe) is benched for 10 min
+// and retried later — no point feeding tiles to a server that will time out.
+const epRecent = new Map(); // endpoint -> last durations (ms)
+function noteLatency(ep, ms) {
+  const arr = epRecent.get(ep) || [];
+  arr.push(ms); if (arr.length > 3) arr.shift();
+  epRecent.set(ep, arr);
+  if (arr.length === 3 && arr.reduce((a, b) => a + b, 0) / 3 > 30000) {
+    epCooldown.set(ep, Date.now() + 600000);
+    epRecent.set(ep, []);
+    log(`  mirror ${ep.split('/')[2]} averaging ${Math.round(arr.reduce((a, b) => a + b, 0) / 3000)} s/query — benching it for 10 min`);
+  }
+}
 async function overpass(query) {
   let lastErr;
   for (let attempt = 0; attempt < 10; attempt++) {
@@ -212,6 +226,7 @@ async function overpass(query) {
     }
     if (!ep) ep = OVERPASS_ENDPOINTS[0];
     epInFlight.set(ep, (epInFlight.get(ep) || 0) + 1);
+    const t0 = Date.now();
     try {
       const res = await fetch(ep, {
         method: 'POST',
@@ -232,6 +247,7 @@ async function overpass(query) {
         throw new Error(`HTTP ${res.status} from ${ep}`);
       }
       const data = await res.json();
+      noteLatency(ep, Date.now() - t0);
       if (data.remark) {
         log(`  overpass remark: ${data.remark}`);
         if (/timed out/i.test(data.remark)) {
