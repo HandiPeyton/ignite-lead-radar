@@ -61,7 +61,7 @@ jobs:
 
       - name: Scan all six regions (full enumeration)
         if: steps.mode.outputs.mode == 'full'
-        run: node scan.mjs --pace 4000
+        run: node scan.mjs
 
       - name: Re-audit from last enumeration (light)
         if: steps.mode.outputs.mode == 'light'
