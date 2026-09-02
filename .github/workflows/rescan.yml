@@ -94,6 +94,12 @@ jobs:
           FOURSQUARE_API_KEY: ${{ secrets.FOURSQUARE_API_KEY }}
         run: node enrich-fsq.mjs
 
+      - name: Overture Maps verification (open data; every run, cheap when nothing changed)
+        continue-on-error: true   # verification is additive; never block the build + deploy
+        run: |
+          npm install --no-save --no-fund --no-audit duckdb
+          node enrich-overture.mjs
+
       - name: Deep render scan + screenshots (weekly full only)
         if: steps.mode.outputs.mode == 'full'
         continue-on-error: true   # screenshots are a bonus; never let them block the build + deploy

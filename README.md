@@ -74,6 +74,15 @@ plus a redeploy.
   prefers High confidence) with its prep panel ready — dial, mark, repeat.
 - **Backup** downloads all progress/notes as JSON; `rescan.cmd` also snapshots it to
   `out/backups/` before every rescan.
+- **Still-in-business verification (open data, via Overture Maps)**: `enrich-overture.mjs`
+  cross-checks every lead against Overture's Places theme (Meta + Microsoft + Foursquare +
+  PinMeTo, monthly releases, no key, no quota). Its `operating_status` marks leads permanently
+  or temporarily closed, `confidence` says how sure the record is, and websites / phones /
+  emails backfill gaps. DuckDB reads the release's parquet straight from the public bucket
+  with bounding-box pruning (`npm install --no-save duckdb`; the script skips itself without
+  it). Runs every CI run; costs nothing when every lead was already checked against the
+  current release. A live Google / Foursquare match refreshed in the last 45 days keeps its
+  status; otherwise Overture's wins.
 - **Still-in-business verification (live, via Foursquare)**: `enrich-fsq.mjs` checks
   every lead against Foursquare's free-tier places data (`FOURSQUARE_API_KEY` secret,
   no card needed) — `date_closed` present ⇒ permanently closed ⇒ removed from the
@@ -118,6 +127,7 @@ Full rebuild pipeline after a rescan:
 ```
 node tools/lead-scanner/scan.mjs --pace 4000
 node tools/lead-scanner/audit-deep.mjs
+node tools/lead-scanner/enrich-overture.mjs   # needs: npm install --no-save duckdb
 node tools/lead-scanner/build-audits.mjs
 node tools/lead-scanner/build-board.mjs
 cd tools/lead-scanner/site
