@@ -1409,8 +1409,8 @@
   const schedGapEl = document.getElementById('schedGap');
   const slotsEl = document.getElementById('slots');
   const schedSummaryEl = document.getElementById('schedSummary');
-  const EVENING_VERTS = new Set(['hospitality', 'fitness']);
-  const WINDOW_LABEL = { day: 'Daytime block — 10:00 AM to 4:00 PM', eve: 'Evening block — 8:00 to 10:00 PM' };
+  const EVENING_VERTS = new Set(); // no evening block anymore — every vertical books into business hours
+  const WINDOW_LABEL = { day: 'Business hours — 9:00 AM to 5:00 PM', eve: 'Evening block' };
 
   function setView(v) {
     state.view = v;
@@ -1431,7 +1431,7 @@
   (function initSchedDate() {
     const now = new Date();
     const d = new Date(now);
-    if (now.getHours() >= 21 && now.getMinutes() >= 45 || now.getHours() >= 22) d.setDate(d.getDate() + 1);
+    if (now.getHours() > 16 || (now.getHours() === 16 && now.getMinutes() >= 45)) d.setDate(d.getDate() + 1); // past the last slot → plan tomorrow
     schedDateEl.value = localDateStr(d);
   })();
   schedDateEl.addEventListener('change', renderSchedule);
@@ -1441,7 +1441,7 @@
     const [y, m, d] = dateStr.split('-').map(Number);
     if (!y) return [];
     const mk = (h, mi) => new Date(y, m - 1, d, h, mi);
-    const windows = [[mk(10, 0), mk(16, 0), 'day'], [mk(20, 0), mk(22, 0), 'eve']];
+    const windows = [[mk(9, 0), mk(17, 0), 'day']]; // business hours only — evening calls reach the late shift, not the owner
     const nowT = Date.now();
     const out = [];
     for (const [start, end, kind] of windows) {
