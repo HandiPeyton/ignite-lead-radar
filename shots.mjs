@@ -35,7 +35,7 @@ if (!process.env.NETLIFY_AUTH_TOKEN) {
 }
 
 const leads = JSON.parse(fs.readFileSync(path.join(out, 'leads.json'), 'utf8'));
-const targets = [];
+const allTargets = [];
 const seen = new Set();
 for (const l of leads) {
   if (!l.website || SOCIAL_RE.test(l.website)) continue;
@@ -43,9 +43,8 @@ for (const l of leads) {
   const slug = slugOf(l);
   if (seen.has(slug)) continue;
   seen.add(slug);
-  targets.push({ slug, url: l.audit?.finalUrl || l.website });
+  allTargets.push({ slug, url: l.audit?.finalUrl || l.website, hi: l.confidence === 'High' ? 1 : 0, mi: typeof l.mi === 'number' ? l.mi : 999 });
 }
-log(`Screenshotting ${targets.length} lead sites...`);
 
 const store = getStore({ name: 'shots', siteID: SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN });
 const browser = await puppeteer.launch({
@@ -61,13 +60,26 @@ const deep = {};
 let existingDeep = {};
 try { existingDeep = JSON.parse(fs.readFileSync(path.join(out, 'deepscan.json'), 'utf8')); } catch { /* first run */ }
 const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return null; } };
+// Bounded workload at 200-mile scale: High-confidence + closest sites first, skip sites
+// measured within the last week (their screenshot is still in Blobs) so weekly runs rotate
+// through the rest, hard cap on count, and a wall-clock budget so the job can never time out here.
+const argOf = (name, dflt) => { const a = process.argv.find((x) => x.startsWith(name + '=')); return a ? a.slice(name.length + 1) : dflt; };
+const MAX_SHOTS = parseInt(argOf('--max-shots', '1500'), 10);
+const SHOT_MINUTES = parseInt(argOf('--shots-minutes', '75'), 10);
+const FRESH_MS = 6.5 * 86400000;
+let skippedFresh = 0;
+let targets = allTargets.filter((t) => { const d = existingDeep[hostOf(t.url)]; if (d && d.at && Date.now() - d.at < FRESH_MS) { skippedFresh++; return false; } return true; });
+targets.sort((a, b) => (b.hi - a.hi) || (a.mi - b.mi));
+if (targets.length > MAX_SHOTS) targets = targets.slice(0, MAX_SHOTS);
+const deadline = Date.now() + SHOT_MINUTES * 60000;
+log(`Screenshotting ${targets.length} of ${allTargets.length} lead sites (High-confidence + closest first; ${skippedFresh} still fresh from a prior week; cap ${MAX_SHOTS}; budget ${SHOT_MINUTES} min)...`);
 
 let i = 0, done = 0, ok = 0, metriced = 0;
 async function worker() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
   page.setDefaultNavigationTimeout(24000); // a 20-second site is a lead — measure it, don't skip it
-  while (i < targets.length) {
+  while (i < targets.length && Date.now() < deadline) {
     const t = targets[i++];
     const host = hostOf(t.url);
     let bytes = 0, imgBytes = 0, imgCount = 0, reqCount = 0;
@@ -126,4 +138,4 @@ await browser.close();
 
 // merge over any prior deepscan (sites that failed this run keep last-known metrics)
 fs.writeFileSync(path.join(out, 'deepscan.json'), JSON.stringify({ ...existingDeep, ...deep }, null, 0));
-log(`Done: ${ok}/${targets.length} screenshots, ${metriced} deep-metric captures.`);
+log(`Done: ${ok}/${done} screenshots, ${metriced} deep-metric captures` + (done < targets.length ? ` (time budget reached with ${targets.length - done} left; next weekly run picks them up)` : '') + '.');
