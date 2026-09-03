@@ -424,7 +424,17 @@ async function tryFetch(url) {
 function causeCode(e) {
   return e?.cause?.code || e?.code || (e?.name === 'TimeoutError' ? 'ETIMEDOUT' : '') || '';
 }
-const CERT_CODES = /CERT|UNABLE_TO_VERIFY|SELF_SIGNED|ALTNAME|SSL|TLS/i;
+// Only genuine certificate problems count as "your certificate is broken": expired, wrong
+// name, self-signed, unverifiable chain. Handshake/protocol failures and resets are "unreachable".
+const CERT_CODE_RE = /^(CERT_|ERR_TLS_CERT_|DEPTH_ZERO_SELF_SIGNED_CERT|SELF_SIGNED_CERT_IN_CHAIN|UNABLE_TO_VERIFY_LEAF_SIGNATURE|UNABLE_TO_GET_ISSUER_CERT)/i;
+const CERT_MSG_RE = /certificate (?:has expired|is not yet valid)|self[- ]signed certificate|does not match certificate|unable to verify the first certificate|unable to get local issuer certificate|altnames/i;
+// Hosting platforms whose sites live on a subdomain: adding www./apex variants to those only
+// manufactures certificate errors against the platform's wildcard cert.
+const PLATFORM_HOST_RE = /(wixsite|godaddysites|weebly|squarespace|wordpress|blogspot|webs|business\.site|toast\.site|square\.site|carrd\.co|my\.canva\.site|sites\.google)\.?/i;
+// Bot protection answers (the host is up; it just won't serve a scanner) — never a lead signal.
+const BLOCKED_STATUS = new Set([401, 403, 405, 406, 409, 429, 503]);
+const CHALLENGE_RE = /just a moment|attention required|checking your browser|enable javascript and cookies|verify you are human|are you a human|access denied|cloudflare|incapsula|imperva|ddos-guard|sucuri website firewall|bot verification|request blocked/i;
+const TRANSIENT_RE = /^(UND_ERR_CONNECT_TIMEOUT|ETIMEDOUT|UND_ERR_SOCKET|ECONNRESET|EAI_AGAIN)$/;
 
 async function auditSite(rawUrl) {
   // Double-check design: a site only counts as down/broken if EVERY reasonable
@@ -439,31 +449,46 @@ async function auditSite(rawUrl) {
 
   const candidates = [];
   const push = (c) => { if (!candidates.includes(c)) candidates.push(c); };
+  // https is tried before http even when the listing says http://, so a site that got a free
+  // certificate isn't reported as "no HTTPS" just because the old listing answers on port 80.
+  const bareDomain = bare.split('.').length === 2 && !PLATFORM_HOST_RE.test(bare);
+  push(u.href.replace(/^http:/i, 'https:'));
+  if (bareDomain) { push(`https://www.${bare}/`); push(`https://${bare}/`); }
   push(u.href);
-  push(`https://www.${bare}/`);
-  push(`https://${bare}/`);
-  push(`http://www.${bare}/`);
-  push(`http://${bare}/`);
+  if (bareDomain) { push(`http://www.${bare}/`); push(`http://${bare}/`); }
 
   const result = {
     status: 'ok', viewport: false, year: null, flags: [], freeEmail: '',
     oldServer: '', finalUrl: '', https: true,
   };
-  let page = null, sawCert = false, lastNote = '';
+  let page = null, sawCert = false, blocked = false, lastNote = '';
   for (const cand of candidates) {
-    try {
-      const p = await tryFetch(cand);
-      if (p.res.status >= 400) { lastNote = `HTTP ${p.res.status}`; continue; }
-      page = p;
-      break;
-    } catch (e) {
-      const code = causeCode(e);
-      if (CERT_CODES.test(code) || CERT_CODES.test(String(e?.cause?.message || ''))) sawCert = true;
-      lastNote = code || 'unreachable';
+    for (let attempt = 0; attempt < 2 && !page; attempt++) {
+      try {
+        const p = await tryFetch(cand);
+        const st = p.res.status;
+        if (st < 400) { page = p; break; }
+        // an HTTP answer means the host is up: bot protection is not "down"
+        if (BLOCKED_STATUS.has(st) || CHALLENGE_RE.test(p.text.slice(0, 20000))) { blocked = true; lastNote = `HTTP ${st} (bot protection)`; }
+        else lastNote = `HTTP ${st}`;
+        break;
+      } catch (e) {
+        const code = causeCode(e);
+        const msg = String(e?.cause?.message || e?.message || '');
+        if (CERT_CODE_RE.test(code) || CERT_MSG_RE.test(msg)) sawCert = true;
+        lastNote = code || 'unreachable';
+        // one retry for transient network failures — a single connect timeout from a busy
+        // runner must not become "your website is unreachable" on a prospect's checkup page
+        if (attempt === 0 && TRANSIENT_RE.test(code)) { await sleep(3000); continue; }
+        break;
+      }
     }
+    if (page) break;
   }
   if (!page) {
-    const r = { status: sawCert ? 'ssl-error' : 'down', notes: [lastNote] };
+    const r = blocked
+      ? { status: 'blocked', notes: [lastNote] }
+      : { status: sawCert ? 'ssl-error' : 'down', notes: [lastNote] };
     auditCache.set(bare, r);
     return r;
   }
