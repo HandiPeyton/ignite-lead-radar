@@ -153,7 +153,7 @@ function nameScore(a, b) {
   if (!ta.size || !tb.size) return 0;
   let shared = 0;
   for (const t of ta) if (tb.has(t)) shared++;
-  return shared / Math.min(ta.size, tb.size);
+  return shared / Math.max(ta.size, tb.size); // subset names score below an exact/prefix match
 }
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;

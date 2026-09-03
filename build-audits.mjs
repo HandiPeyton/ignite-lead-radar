@@ -279,7 +279,8 @@ const apex = (h) => { const p = (h || '').split('.'); return p.length <= 2 ? h :
 // ---------- grade ----------
 function grade(F) {
   let score = 100;
-  for (const f of F) score -= f.sev === 'crit' ? 30 : f.sev === 'imp' ? 10 : 4;
+  for (const f of F) score -= f.sev === 'crit' ? 30 : f.sev === 'imp' ? 10 : 0;
+  score -= Math.min(12, 4 * F.filter((f) => f.sev === 'rec').length); // recs are tune-ups: capped
   score = Math.max(5, score);
   const letter = score >= 90 ? 'A' : score >= 78 ? 'B' : score >= 64 ? 'C' : score >= 50 ? 'D' : 'F';
   return { score, letter };

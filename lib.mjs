@@ -21,6 +21,11 @@ export function hostnameOf(url) {
 
 export const SOCIAL_RE = /facebook\.com|fb\.com|instagram\.com|linktr\.ee|m\.me\//i;
 
+// Directory, review, ordering and aggregator pages that places data (Overture / Foursquare /
+// Google) sometimes lists as a business's "website". Auditing one of these would grade a
+// third party's page as if it were the prospect's own site.
+export const DIRECTORY_RE = /(^|\/\/|\.)(yelp|mapquest|yellowpages|yp|superpages|bbb|angi|angieslist|homeadvisor|thumbtack|houzz|porch|manta|merchantcircle|alignable|nextdoor|tripadvisor|foursquare|doordash|grubhub|ubereats|seamless|toasttab|clover|square|opentable|resy|zomato|allmenus|menupages|restaurantji|healthgrades|zocdoc|vitals|webmd|findlaw|avvo|lawyers|justia|realtor|zillow|apartments|booking|expedia|hotels|airbnb|vrbo|groupon|indeed|glassdoor|bizapedia|dnb|zoominfo|cylex|hotfrog|chamberofcommerce|nicelocal|birdeye|google|goo|bing|apple|amazon|etsy|ebay|linkedin|youtube|tiktok|twitter|x|pinterest|yellowbook|citysearch|local|cityfos|dexknows|elocal|showmelocal|ezlocal|brownbook|hubbiz|us-business|wheree)\.(com|net|org|co|gl|io|site|biz)\b/i;
+
 export function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }

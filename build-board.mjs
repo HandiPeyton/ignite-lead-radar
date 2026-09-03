@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REGIONS } from './regions.mjs';
-import { slugOf, hostnameOf, keyOf } from './lib.mjs';
+import { slugOf, hostnameOf, keyOf, DIRECTORY_RE } from './lib.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const out = path.join(dir, 'out');
@@ -34,14 +34,14 @@ function breakOf(l) {
   const p = prevLeadMap.get(k);
   if (p) {
     const pst = p.audit && p.audit.status;
-    if (BAD.has(st) && !BAD.has(pst)) {
+    // only a site the previous scan actually audited as reachable can "break"
+    if (BAD.has(st) && pst && !BAD.has(pst)) {
       return st === 'ssl-error' ? 'Security certificate broke since last scan' : 'Website went down since last scan';
     }
     return '';
   }
   if (prevInvKeys && !prevInvKeys.has(k)) return 'Newly listed business';
-  if (BAD.has(st)) return st === 'ssl-error' ? 'Certificate broke since last scan (site was healthy)' : 'Website went down since last scan (was healthy)';
-  return '';
+  return ''; // no previous audit of this site — nothing to compare against
 }
 const retired = prevLeads
   ? prevLeads.filter((p) => !leads.some((l) => keyOf(l) === keyOf(p))).length
@@ -158,9 +158,10 @@ for (const l of leads) {
     xd: expDays !== null && expDays >= 0 && expDays < 60 ? expDays : null,
     r: rat && rat.matched ? rat.r : 0,
     rc: rat && rat.matched ? rat.rc : 0,
-    g: rat && rat.matched ? 1 : 0,                                  // places-verified
-    dv: rat && rat.matched ? (rat.dr || '') : '',                   // record refresh date
-    fw: rat && rat.matched && rat.w && !l.website ? rat.w : '',     // FSQ-only website
+    g: rat && rat.matched && (!rat.bs || rat.bs === 'OPERATIONAL') ? 1 : 0, // places-verified as open
+    gl: rat && rat.matched && rat.bs === 'LISTED' ? 1 : 0,          // listed, open/closed status not stated
+    dv: rat && rat.matched ? (rat.dr || '') : '',                   // record refresh / release date
+    fw: rat && rat.matched && rat.w && !l.website && !DIRECTORY_RE.test(rat.w) ? rat.w : '', // places-data website
     pm: (() => {                                                     // phone mismatch: FSQ's number
       if (!(rat && rat.matched && rat.t && l.phone)) return '';
       const a = l.phone.replace(/\D/g, '').slice(-10);

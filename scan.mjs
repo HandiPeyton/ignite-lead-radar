@@ -27,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REGIONS, SELECTORS, CHAIN_RE, IT_HEAVY, VERTICAL_PRIORITY, classifyVertical, CENTER, RADIUS_KM, TILE_LAT, TILE_LNG } from './regions.mjs';
+import { DIRECTORY_RE } from './lib.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, 'out');
@@ -487,14 +488,15 @@ async function auditSite(rawUrl) {
 
   if (/microsoft frontpage/i.test(text)) result.flags.push('Built with FrontPage (1990s-era)');
   if (/<frameset/i.test(text)) result.flags.push('Uses HTML framesets (1990s-era)');
-  if (/\.swf["']/i.test(text)) result.flags.push('Uses Flash (dead tech)');
+  if (/<(?:object|embed|param)[^>]+\.swf["'\s>]|application\/x-shockwave-flash|clsid:D27CDB6E-AE6D-11cf-96B8-444553540000|swfobject\.embedSWF\s*\(/i.test(text)) result.flags.push('Uses Flash (dead tech)');
   if (/wsimg\.com|godaddy.*website ?builder/i.test(text)) result.flags.push('GoDaddy site builder');
   if (/wixstatic\.com|wix\.com/i.test(text)) result.flags.push('Wix builder');
   if (/weebly\.com/i.test(text)) result.flags.push('Weebly builder');
 
   // "Genuinely outdated / dated-looking" signals — sites that load fine but
   // scream 2005: legacy markup, ancient frameworks, authoring-tool exports.
-  if (/<font[\s>]|<center[\s>]|<marquee|<body[^>]+bgcolor=/i.test(text)) result.flags.push('2000s-era HTML (font/center/marquee markup)');
+  const legacyTags = (text.match(/<font[\s>]|<center[\s>]/gi) || []).length;
+  if (/<marquee[\s>]|<body[^>]+bgcolor=/i.test(text) || (legacyTags >= 4 && !result.viewport)) result.flags.push('2000s-era HTML (font/center/marquee markup)');
   if (/<!DOCTYPE html PUBLIC[^>]*(XHTML 1\.0|HTML 4\.0)/i.test(text.slice(0, 400))) result.flags.push('Pre-2010 page framework (XHTML/HTML4 doctype)');
   if (/jquery[\/.-]1\.\d/i.test(text)) result.flags.push('Ancient jQuery library (1.x)');
   const genMeta = text.match(/<meta[^>]+generator[^>]*>/i)?.[0] || '';
@@ -503,11 +505,14 @@ async function auditSite(rawUrl) {
   if (tableCount >= 6 && !/display:\s*(flex|grid)/i.test(text) && !result.viewport) result.flags.push('Table-based page layout (dated design)');
 
   const wpGen = text.match(/content=["']WordPress (\d+)\.(\d+)/i);
-  const wpVer = text.match(/wp-(?:content|includes)[^"']{0,120}?[?&]ver=(\d+)\.(\d+)/i);
+  const wpVer = text.match(/wp-includes(?:\\?\/)(?:js(?:\\?\/)(?:wp-emoji-release|wp-emoji|wp-embed)|css(?:\\?\/)dist(?:\\?\/)block-library)[^"'\s]{0,200}?[?&]ver=(\d+)\.(\d+)/i);
   const wp = wpGen || wpVer;
   if (wp && parseInt(wp[1], 10) < 6) result.flags.push(`WordPress ${wp[1]}.${wp[2]} (outdated)`);
 
-  const freeMail = text.match(FREE_EMAIL_RE);
+  const visible = text.replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/<input[^>]+type=["']hidden[^>]*>/gi, ' ');
+  const mailtos = [...visible.matchAll(/mailto:([^"'?\s>]+)/gi)].map((m) => m[1]);
+  const freeMail = mailtos.map((m) => m.match(FREE_EMAIL_RE)).find(Boolean) || visible.match(FREE_EMAIL_RE);
   if (freeMail) result.freeEmail = freeMail[0].toLowerCase();
 
   const server = `${res.headers.get('server') || ''} ${res.headers.get('x-powered-by') || ''}`;
@@ -767,7 +772,11 @@ async function main() {
     for (const b of all) {
       if (b.website) continue;
       const e = fsq[(b.name + '|' + b.town + '|' + b.st).toLowerCase()];
-      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w)) { b.website = e.w.includes('://') ? e.w : 'https://' + e.w; b.fsqSite = true; adopted++; }
+      // never adopt a directory / ordering / review page, and never adopt from a record whose
+      // phone disagrees with OSM's — that record is probably a neighbouring business
+      const d10 = (p) => String(p || '').replace(/\D/g, '').slice(-10);
+      const phoneClash = e && e.t && b.phone && d10(e.t).length === 10 && d10(b.phone).length === 10 && d10(e.t) !== d10(b.phone);
+      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w) && !DIRECTORY_RE.test(e.w) && !phoneClash) { b.website = e.w.includes('://') ? e.w : 'https://' + e.w; b.fsqSite = true; adopted++; }
     }
     if (adopted) log(`Adopted ${adopted} places-listed websites (Overture / Foursquare / Google) for no-site businesses.`);
   } catch { /* no ratings yet — fine */ }
@@ -784,7 +793,7 @@ async function main() {
   for (const rk of REGION_KEYS) {
     const withSite = all
       .filter((b) => b.region === rk && b.website && !SOCIAL_RE.test(b.website))
-      .sort((a, b) => prio(a.vertical) - prio(b.vertical));
+      .sort((a, b) => (prio(a.vertical) - prio(b.vertical)) || ((a.mi ?? 999) - (b.mi ?? 999)));
     auditSet.push(...withSite.slice(0, MAX_AUDIT));
   }
   log(`Auditing ${auditSet.length} websites (${auditCache.size ? 'warm' : 'cold'} cache, concurrency ${AUDIT_CONCURRENCY})...`);

@@ -184,11 +184,12 @@ async function auditHost(host) {
         const sm = await fetch(`${scheme}://${host}/sitemap.xml`, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(10000) });
         a.smOk = sm.ok;
       } catch { a.smOk = false; }
-      const cm = text.match(/href=["']([^"']*contact[^"']{0,60})["']/i);
+      const cm = [...text.matchAll(/<a[^>]+href=["']([^"'#]*contact[^"']{0,60})["']/gi)]
+        .map((m) => m[1]).find((h) => !/\.(css|js|json|png|jpe?g|gif|svg|webp|pdf|xml)(\?|$)/i.test(h) && !/^(mailto|tel|javascript):/i.test(h));
       if (cm) {
         a.cFound = true;
         try {
-          const curl = new URL(cm[1], res.url || `https://${host}/`).href;
+          const curl = new URL(cm, res.url || `https://${host}/`).href;
           const cres = await fetch(curl, { headers: { 'User-Agent': UA, Accept: 'text/html,*/*' }, redirect: 'follow', signal: AbortSignal.timeout(12000) });
           const ctext = cres.ok ? (await cres.text()).slice(0, 200000) : '';
           a.cForm = /<form[\s>]/i.test(ctext);
