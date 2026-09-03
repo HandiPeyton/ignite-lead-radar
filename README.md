@@ -114,6 +114,11 @@ plus a redeploy.
   noindex, printable → Ctrl+P for a PDF to email). Co-branded Ignite/Ridge, letter grade,
   findings in plain English with "why it matters / the fix", vertical-specific intro, CTA.
   Contact info lives in the `CONTACT` block at the top of [build-audits.mjs](build-audits.mjs).
+- **Manual checkups** — for prospects the scanner can't judge well (corporate sites, a
+  different domain than the one on file, findings that need a human): drop
+  `site/manual/<slug>.json` with `{ lead, findings[], shot?, shotCaption?, shotMaxWidth? }`
+  and the next build renders it through the same template at `/a/<slug>.html`. Tracked in git,
+  so it survives every deploy. First one: `makita-usa-makitatools`.
 - **Call-prep panel (private)** — click any row on the unlocked board: scripted opener
   keyed to their worst finding, talking points, what to pitch (Ridge/Ignite/both), best
   call window + who answers by vertical, multi-location flag (same name in 2+ towns),

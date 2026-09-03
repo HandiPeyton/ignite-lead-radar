@@ -287,7 +287,9 @@ function grade(F) {
 
 // ---------- page ----------
 const SEV_LABEL = { crit: 'Critical', imp: 'Important', rec: 'Recommended' };
-function page(l, F, deep, slug) {
+function page(l, F, deep, slug, opts = {}) {
+  const shotSrc = opts.shotSrc || `/shot/${esc(slug)}.jpg`;
+  const shotCaption = opts.shotCaption || 'Your website as visitors see it today';
   const g = l.website ? grade(F) : null;
   const host = l.website ? hostnameOf(l.website) : null;
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -392,9 +394,9 @@ function page(l, F, deep, slug) {
   </div>`}
 
   ${l.website && !SOCIAL_RE.test(l.website) ? `<figure class="shotwrap">
-    <img src="/shot/${esc(slug)}.jpg" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
-      onerror="this.closest('figure').style.display='none'">
-    <figcaption>Your website as visitors see it today</figcaption>
+    <img src="${shotSrc}" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
+      onerror="this.closest('figure').style.display='none'"${opts.shotMaxWidth ? ` style="max-width:${opts.shotMaxWidth}px;margin:0 auto"` : ''}>
+    <figcaption>${esc(shotCaption)}</figcaption>
   </figure>` : ''}
 
   <div class="angle">${esc(VERTICAL_ANGLE[l.vertical] || VERTICAL_ANGLE.other)}</div>
@@ -450,5 +452,29 @@ for (const l of leads) {
   slugMap[slug] = true;
   built++;
 }
+// ---------- manual checkups ----------
+// Hand-reviewed pages for prospects the scanner can't judge well (corporate sites,
+// wrong domain on file, findings that need a human). One JSON per page in
+// site/manual/<slug>.json → rendered through the same template, so they match
+// the automated pages exactly and survive every deploy:
+//   { "lead": { name, town, st, website, vertical, need }, "findings": [ { sev, title, found, why, fix } ],
+//     "shot": "data:image/png;base64,…" | "/shot/x.jpg" (optional), "shotCaption": "…", "shotMaxWidth": 390 }
+const mdir = path.join(dir, 'site', 'manual');
+let manual = 0;
+if (fs.existsSync(mdir)) {
+  for (const f of fs.readdirSync(mdir).filter((n) => n.endsWith('.json'))) {
+    try {
+      const m = JSON.parse(fs.readFileSync(path.join(mdir, f), 'utf8'));
+      const slug = f.replace(/\.json$/, '');
+      const F = (m.findings || []).filter((x) => x && x.sev && x.title);
+      if (!m.lead || !F.length) { console.log(`manual: ${f} has no lead/findings — skipped`); continue; }
+      fs.writeFileSync(path.join(adir, slug + '.html'),
+        page(m.lead, F, null, slug, { shotSrc: m.shot, shotCaption: m.shotCaption, shotMaxWidth: m.shotMaxWidth }));
+      slugMap[slug] = true;
+      manual++;
+    } catch (e) { console.log(`manual: ${f} failed — ${e.message}`); }
+  }
+}
+
 fs.writeFileSync(path.join(out, 'audit-slugs.json'), JSON.stringify(slugMap));
-console.log(`Built ${built} personalized audit pages → site/public/a/`);
+console.log(`Built ${built} personalized audit pages${manual ? ` + ${manual} manual` : ''} → site/public/a/`);
