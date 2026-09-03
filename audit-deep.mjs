@@ -35,6 +35,10 @@ const hosts = [...new Set(
 let existing = {};
 try { existing = JSON.parse(fs.readFileSync(path.join(out, 'audits.json'), 'utf8')); } catch { /* first run */ }
 const D2_TTL = 6.5 * 86400000;
+const D2V = 2; // bump to discard cached slow-check verdicts produced by older logic
+const BLOCKED_STATUS = new Set([401, 403, 405, 406, 409, 429, 503]);
+const CHALLENGE_2XX_RE = /\.well-known\/sgcaptcha|_Incapsula_Resource|cf-browser-verification|cf_chl_|\/cgi-sys\/defaultwebpage\.cgi|window\.location\.href\s*=\s*["']\/lander/i;
+const visibleText = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 log(`Deep-auditing ${hosts.length} lead domains (passive checks only)...`);
 
 async function rdapExpiry(apex) {
@@ -119,7 +123,7 @@ async function auditHost(host) {
 
   // Homepage: try www/apex on both schemes — a site only counts as unreachable
   // if every variant fails (many sites answer on exactly one hostname).
-  let text = null, res = null;
+  let text = null, res = null, blocked = false;
   for (const cand of [`https://www.${host}/`, `https://${host}/`, `http://www.${host}/`, `http://${host}/`]) {
     try {
       res = await fetch(cand, {
@@ -127,7 +131,11 @@ async function auditHost(host) {
         redirect: 'follow',
         signal: AbortSignal.timeout(12000),
       });
-      if (res.ok) { text = (await res.text()).slice(0, 300000); break; }
+      if (res.status !== 200) { if (res.status < 400 || BLOCKED_STATUS.has(res.status)) blocked = true; continue; }
+      const body = (await res.text()).slice(0, 300000);
+      // a bot challenge / empty shell is not the homepage — grading it would invent SEO and mobile findings
+      if (CHALLENGE_2XX_RE.test(body.slice(0, 20000)) || visibleText(body).length < 40) { blocked = true; continue; }
+      text = body; break;
     } catch { /* try next variant */ }
   }
   if (text) {
@@ -162,17 +170,19 @@ async function auditHost(host) {
     a.analytics = /gtag\(|google-analytics\.com|googletagmanager\.com|\bga\.js|analytics\.js|fbevents\.js|fbq\(|clarity\.ms|hotjar/i.test(text);
   } else {
     a.ok = false;
+    if (blocked) a.blocked = true;
   }
 
   // Slow-moving checks, cached ~7 days (see D2_TTL): RDAP expiry, Wayback
   // staleness, sitemap presence, one contact-page crawl.
   const prev = existing[host];
-  if (prev && prev.d2at && Date.now() - prev.d2at < D2_TTL) {
-    for (const f of ['exp', 'wbSince', 'wbLast', 'smOk', 'cFound', 'cForm', 'cMailto', 'cEmails', 'd2at']) {
+  if (prev && prev.d2at && prev.d2v === D2V && Date.now() - prev.d2at < D2_TTL) {
+    for (const f of ['exp', 'wbSince', 'wbLast', 'smOk', 'cFound', 'cForm', 'cMailto', 'cEmails', 'cStatus', 'd2at', 'd2v']) {
       if (prev[f] !== undefined) a[f] = prev[f];
     }
   } else if (!a.platform) {
     a.d2at = Date.now();
+    a.d2v = D2V;
     const apex = apexOf(host);
     const [exp, wb] = await Promise.all([rdapExpiry(apex), waybackStale(host)]);
     if (exp) a.exp = exp;
@@ -191,13 +201,18 @@ async function auditHost(host) {
         try {
           const curl = new URL(cm, res.url || `https://${host}/`).href;
           const cres = await fetch(curl, { headers: { 'User-Agent': UA, Accept: 'text/html,*/*' }, redirect: 'follow', signal: AbortSignal.timeout(12000) });
-          const ctext = cres.ok ? (await cres.text()).slice(0, 200000) : '';
-          a.cForm = /<form[\s>]/i.test(ctext);
+          if (!cres.ok) { a.cStatus = cres.status; /* cForm/cMailto stay undefined = unknown */ }
+          else {
+          const ctext = (await cres.text()).slice(0, 400000);
+          a.cForm = /<form[\s>]/i.test(ctext)
+            || (ctext.match(/<(?:input|textarea)\b/gi) || []).length >= 2
+            || /wpcf7-form|wpforms-form|gform_wrapper|nf-form-cont|elementor-form|sqs-block-form|hbspt\.forms|formstack|cognitoforms|123formbuilder|jotform|typeform|docs\.google\.com\/forms/i.test(ctext);
           a.cMailto = /mailto:/i.test(ctext);
           const emails = [...new Set((ctext.match(/\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b/gi) || [])
             .map((e) => e.toLowerCase()).filter((e) => !/\.(png|jpg|gif|webp|svg)$/.test(e)))];
           if (emails.length) a.cEmails = emails.slice(0, 3);
-        } catch { /* contact page unreachable */ }
+          }
+        } catch { /* contact page unreachable — leave cForm/cMailto unknown */ }
       } else {
         a.cFound = false;
       }
@@ -229,6 +244,14 @@ async function auditHost(host) {
       a.mxh = mx.sort((x, y) => x.priority - y.priority)[0]?.exchange || '';
       a.mxp = classifyMx(a.mxh);
     } catch { /* unknown */ }
+    // A domain with no mail servers and no address records isn't running email at all —
+    // 'missing SPF/DMARC' would be a claim about email that doesn't exist.
+    if (!a.mx) {
+      let resolves = false;
+      try { resolves = (await dns.resolve4(apex)).length > 0; } catch { /* none */ }
+      if (!resolves) { try { resolves = (await dns.resolve6(apex)).length > 0; } catch { /* none */ } }
+      if (!resolves) { delete a.spf; delete a.dmarc; a.noDns = true; }
+    }
   }
   return a;
 }

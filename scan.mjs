@@ -422,8 +422,14 @@ async function tryFetch(url) {
 }
 
 function causeCode(e) {
-  return e?.cause?.code || e?.code || (e?.name === 'TimeoutError' ? 'ETIMEDOUT' : '') || '';
+  if (e?.name === 'TimeoutError' || e?.cause?.name === 'TimeoutError') return 'ETIMEDOUT';
+  const c = e?.cause?.code || e?.code || '';
+  return typeof c === 'string' ? c : '';
 }
+// A 2xx that is really a bot challenge or an empty shell (cPanel default page, parking lander,
+// JS-only interstitial) must not be graded as the business's homepage.
+const CHALLENGE_2XX_RE = /\.well-known\/sgcaptcha|_Incapsula_Resource|cf-browser-verification|cf_chl_|\/cgi-sys\/defaultwebpage\.cgi|window\.location\.href\s*=\s*["']\/lander/i;
+const visibleText = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 // Only genuine certificate problems count as "your certificate is broken": expired, wrong
 // name, self-signed, unverifiable chain. Handshake/protocol failures and resets are "unreachable".
 const CERT_CODE_RE = /^(CERT_|ERR_TLS_CERT_|DEPTH_ZERO_SELF_SIGNED_CERT|SELF_SIGNED_CERT_IN_CHAIN|UNABLE_TO_VERIFY_LEAF_SIGNATURE|UNABLE_TO_GET_ISSUER_CERT)/i;
@@ -461,13 +467,16 @@ async function auditSite(rawUrl) {
     status: 'ok', viewport: false, year: null, flags: [], freeEmail: '',
     oldServer: '', finalUrl: '', https: true,
   };
-  let page = null, sawCert = false, blocked = false, lastNote = '';
+  let page = null, certCode = '', blocked = false, lastNote = '';
   for (const cand of candidates) {
     for (let attempt = 0; attempt < 2 && !page; attempt++) {
       try {
         const p = await tryFetch(cand);
         const st = p.res.status;
-        if (st < 400) { page = p; break; }
+        if (st < 400) {
+          if (st !== 200 || CHALLENGE_2XX_RE.test(p.text.slice(0, 20000)) || visibleText(p.text).length < 40) { blocked = true; lastNote = `HTTP ${st} (challenge or empty page)`; break; }
+          page = p; break;
+        }
         // an HTTP answer means the host is up: bot protection is not "down"
         if (BLOCKED_STATUS.has(st) || CHALLENGE_RE.test(p.text.slice(0, 20000))) { blocked = true; lastNote = `HTTP ${st} (bot protection)`; }
         else lastNote = `HTTP ${st}`;
@@ -475,7 +484,7 @@ async function auditSite(rawUrl) {
       } catch (e) {
         const code = causeCode(e);
         const msg = String(e?.cause?.message || e?.message || '');
-        if (CERT_CODE_RE.test(code) || CERT_MSG_RE.test(msg)) sawCert = true;
+        if (!certCode && (CERT_CODE_RE.test(code) || CERT_MSG_RE.test(msg)) && /^https:/i.test(cand) && new URL(cand).hostname.replace(/^www\./, '') === bare) certCode = code || 'CERT';
         lastNote = code || 'unreachable';
         // one retry for transient network failures — a single connect timeout from a busy
         // runner must not become "your website is unreachable" on a prospect's checkup page
@@ -488,7 +497,7 @@ async function auditSite(rawUrl) {
   if (!page) {
     const r = blocked
       ? { status: 'blocked', notes: [lastNote] }
-      : { status: sawCert ? 'ssl-error' : 'down', notes: [lastNote] };
+      : { status: certCode ? 'ssl-error' : 'down', notes: [lastNote] };
     auditCache.set(bare, r);
     return r;
   }
@@ -497,7 +506,8 @@ async function auditSite(rawUrl) {
   result.finalUrl = res.url || '';
   if (!result.finalUrl.startsWith('https://')) {
     result.https = false;
-    result.status = sawCert ? 'ssl-error' : 'http-only';
+    result.status = 'http-only'; // served over plain http with no redirect: that is the finding
+    if (certCode) result.certCode = certCode;
   }
   if (PARKED_RE.test(text)) {
     result.status = 'parked';
