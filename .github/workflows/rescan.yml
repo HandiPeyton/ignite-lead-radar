@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: write   # lets a late cron run cancel itself (dedupe guard)
 
 # Never let two scans overlap (a delayed cron landing on top of a full run
 # would double-hit Overpass and race the deploy) — later runs wait their turn.
@@ -50,6 +51,18 @@ jobs:
         run: |
           mkdir -p out
           curl -s -H "x-board-key: $LEAD_BOARD_KEY" https://ignite-lead-radar.netlify.app/api/state -o out/state-live.json
+
+      # GitHub's cron can fire hours late. When an exact-time dispatch (Netlify scheduled
+      # function) already started a run in the last two hours, a late cron must not run the
+      # whole thing again — it cancels itself instead.
+      - name: Skip a late cron if a run already started recently
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RECENT=$(gh run list -R ${{ github.repository }} -w "Monthly lead rescan" -L 10 --json databaseId,createdAt --jq '[.[] | select(.databaseId != ${{ github.run_id }}) | select((now - (.createdAt | fromdateiso8601)) < 7200)] | length')
+          echo "runs started in the last 2 h (other than this one): $RECENT"
+          if [ "$RECENT" != "0" ]; then echo "A run already started recently — cancelling this late cron."; gh run cancel ${{ github.run_id }} -R ${{ github.repository }}; sleep 30; fi
 
       - name: Decide scan mode
         id: mode
