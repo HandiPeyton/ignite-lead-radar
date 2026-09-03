@@ -3,8 +3,8 @@ name: Monthly lead rescan
 on:
   schedule:
     - cron: '30 9 * * 0'    # weekly FULL scan (re-enumerate OSM): Sundays ~5:30 AM ET
-    - cron: '0 8 * * 1-6'   # daily LIGHT rescan Mon–Sat ~4 AM ET (8:00 UTC; 3 AM in winter — DST)
-    - cron: '0 20 * * *'    # daily LIGHT rescan ~4 PM ET (20:00 UTC; 3 PM in winter — DST)
+    - cron: '7 8 * * 1-6'   # daily LIGHT rescan Mon–Sat ~4:07 AM ET (off the congested :00 minute; 3 AM in winter — DST)
+    - cron: '7 20 * * *'    # daily LIGHT rescan ~4:07 PM ET (off the congested :00 minute; 3 PM in winter — DST)
     # ONE-OFF full scan for Sept 3 around 2:00 AM ET, three staggered chances because GitHub's
     # cron can fire hours late; the dedupe guard cancels whichever ones fire after the first has
     # started. Remove all three after Sept 3.
