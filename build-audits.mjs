@@ -377,38 +377,120 @@ function buildFindings(l, deep, ds) {
 const apex = (h) => { const p = (h || '').split('.'); return p.length <= 2 ? h : p.slice(-2).join('.'); };
 
 // ---------- grade ----------
+// Score as before; then coherence caps so the letter can never contradict the cards:
+// a Critical caps at C, an Important caps at B, recommendations alone never drop below B.
 function grade(F) {
   let score = 100;
   for (const f of F) score -= f.sev === 'crit' ? 30 : f.sev === 'imp' ? 10 : 0;
   score -= Math.min(12, 4 * F.filter((f) => f.sev === 'rec').length); // recs are tune-ups: capped
   score = Math.max(5, score);
-  const letter = score >= 90 ? 'A' : score >= 78 ? 'B' : score >= 64 ? 'C' : score >= 50 ? 'D' : 'F';
+  let letter = score >= 90 ? 'A' : score >= 78 ? 'B' : score >= 64 ? 'C' : score >= 50 ? 'D' : 'F';
+  const order = ['A', 'B', 'C', 'D', 'F'];
+  const cap = (max) => { if (order.indexOf(letter) < order.indexOf(max)) letter = max; };
+  if (F.some((f) => f.sev === 'crit')) cap('C');
+  else if (F.some((f) => f.sev === 'imp')) cap('B');
   return { score, letter };
 }
+const GRADE_MEANING = {
+  A: 'Solid. A few tune-ups at most.',
+  B: 'Good bones, with something worth fixing.',
+  C: 'Working, but with a problem customers can run into.',
+  D: 'Costing you customers today.',
+  F: 'Broken in a way customers see first.',
+};
 
 // ---------- page ----------
 const SEV_LABEL = { crit: 'Critical', imp: 'Important', rec: 'Recommended' };
+
+// "How to check this yourself" — only for findings a business owner can confirm safely on
+// their own; the instruction must match what the card claims.
+function verifyHint(f, host) {
+  const t = f.title, a = apex(host || '');
+  if (/unreachable/i.test(t)) return 'Open your website on your phone right now.';
+  if (/parked/i.test(t)) return 'Type your web address into a phone browser and see what appears.';
+  if (/certificate/i.test(t)) return 'Open the site in a browser and look at the padlock in the address bar.';
+  if (/No HTTPS/i.test(t)) return 'Look at your address bar: it should read https:// with a padlock.';
+  if (/impersonated|monitor only|SPF record/i.test(t)) return `Search “${a} SPF record lookup” — any free DNS checker shows the same records.`;
+  if (/says ©/.test(t)) return 'Scroll to the bottom of your homepage and read the year.';
+  if (/Not built for phones|broken on phones|jumps around/i.test(t)) return 'Open the homepage on a phone.';
+  if (/takes .* seconds|main content takes/i.test(t)) return 'Load the homepage on a phone using cellular data, not Wi-Fi.';
+  if (/links go to missing pages/i.test(t)) return 'Click the paths listed above from your homepage.';
+  if (/registration has lapsed|on hold|auto-renew grace|registration expires/i.test(t)) return `Search “whois ${a}” and read the status and expiration lines.`;
+  return '';
+}
+
+// Rough effort for the plan — words, not prices.
+function effortOf(f) {
+  const t = f.title;
+  if (/couldn’t find a website|Facebook page|parked|1990s|2000s|Table-based|Pre-2010|authoring tool|site builder|Not built for phones|broken on phones/i.test(t)) return 'a small project';
+  if (/unreachable|takes .* seconds|main content takes/i.test(t)) return 'a day';
+  if (/says ©/.test(t)) return 'an hour';
+  return 'an afternoon';
+}
+
+// Checks that PASSED, each provable from a field we hold. Never inferred.
+function passes(l, deep, ds) {
+  const a = l.audit || {};
+  const out = [];
+  if (a.status === 'ok' && ((a.finalUrl || '').startsWith('https://') || deep?.finalHttps)) out.push('Loads over HTTPS');
+  if (a.status === 'ok' && a.viewport === true) out.push('Set up for phones (mobile viewport present)');
+  if (deep?.spf === true && deep?.dmarc === true) {
+    out.push(deep.dmarcPolicy === 'reject' || deep.dmarcPolicy === 'quarantine'
+      ? 'Email protection records (SPF and DMARC) published and enforcing'
+      : 'Email protection records (SPF and DMARC) published');
+  }
+  if (Array.isArray(deep?.dkim) && deep.dkim.length) out.push('Email signing (DKIM) found');
+  if (deep?.mtaSts === true) out.push('Mail transport security (MTA-STS) in place');
+  if (typeof deep?.certDaysLeft === 'number' && deep.certDaysLeft > 30) out.push(`Security certificate valid for ${deep.certDaysLeft} more days`);
+  if (deep?.exp && Number.isFinite(Date.parse(deep.exp))) {
+    const days = Math.round((Date.parse(deep.exp) - Date.now()) / 86400000);
+    if (days > 60 && !deep.domLapsed && !deep.domHold && !deep.domGrace) out.push(`Domain registered through ${deep.exp}`);
+  }
+  if (deep?.brokenLinks && deep.brokenLinks.checked >= 5 && deep.brokenLinks.broken === 0) out.push(`No broken links among the ${deep.brokenLinks.checked} homepage links we checked`);
+  if (ds && typeof ds.loadMs === 'number' && ds.loadMs > 0 && ds.loadMs < 3000) out.push(`Homepage loaded in ${(ds.loadMs / 1000).toFixed(1)} s in our browser test`);
+  if (deep?.hsts === true) out.push('Strict transport security enabled');
+  if (deep?.localSchema === true) out.push('Local-business markup present for search engines');
+  if (deep?.smOk === true) out.push('Sitemap present');
+  if (a.year && a.year >= CUR_YEAR - 1) out.push(`Copyright current (© ${a.year})`);
+  return out.slice(0, 6);
+}
+
 function page(l, F, deep, slug, opts = {}) {
   const shotSrc = opts.shotSrc || `/shot/${esc(slug)}.jpg`;
-  const shotCaption = opts.shotCaption || 'Your website as visitors see it today';
+  const shotCaption = opts.shotCaption || 'Exhibit: your homepage as visitors see it today';
   const g = l.website ? grade(F) : null;
   const host = l.website ? hostnameOf(l.website) : null;
-  const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const fullDate = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const counts = ['crit', 'imp', 'rec'].map((s) => [s, F.filter((f) => f.sev === s).length]);
+  const sevRank = { crit: 0, imp: 1, rec: 2 };
+  const ranked = [...F].sort((x, y) => sevRank[x.sev] - sevRank[y.sev]);
+  const headline = ranked.slice(0, 3);
+  const plan = ranked.slice(0, 3);
+  const good = l.website && !SOCIAL_RE.test(l.website) ? passes(l, deep, l.website ? (opts.ds || null) : null) : [];
   const needLine = l.need === 'Both'
-    ? 'The findings above span both the website itself and the technology behind it — the two halves of how your business shows up and stays safe online.'
+    ? 'The findings span both the website itself and the technology behind it — the two halves of how your business shows up and stays safe online.'
     : l.need === 'IT'
       ? 'Most of what we found is about the technology behind the business — the kind of thing an IT partner quietly keeps handled.'
       : 'Most of what we found is about the website itself — how the business looks and performs when customers find you.';
+  const gradeColor = g ? ((g.letter === 'A' || g.letter === 'B') ? 'var(--good)' : g.letter === 'C' ? 'var(--imp)' : 'var(--crit)') : 'var(--soft)';
 
-  const cards = F.map((f) => `
+  const cards = F.map((f) => {
+    const v = verifyHint(f, host);
+    return `
       <article class="card sev-${f.sev}">
-        <div class="sevtag">${SEV_LABEL[f.sev]}</div>
-        <h3>${esc(f.title)}</h3>
+        <div class="cardhead"><span class="sevtag">${SEV_LABEL[f.sev]}</span><h3>${esc(f.title)}</h3></div>
         <p class="found">${esc(f.found)}</p>
         <p><strong>Why it matters:</strong> ${esc(f.why)}</p>
         <p class="fix"><strong>The fix:</strong> ${esc(f.fix)}</p>
-      </article>`).join('\n');
+        ${v ? `<p class="verify"><strong>Check it yourself:</strong> ${esc(v)}</p>` : ''}
+      </article>`;
+  }).join('\n');
+
+  const summaryList = headline.map((f) => `<li class="s-${f.sev}"><span class="dot"></span>${esc(f.title)}</li>`).join('');
+  const goodList = good.length >= 2 ? `<h2 class="inline">What’s working</h2><ul class="good">${good.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '';
+  const planList = plan.map((f) => `<li><div class="ptitle">${esc(f.title)}</div><div class="pfix">${esc(f.fix)}</div><span class="effort">${esc(effortOf(f))}</span></li>`).join('');
 
   return `<!doctype html>
 <html lang="en">
@@ -420,58 +502,93 @@ function page(l, F, deep, slug, opts = {}) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
   :root {
-    --paper: #FAF7F4; --card: #FFFFFF; --ink: #26211D; --soft: #6B6259;
-    --line: #E3DAD1; --ember: #C2410C;
+    --paper: #FAF7F4; --card: #FFFFFF; --ink: #26211D; --soft: #6B6259; --faint: #9A928A;
+    --line: #E3DAD1; --ember: #C2410C; --ember-soft: #FBE9DF;
     --crit: #A8321B; --crit-bg: #F9E3DC;
     --imp: #8A6D1C;  --imp-bg: #F5ECD4;
     --rec: #2F6FAB;  --rec-bg: #E1ECF5;
-    --good: #177E70;
+    --good: #177E70; --good-bg: #DDF0EC;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 15px/1.6 "Barlow", "Segoe UI", sans-serif; }
-  .sheet { max-width: 780px; margin: 0 auto; padding: 34px 26px 60px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 "Barlow", "Segoe UI", sans-serif; }
+  .sheet { max-width: 840px; margin: 0 auto; padding: 28px 20px 56px; }
   .brandrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
     border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
   .brandrow b { font: 700 17px/1 "Barlow Condensed", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
   .brandrow b span { color: var(--ember); }
   .brandrow small { color: var(--soft); }
-  h1 { font: 700 40px/1.05 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .01em; margin: 26px 0 4px; }
-  .who { color: var(--soft); margin: 0 0 22px; font-size: 15px; }
+  h1 { font: 700 clamp(32px, 6vw, 44px)/1.02 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .01em; margin: 24px 0 4px; text-wrap: balance; }
+  .who { color: var(--soft); margin: 0 0 20px; font-size: 15px; }
   .who b { color: var(--ink); }
-  .gradebox { display: flex; gap: 18px; align-items: center; background: var(--card); border: 1px solid var(--line);
-    border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
-  .gletter { font: 700 54px/1 "Barlow Condensed", sans-serif; color: ${g && (g.letter === 'A' || g.letter === 'B') ? 'var(--good)' : g && g.letter === 'C' ? 'var(--imp)' : 'var(--crit)'}; }
+
+  .top { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 8px; }
+  .gradebox { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center; }
+  .gletter { font: 700 64px/1 "Barlow Condensed", sans-serif; color: ${gradeColor}; grid-row: span 2; font-variant-numeric: tabular-nums; }
+  .gmean { font: 600 17px/1.25 "Barlow", sans-serif; }
   .gmeta { font-size: 14px; color: var(--soft); }
   .gmeta b { color: var(--ink); }
-  .angle { margin: 18px 0 26px; padding: 14px 18px; border-left: 3px solid var(--ember); background: var(--card); border-radius: 0 6px 6px 0; }
-  .shotwrap { margin: 18px 0 6px; }
-  .shotwrap img { width: 100%; border: 1px solid var(--line); border-radius: 8px; display: block; }
-  .shotwrap figcaption { font-size: 12px; color: var(--soft); margin-top: 6px; text-align: center; }
-  h2 { font: 600 13px/1 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--soft); margin: 30px 0 12px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-left-width: 4px; border-radius: 6px; padding: 16px 18px 6px; margin-bottom: 12px; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px 14px; }
+  h2 { font: 600 12.5px/1 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .12em; color: var(--soft); margin: 30px 0 12px; }
+  h2.inline { margin: 14px 0 8px; }
+  .summary h2:first-child { margin-top: 0; }
+  ul.headline { list-style: none; margin: 0; padding: 0; }
+  ul.headline li { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; margin: 0 0 6px; line-height: 1.35; }
+  ul.headline .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--rec); }
+  ul.headline .s-crit .dot { background: var(--crit); }
+  ul.headline .s-imp .dot { background: var(--imp); }
+  ul.good { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  ul.good li { position: relative; padding-left: 20px; color: var(--soft); font-size: 15px; }
+  ul.good li::before { content: ''; position: absolute; left: 0; top: 7px; width: 10px; height: 6px; border-left: 2px solid var(--good); border-bottom: 2px solid var(--good); transform: rotate(-45deg); }
+
+  .shotwrap { margin: 16px 0 6px; padding: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+  .shotwrap img { width: 100%; border: 1px solid var(--line); border-radius: 4px; display: block; }
+  .shotwrap figcaption { font-size: 12.5px; color: var(--soft); margin-top: 8px; text-align: center; letter-spacing: .02em; }
+  .angle { margin: 18px 0 24px; padding: 14px 18px; border-left: 3px solid var(--ember); background: var(--card); border-radius: 0 6px 6px 0; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-left-width: 5px; border-radius: 6px; padding: 14px 18px 6px; margin-bottom: 12px; }
   .card.sev-crit { border-left-color: var(--crit); }
   .card.sev-imp  { border-left-color: var(--imp); }
   .card.sev-rec  { border-left-color: var(--rec); }
-  .sevtag { display: inline-block; font: 600 10px/1.2 "Barlow", sans-serif; letter-spacing: .08em; text-transform: uppercase;
-    padding: 3px 7px; border-radius: 3px; margin-bottom: 8px; }
+  .cardhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sevtag { display: inline-block; font: 600 10.5px/1.2 "Barlow", sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; }
   .sev-crit .sevtag { color: var(--crit); background: var(--crit-bg); }
   .sev-imp  .sevtag { color: var(--imp); background: var(--imp-bg); }
   .sev-rec  .sevtag { color: var(--rec); background: var(--rec-bg); }
-  .card h3 { margin: 0 0 6px; font: 600 18px/1.25 "Barlow", sans-serif; }
-  .card p { margin: 0 0 10px; }
+  .card h3 { margin: 0; font: 600 18px/1.25 "Barlow", sans-serif; text-wrap: balance; }
+  .card p { margin: 0 0 9px; }
   .card .found { color: var(--soft); }
-  .cta { margin-top: 34px; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 22px 24px; }
-  .cta h2 { color: var(--paper); opacity: .75; margin: 0 0 8px; }
-  .cta .big { font: 700 26px/1.2 "Barlow Condensed", sans-serif; margin: 0 0 6px; }
+  .card .verify { font-size: 14px; color: var(--soft); border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 4px; }
+  .card .verify strong { color: var(--ink); font-weight: 600; }
+
+  ol.plan { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 10px; }
+  ol.plan li { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px 12px 54px; }
+  ol.plan li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 10px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--paper); font: 700 16px/28px "Barlow Condensed", sans-serif; text-align: center; }
+  ol.plan .ptitle { font-weight: 600; }
+  ol.plan .pfix { color: var(--soft); font-size: 15px; margin-top: 2px; }
+  ol.plan .effort { display: inline-block; margin-top: 8px; font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ember); background: var(--ember-soft); padding: 3px 8px; border-radius: 3px; }
+
+  .cta { margin-top: 30px; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 22px 22px 20px; }
+  .cta h2 { color: var(--paper); opacity: .7; margin: 0 0 8px; }
+  .cta .big { font: 700 24px/1.2 "Barlow Condensed", sans-serif; margin: 0 0 10px; }
+  .cta .tel { display: inline-block; font: 700 34px/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; color: #F0956B; text-decoration: none; font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
   .cta p { margin: 0 0 4px; }
   .cta a { color: #F0956B; text-decoration: none; }
-  footer { margin-top: 26px; color: var(--soft); font-size: 12px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 12px; }
+  .cta .reply { color: var(--paper); opacity: .8; font-size: 15px; margin-top: 8px; }
+  footer { margin-top: 24px; color: var(--soft); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 12px; }
+
+  @media (min-width: 720px) {
+    .sheet { padding: 34px 26px 60px; }
+    .top { grid-template-columns: 250px 1fr; }
+  }
   @media print {
-    body { background: #fff; }
+    body { background: #fff; font-size: 13px; }
     .sheet { padding: 0; max-width: none; }
+    .top { grid-template-columns: 220px 1fr; }
     .cta { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
-    .cta a, .cta h2 { color: var(--ink); }
-    .card { break-inside: avoid; }
+    .cta a, .cta h2, .cta .tel, .cta .reply { color: var(--ink); }
+    .card, .gradebox, .summary, ol.plan li, .shotwrap { break-inside: avoid; }
+    h2 { break-after: avoid; }
   }
 </style>
 </head>
@@ -485,14 +602,22 @@ function page(l, F, deep, slug, opts = {}) {
   <h1>Website &amp; Technology Checkup</h1>
   <p class="who">Prepared for <b>${esc(l.name)}</b> &middot; ${esc(l.town)}, ${esc(l.st)}${host ? ` &middot; ${esc(host)}` : ''} &middot; ${dateStr}</p>
 
-  ${g ? `<div class="gradebox">
-    <div class="gletter">${g.letter}</div>
-    <div class="gmeta"><b>${F.length} finding${F.length === 1 ? '' : 's'}</b> from a review of your public web presence<br>
-    ${counts.filter(([, n]) => n).map(([s, n]) => `${n} ${SEV_LABEL[s].toLowerCase()}`).join(' · ') || 'No issues found'}</div>
-  </div>` : `<div class="gradebox">
-    <div class="gletter">?</div>
-    <div class="gmeta"><b>We couldn’t find a website for your business.</b><br>If you have one we missed, we’d love to check it — otherwise, that’s the finding.</div>
-  </div>`}
+  <div class="top">
+    ${g ? `<div class="gradebox">
+      <div class="gletter">${g.letter}</div>
+      <div class="gmean">${esc(GRADE_MEANING[g.letter])}</div>
+      <div class="gmeta"><b>${F.length} finding${F.length === 1 ? '' : 's'}</b> &middot; ${counts.filter(([, n]) => n).map(([s, n]) => `${n} ${SEV_LABEL[s].toLowerCase()}`).join(' · ') || 'no issues found'}</div>
+    </div>` : `<div class="gradebox">
+      <div class="gletter">?</div>
+      <div class="gmean">We couldn’t find a website for your business.</div>
+      <div class="gmeta">If you have one we missed, we’d love to check it — otherwise, that’s the finding.</div>
+    </div>`}
+    <div class="summary">
+      <h2>In 20 seconds</h2>
+      <ul class="headline">${summaryList}</ul>
+      ${goodList}
+    </div>
+  </div>
 
   ${l.website && !SOCIAL_RE.test(l.website) ? `<figure class="shotwrap">
     <img src="${shotSrc}" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
@@ -505,20 +630,25 @@ function page(l, F, deep, slug, opts = {}) {
   <h2>What we found</h2>
   ${cards}
 
+  <h2>What we’d do first</h2>
+  <ol class="plan">${planList}</ol>
+
   <h2>Where this points</h2>
   <p>${esc(needLine)}</p>
 
   <div class="cta">
     <h2>Talk to a local team</h2>
     <p class="big">${esc(CONTACT.brands)}</p>
-    <p>Call or text <a href="tel:${CONTACT.phone.replace(/[^\d]/g, '')}">${esc(CONTACT.phone)}</a> &middot; <a href="mailto:${esc(CONTACT.email)}">${esc(CONTACT.email)}</a></p>
+    <a class="tel" href="tel:${CONTACT.phone.replace(/[^\d]/g, '')}">${esc(CONTACT.phone)}</a>
+    <p>Call or text, or email <a href="mailto:${esc(CONTACT.email)}">${esc(CONTACT.email)}</a></p>
     <p>${CONTACT.sites.map((s) => `<a href="https://${esc(s)}">${esc(s)}</a>`).join(' &middot; ')}</p>
+    <p class="reply">Or simply reply to the email this came with — we’ll pick it up from there.</p>
   </div>
 
   <footer>
-    This checkup reviewed only publicly visible information — your public website, its security certificate, and public
-    DNS records. No systems were accessed or tested. Findings reflect what we could observe on the date above and are
-    easy to confirm together on a quick call.
+    Reviewed ${esc(fullDate)}. This checkup looked only at publicly visible information — your public website, its security
+    certificate, and public DNS records. No systems were accessed or tested. Findings reflect what we could observe on that
+    date and are easy to confirm together on a quick call.
   </footer>
 </div>
 </body>
@@ -549,7 +679,7 @@ for (const l of leads) {
   const F = buildFindings(l, deep, ds);
   if (!F.length) continue; // nothing to say — no audit page
   const slug = slugOf(l);
-  fs.writeFileSync(path.join(adir, slug + '.html'), page(l, F, deep, slug));
+  fs.writeFileSync(path.join(adir, slug + '.html'), page(l, F, deep, slug, { ds }));
   slugMap[slug] = true;
   built++;
 }
