@@ -106,6 +106,46 @@ function buildFindings(l, deep, ds) {
       'Scammers can send mail that looks like it’s from your business — a common setup for invoice fraud against your customers.',
       'Publish SPF and DMARC records: an hour of IT work that closes the door on spoofing.');
   }
+  // Email policy quality (deep DNS). Only asserted on records that were actually
+  // read; never duplicates the "can be impersonated" card above.
+  if (deep && !deep.platform && deep.spf !== false && deep.dmarc !== false) {
+    if (deep.dmarcPolicy === 'none') {
+      const pct = typeof deep.dmarcPct === 'number' && deep.dmarcPct < 100 ? ` (and applies to only ${deep.dmarcPct}% of mail)` : '';
+      add('rec', 'Your email policy is set to monitor only',
+        `The DMARC record for ${apex(host)} is published with p=none${pct} — it asks receiving mail servers to report forged mail, not to block it.`,
+        'Monitor mode is the right first step, but on its own it doesn’t stop anyone from sending mail as your domain — the record only watches.',
+        'Once the reports look clean, move the policy to quarantine and then reject — a two-line DNS change, done in stages.');
+    }
+    if (deep.spfAll === '+all') {
+      add('imp', 'Your SPF record allows anyone',
+        `The SPF record for ${apex(host)} ends in "+all", which authorizes every mail server on the internet to send as your domain.`,
+        'The record exists but does no filtering — forged mail from your domain passes the SPF check just like the real thing.',
+        'Change the final qualifier to "~all" (softfail) or "-all" (fail) once your legitimate senders are listed — a one-word DNS edit.');
+    } else if (deep.spfAll === '?all') {
+      add('imp', 'Your SPF record doesn’t restrict senders',
+        `The SPF record for ${apex(host)} ends in "?all" (neutral) — it makes no statement about unlisted senders, so forged mail gets the same result as if there were no SPF record at all.`,
+        'The record exists but does no filtering — forged mail from your domain passes the SPF check just like the real thing.',
+        'Change the final qualifier to "~all" (softfail) or "-all" (fail) once your legitimate senders are listed — a one-word DNS edit.');
+    }
+    if (typeof deep.spfLookups === 'number' && deep.spfLookups > 10) {
+      add('imp', 'Your SPF record exceeds the 10-lookup limit',
+        `Evaluating the SPF record for ${apex(host)} requires ${deep.spfLookups} DNS lookups; the SPF standard caps it at 10, past which receiving servers return a permanent error.`,
+        'When the check errors, legitimate mail from your business can be rejected or sent to spam — and it happens silently, at the receiving end.',
+        'Trim unused "include:" entries or flatten the record so it evaluates in 10 lookups or fewer.');
+    }
+  }
+  // Self-hosted mail plus published remote-access hostnames: a legitimate setup that
+  // simply deserves a scheduled review. Stated as fact, never as a vulnerability.
+  if (deep && !deep.platform && deep.selfHostedMail === true && Array.isArray(deep.dnsHosts)) {
+    const REMOTE = ['remote', 'rdp', 'vpn', 'owa', 'exchange', 'citrix'];
+    const ra = deep.dnsHosts.filter((h) => REMOTE.includes(h));
+    if (ra.length) {
+      add('rec', 'Self-hosted email and remote access',
+        `Mail for ${apex(host)} is delivered to a server on your own domain, and public DNS also lists remote-access names for it (${ra.map((h) => h + '.' + apex(host)).join(', ')}).`,
+        'Running your own mail and remote access is a perfectly normal setup — it just means the patching, backups, and monitoring are on your side of the fence, and those are worth a security review on a schedule.',
+        'A short review of the update, backup, and remote-access configuration — no changes assumed, just a second set of eyes.');
+    }
+  }
 
   // Mobile / freshness / tech (scan)
   if (a.status === 'ok' && a.viewport === false) {
@@ -177,14 +217,47 @@ function buildFindings(l, deep, ds) {
   }
 
   // Domain / neglect / contact-path (deep, cached weekly)
-  if (deep?.exp) {
-    const days = Math.round((Date.parse(deep.exp) - Date.now()) / 86400000);
-    if (days >= 0 && days < 45) {
+  const expDays = deep?.exp && Number.isFinite(Date.parse(deep.exp))
+    ? Math.round((Date.parse(deep.exp) - Date.now()) / 86400000) : null;
+  const expNote = deep?.exp ? ` The registry’s expiration date for it is ${deep.exp}.` : '';
+  // The lapsed/hold statuses are cached for days while `ok` is refreshed every run, so a
+  // site that loaded overrides a stale flag: the crit cards fire only when the site is
+  // down too. A past expiration date with a normal status is inconclusive — no card.
+  if (deep && !deep.platform) {
+    if (deep.domLapsed && !deep.ok) {
+      const pending = deep.domLapsed === 'pendingdelete';
+      add('crit', 'Your domain registration has lapsed',
+        `The domain registry lists ${apex(host)} with the status "${pending ? 'pending delete' : 'redemption period'}".${expNote}`,
+        pending
+          ? 'Pending delete means the name is about to be released back to the public — once it drops, anyone can buy it, and your website and email addresses go with it.'
+          : 'In the redemption period the name can still be recovered, but only through the registrar and usually for a fee. When that window closes the name is released and anyone can buy it.',
+        'Contact your registrar immediately and ask to restore the domain — every day matters here. Then turn on auto-renew so it can’t happen again.');
+    } else if (deep.domHold && !deep.ok) {
+      add('crit', 'Your domain has been put on hold by the registrar',
+        `The domain registry lists ${apex(host)} with a hold status — the name is suspended and doesn’t resolve.${expNote}`,
+        'While a domain is on hold, the website and any email on it are dark for everyone. Holds usually come from a missed renewal, an unverified contact email, or a dispute.',
+        'Contact your registrar today to find out why the hold was placed and what they need to lift it — often it’s a verification email nobody saw.');
+    } else if (deep.domGrace) {
+      add('rec', 'The registry shows your domain in its auto-renew grace status',
+        `The domain registry lists ${apex(host)} with the status autoRenewPeriod, which appears once the expiration date passes — it can remain for weeks even after a registrar has already renewed.`,
+        'If the renewal did not go through, the grace window is short, and when it closes the name moves toward deletion — taking the website and email with it.',
+        'Confirm with your registrar that the renewal went through, and turn on auto-renew.');
+    } else if (expDays !== null && expDays >= 0 && expDays < 45) {
       add('crit', 'Your domain registration expires very soon',
-        `${apex(host)} is registered only through ${deep.exp} — ${days} days from now.`,
+        `${apex(host)} is registered only through ${deep.exp} — ${expDays} days from now.`,
         'If it lapses, the website and any email on the domain go dark at once, and expired domains get snapped up by squatters within days.',
         'Renew now and turn on auto-renew — five minutes that prevents a very bad week.');
     }
+  }
+  // Broken internal links (deep pass; only HTTP 404/410 count as broken)
+  const bl = deep?.brokenLinks;
+  if (bl && typeof bl.broken === 'number' && typeof bl.checked === 'number' && bl.broken >= 2) {
+    const pathOf = (s) => { try { const u = new URL(s); return u.pathname + u.search; } catch { return String(s); } };
+    const samples = (Array.isArray(bl.sample) ? bl.sample : []).map(pathOf).filter((s) => s.startsWith('/')).slice(0, 2);
+    add(bl.broken >= 5 ? 'imp' : 'rec', `${bl.broken} of your homepage’s links go to missing pages`,
+      `We followed ${bl.checked} links from your homepage to pages on your own site; ${bl.broken} of them returned "page not found"${samples.length ? ` — for example ${samples.join(' and ')}` : ''}.`,
+      'Every broken link is a visitor who gave up at the exact moment they wanted more — and search engines read dead links as a site nobody is maintaining.',
+      'Fix or remove the dead links and set up redirects for any pages that moved — usually an hour of cleanup.');
   }
   if (deep?.wbSince) {
     add('imp', 'The site hasn’t changed in years',
@@ -230,6 +303,33 @@ function buildFindings(l, deep, ds) {
         `Your homepage loads ${(ds.imgKB / 1024).toFixed(1)} MB of images across ${ds.imgCount} files.`,
         'Unoptimized photos are the most common cause of slow local sites, especially on cell connections.',
         'Compress and right-size images — often cuts load time in half with no visible quality loss.');
+    }
+    // Core Web Vitals from the same render. LCP only when the load-time card above
+    // didn’t already fire, so the page never carries two speed cards.
+    if (typeof ds.lcpMs === 'number' && ds.lcpMs > 4000 && !(ds.loadMs >= 5000)) {
+      add('imp', `Your main content takes ${(ds.lcpMs / 1000).toFixed(1)} seconds to appear`,
+        `Measured in a real browser, the largest visible element on your homepage appeared after ${(ds.lcpMs / 1000).toFixed(1)} seconds (Largest Contentful Paint). Google’s "poor" threshold is 4 seconds.`,
+        'This is one of the Core Web Vitals Google uses in ranking, and it’s the moment a visitor decides whether the page is working at all.',
+        'Optimize the hero image and hosting, or rebuild lean — the main content should appear inside 2.5 seconds.');
+    }
+    if (typeof ds.cls === 'number' && ds.cls > 0.25) {
+      add('rec', 'The page jumps around while loading',
+        `We measured a cumulative layout shift of ${ds.cls.toFixed(2)} on your homepage — Google’s "poor" threshold is 0.25.`,
+        'Content that moves as it loads makes visitors mis-tap links and buttons, and it’s a Core Web Vitals ranking signal.',
+        'Reserve space for images, ads, and embeds so nothing shifts after it appears — a straightforward fix.');
+    }
+    if (typeof ds.imgNoAlt === 'number' && typeof ds.imgTotal === 'number' && ds.imgTotal > 0
+        && ds.imgNoAlt >= 5 && ds.imgNoAlt / ds.imgTotal >= 0.3) {
+      add('rec', 'Images have no text alternatives',
+        `${ds.imgNoAlt} of the ${ds.imgTotal} images on your homepage have no alt attribute at all.`,
+        'Screen readers can’t describe those images and search engines can’t read them — it’s the kind of gap accessibility complaints cite, and it costs image-search visibility too.',
+        'Add a short description to each meaningful image and mark decorative ones as such — a quick pass through the page.');
+    }
+    if (typeof ds.inputsNoLabel === 'number' && ds.inputsNoLabel >= 2) {
+      add('rec', 'Form fields are missing labels',
+        `${ds.inputsNoLabel} form field${ds.inputsNoLabel === 1 ? '' : 's'} on your homepage ${ds.inputsNoLabel === 1 ? 'has' : 'have'} no label a screen reader or browser can announce.`,
+        'Unlabeled fields are hard to fill out with assistive technology and on phones with autofill — another gap accessibility complaints commonly cite.',
+        'Attach a visible label (or an accessible name) to every field — minutes per form.');
     }
   }
   if (deep?.analytics === false && deep?.ok) {

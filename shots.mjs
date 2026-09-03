@@ -58,8 +58,107 @@ const browser = await puppeteer.launch({
 
 // Deep per-site metrics captured on the SAME page load as the screenshot:
 // real load time, total page weight, image weight, request count, mobile
-// horizontal overflow, tiny tap targets. Written to out/deepscan.json (host-keyed).
+// horizontal overflow, tiny tap targets, LCP/CLS, and image-alt / form-label
+// counts. Written to out/deepscan.json (host-keyed).
 const deep = {};
+
+// Installed before every navigation (survives the mobile reload too): buffered
+// PerformanceObservers accumulate LCP + layout-shift entries into window.__radar.
+// Every statement is guarded — a page that lacks the API or throws simply leaves
+// __radar empty and the render metrics are recorded as unknown.
+const PROBE = `(() => {
+  try {
+    const r = { lcp: [], cls: [] };
+    Object.defineProperty(window, '__radar', { value: r, writable: false, configurable: false });
+    if (typeof PerformanceObserver !== 'function') return;
+    try {
+      new PerformanceObserver((list) => { for (const e of list.getEntries()) r.lcp.push(e.startTime); })
+        .observe({ type: 'largest-contentful-paint', buffered: true });
+    } catch (e) {}
+    try {
+      new PerformanceObserver((list) => { for (const e of list.getEntries()) { if (!e.hadRecentInput) r.cls.push(e.value); } })
+        .observe({ type: 'layout-shift', buffered: true });
+      r.clsOk = true;
+    } catch (e) {}
+  } catch (e) {}
+})();`;
+
+// Runs in the desktop pass after the settle wait. Returns partial results: any
+// section that throws is left out rather than failing the whole read.
+function readRender() {
+  const o = {};
+  try {
+    const r = window.__radar;
+    if (r && Array.isArray(r.lcp) && r.lcp.length) o.lcp = r.lcp[r.lcp.length - 1];
+    if (r && r.clsOk === true && Array.isArray(r.cls)) o.cls = r.cls.reduce((s, v) => s + (typeof v === 'number' && isFinite(v) ? v : 0), 0);
+  } catch (e) { /* metrics unknown */ }
+  try {
+    // Chrome wraps a bare image/PDF/text response in a synthetic document — nothing to audit there
+    const ct = String(document.contentType || '').toLowerCase();
+    if (ct && ct !== 'text/html' && ct !== 'application/xhtml+xml') return o;
+  } catch (e) { /* treat as html */ }
+  try {
+    const imgs = document.querySelectorAll('img');
+    o.imgTotal = imgs.length;
+    o.imgNoAlt = [...imgs].filter((im) => {
+      if (im.hasAttribute('alt')) return false; // alt="" is valid (decorative)
+      const role = (im.getAttribute('role') || '').trim().toLowerCase();
+      if (role === 'presentation' || role === 'none' || im.closest('[aria-hidden="true"]')) return false; // decorative per ARIA
+      if (typeof im.checkVisibility === 'function' && !im.checkVisibility({ checkVisibilityCSS: true })) return false; // tracking pixels
+      return true;
+    }).length;
+  } catch (e) { /* counts unknown */ }
+  try {
+    const TEXTY = new Set(['', 'text', 'email', 'tel', 'url', 'search', 'password', 'number', 'date', 'datetime-local', 'month', 'week', 'time']);
+    const fields = [...document.querySelectorAll('input,textarea,select')].filter((el) => {
+      if (el.tagName === 'INPUT' && !TEXTY.has((el.getAttribute('type') || '').trim().toLowerCase())) return false;
+      if (el.closest('[aria-hidden="true"]') || el.getAttribute('tabindex') === '-1') return false; // honeypots, select2 originals
+      if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
+      const rc = el.getBoundingClientRect();
+      if (!(rc.width > 0 && rc.height > 0)) return false;
+      // fully off-canvas (left:-5000px honeypots, clip:rect(0 0 0 0) 1px boxes)
+      const dw = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+      if (rc.right <= 0 || rc.bottom <= 0 || rc.left >= dw || rc.width < 2 || rc.height < 2) return false;
+      return true;
+    });
+    const labeled = (el) => {
+      try { if (el.labels && el.labels.length) return true; } catch (e) { /* fall through */ }
+      if (el.closest('label')) return true;
+      if (el.id) { try { if (document.querySelector('label[for="' + CSS.escape(el.id) + '"]')) return true; } catch (e) { /* bad id */ } }
+      for (const a of ['aria-label', 'aria-labelledby', 'title', 'placeholder']) {
+        if ((el.getAttribute(a) || '').trim()) return true;
+      }
+      return false;
+    };
+    o.inputsTotal = fields.length;
+    o.inputsNoLabel = fields.filter((el) => !labeled(el)).length;
+  } catch (e) { /* counts unknown */ }
+  return o;
+}
+
+// Sanity bounds: an LCP outside (0, loadMs+5000] or a CLS outside [0, 5] is a
+// measurement artifact, not a finding — record unknown instead.
+function renderFields(raw, loadMs) {
+  const f = {};
+  if (!raw || typeof raw !== 'object') return f;
+  const n = (v) => (typeof v === 'number' && isFinite(v) ? v : undefined);
+  const lcp = n(raw.lcp);
+  if (lcp !== undefined && lcp > 0 && lcp <= loadMs + 5000) f.lcpMs = Math.round(lcp);
+  const cls = n(raw.cls);
+  if (cls !== undefined && cls >= 0 && cls <= 5) f.cls = Math.round(cls * 1000) / 1000;
+  const c = (v) => (Number.isInteger(v) && v >= 0 ? v : undefined);
+  if (c(raw.imgTotal) !== undefined && c(raw.imgNoAlt) !== undefined) { f.imgTotal = raw.imgTotal; f.imgNoAlt = raw.imgNoAlt; }
+  if (c(raw.inputsTotal) !== undefined && c(raw.inputsNoLabel) !== undefined) { f.inputsTotal = raw.inputsTotal; f.inputsNoLabel = raw.inputsNoLabel; }
+  return f;
+}
+
+async function newTab() {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
+  page.setDefaultNavigationTimeout(24000); // a 20-second site is a lead — measure it, don't skip it
+  try { await page.evaluateOnNewDocument(PROBE); } catch { /* no probe: LCP/CLS stay unknown */ }
+  return page;
+}
 let existingDeep = {};
 try { existingDeep = JSON.parse(fs.readFileSync(path.join(out, 'deepscan.json'), 'utf8')); } catch { /* first run */ }
 const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return null; } };
@@ -79,9 +178,7 @@ log(`Screenshotting ${targets.length} of ${allTargets.length} lead sites (High-c
 
 let i = 0, done = 0, ok = 0, metriced = 0;
 async function worker() {
-  let page = await browser.newPage();
-  await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
-  page.setDefaultNavigationTimeout(24000); // a 20-second site is a lead — measure it, don't skip it
+  let page = await newTab();
   while (i < targets.length && Date.now() < deadline) {
     const t = targets[i++];
     const host = hostOf(t.url);
@@ -101,6 +198,9 @@ async function worker() {
       await page.goto(t.url, { waitUntil: 'load' });
       const loadMs = Date.now() - t0;
       await new Promise((r) => setTimeout(r, 1200)); // let lazy images/fonts paint before the mirror shot
+      // LCP/CLS + alt/label counts from this same desktop load; unknown if the page blocks it
+      let render = {};
+      try { render = renderFields(await page.evaluate(readRender), loadMs); } catch { /* unknown */ }
       const buf = await page.screenshot({ type: 'jpeg', quality: 52 });
       await store.set(t.slug, buf);
       ok++;
@@ -121,7 +221,7 @@ async function worker() {
           deep[host] = {
             loadMs, weightKB: Math.round(bytes / 1024), imgKB: Math.round(imgBytes / 1024),
             imgCount, reqCount, mobileOverflow: m.overflowPx > 12, overflowPx: m.overflowPx,
-            tinyTaps: m.tinyTaps, at: Date.now(),
+            tinyTaps: m.tinyTaps, ...render, at: Date.now(),
           };
           metriced++;
         }
@@ -133,9 +233,7 @@ async function worker() {
     try { await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 }); }
     catch {
       try { await page.close(); } catch { /* already gone */ }
-      page = await browser.newPage();
-      await page.setViewport({ width: 1160, height: 870, deviceScaleFactor: 0.75 });
-      page.setDefaultNavigationTimeout(24000);
+      page = await newTab();
     }
     done++;
     if (done % 50 === 0) log(`  ${done}/${targets.length} (${ok} shots, ${metriced} metrics)...`);

@@ -40,49 +40,61 @@ export const SELECTORS = [
 
 // National/regional chains and franchises: not realistic buyers of a local
 // website or a local MSP. Any OSM element with a `brand` tag is also skipped.
-export const CHAIN_RE = new RegExp(
-  [
-    'walmart', 'mcdonald', 'subway', 'dollar general', 'dollar tree', 'family dollar',
-    'cvs', 'walgreens', 'rite aid', 'autozone', "o'?reilly", 'advance auto', 'napa auto',
-    'starbucks', 'burger king', "wendy'?s", 'taco bell', 'kfc', 'pizza hut', "domino'?s",
-    'papa john', "hardee'?s", 'bojangles', "zaxby'?s", 'chick-fil-a', 'sonic drive',
-    "arby'?s", 'dairy queen', 'little caesar', 'waffle house', 'cracker barrel', 'ihop',
-    "applebee'?s", 'outback', 'olive garden', 'buffalo wild wings', "wing ?stop",
-    'tractor supply', "lowe'?s", 'home depot', 'harbor freight', 'best buy', 'staples',
-    'office depot', 'petsmart', 'petco', 'verizon', 'at&t', 't-mobile', 'u\\.?s\\.? cellular',
-    'regions bank', 'truist', 'wells fargo', 'bank of america', 'first horizon', 'pnc bank',
-    'fifth third', 'chase bank', 'woodforest', 'world finance', 'onemain',
-    'food city', 'food lion', 'ingles', 'kroger', 'publix', 'aldi', 'lidl', 'save-a-lot',
-    'piggly wiggly', 'harris teeter', 'goodwill', 'salvation army',
-    'enterprise rent', 'hertz', 'u-?haul', 'ups store', 'fedex', 'usps', 'post office',
-    'holiday inn', 'hampton inn', 'marriott', 'hilton', 'comfort (inn|suites)', 'quality inn',
-    'super 8', 'days inn', 'motel 6', 'best western', 'econo ?lodge', 'red roof', 'fairfield inn',
-    'courtyard', 'home2', 'candlewood', 'la quinta', 'sleep inn', 'baymont', 'tru by',
-    'residence inn', 'springhill', 'towneplace', 'wingate', 'microtel', 'ramada', 'howard johnson',
-    'shell', 'exxon', 'chevron', 'bp', 'marathon', 'speedway', "casey'?s", 'pilot travel',
-    "love'?s travel", 'circle k', '7-eleven', 'sheetz', 'wawa', 'quiktrip', 'racetrac',
-    'great clips', 'sport clips', 'supercuts', 'smartstyle', 'anytime fitness', 'planet fitness',
-    'crunch fitness', "gold'?s gym", 'gnc', 'h&r block', 'jackson hewitt', 'liberty tax',
-    'state farm', 'allstate', 'geico', 'progressive', 'nationwide', 'edward jones',
-    "aaron'?s", 'rent-a-center', 'gamestop', 'bath & body', "victoria'?s secret",
-    'belk', "kohl'?s", 'tj ?maxx', 'ross dress', 'burlington', 'old navy', 'shoe show',
-    'hibbett', 'dunham', "dick'?s sporting", 'books-a-million', 'batteries plus',
-    'sherwin-williams', 'ace hardware', 'true value', 'firestone', 'goodyear', 'jiffy lube',
-    'valvoline', 'take 5', 'meineke', 'midas', 'aamco', 'caliber collision', 'gerber collision',
-    'safelite', 'mattress firm', 'la-z-boy', 'ashley (furniture|homestore)', 'badcock',
-    'big lots', "ollie'?s", 'hobby lobby', 'michaels', 'joann', 'party city',
-    'krispy kreme', 'dunkin', 'panera', 'chipotle', 'five guys', 'jersey mike', 'firehouse subs',
-    'jimmy john', "moe'?s southwest", "marco'?s pizza", 'hungry howie', 'cicis',
-    'captain d', 'long john silver', 'bojangle', 'el paso mexican', 'la carreta',
-    'holiday hair', 'regis', 'massage envy', 'european wax',
-    'cookout', 'cook out', 'biscuitville', 'zaxby', 'culver', 'whataburger', 'popeyes',
-    "chili'?s", 'red lobster', 'texas roadhouse', 'longhorn', 'golden corral', 'ruby tuesday',
-    '^target$', "sam'?s club", 'costco', "bj'?s", 'trader joe', 'whole foods', 'sprouts',
-    'bank of the ozarks', 'suntrust', 'bb&t', 'first citizens', 'south state bank',
-    'quest diagnostics', 'labcorp', 'minuteclinic', 'fastmed', 'medexpress',
-  ].join('|'),
-  'i'
-);
+//
+// Every token is matched as a WHOLE WORD (\b…\b around the alternation), so a
+// chain name inside an independent's name no longer kills it ("Wingate
+// Pharmacy", "Burlington Dental", "Captain Dan's"). Two further rules:
+//   • tokens that equal a town inside the 200-mile circle (out/places.json)
+//     are gone: 'burlington' (Burlington NC) and 'wingate' (Wingate NC) — the
+//     chains they stood for survive as 'burlington (coat|stores?)' and 'wingate by wyndham'.
+//   • tokens that are also plain words, first names, or local surnames are
+//     qualified with the word that makes them the chain (hilton, marathon,
+//     progressive, shell, speedway, courtyard, regis, longhorn, outback,
+//     nationwide, staples, michaels, joann, take 5, dunham, culver, midas,
+//     sprouts, lowe's, wendy's, aaron's, casey's, ollie's, bj's, o'reilly).
+//     "Hilton Family Farm" and "Marathon Physical Therapy" are independents.
+export const CHAIN_TOKENS = [
+  'walmart', "mcdonald'?s?", 'subway', 'dollar general', 'dollar tree', 'family dollar',
+  'cvs', 'walgreens', 'rite aid', 'autozone', "o'?reilly auto", "^o'?reilly'?s?$", 'advance auto', 'napa auto',
+  'starbucks', 'burger king', "^wendy'?s$", "wendy'?s (restaurant|old fashioned|hamburgers)", 'taco bell', 'kfc', 'pizza hut', "domino'?s",
+  "papa john'?s?", "hardee'?s", 'bojangles', "zaxby'?s", 'chick-fil-a', 'sonic drive',
+  "arby'?s", 'dairy queen', 'little caesars?', 'waffle house', 'cracker barrel', 'ihop',
+  "applebee'?s", 'outback steakhouse', 'olive garden', 'buffalo wild wings', "wing ?stop",
+  'tractor supply', "lowe'?s (home|hardware)", "^lowe'?s$", 'home depot', 'harbor freight', 'best buy', '^staples$', 'staples (stores?|office|print)',
+  'office depot', 'petsmart', 'petco', 'verizon', 'at&t', 't-mobile', 'u\\.?s\\.? cellular',
+  'regions bank', 'truist', 'wells fargo', 'bank of america', 'first horizon', 'pnc bank',
+  'fifth third', 'chase bank', 'woodforest', 'world finance', 'onemain',
+  'food city', 'food lion', 'ingles', 'kroger', 'publix', 'aldi', 'lidl', 'save-a-lot',
+  'piggly wiggly', 'harris teeter', 'goodwill', 'salvation army',
+  'enterprise rent', 'hertz', 'u-?haul', 'ups store', 'fedex', 'usps', 'post office',
+  'holiday inn', 'hampton inn', 'marriott', 'by hilton', 'hilton (garden|hotels?|inn|honors)', 'doubletree', 'embassy suites', 'comfort (inn|suites)', 'quality inn',
+  'super 8', 'days inn', 'motel 6', 'best western', 'econo ?lodge', 'red roof', 'fairfield inn',
+  'courtyard (by )?marriott', 'home2', 'candlewood', 'la quinta', 'sleep inn', 'baymont', 'tru by',
+  'residence inn', 'springhill', 'towneplace', 'wingate (by wyndham|inn|hotels?)', 'microtel', 'ramada', 'howard johnson',
+  '^shell$', 'shell (station|gas|food ?mart|express|oil)', 'exxon(?: ?mobil)?', 'chevron', 'bp', '^marathon$', 'marathon (gas|petroleum|station|fuel|food ?mart|oil)',
+  '^speedway$', 'speedway (gas|station|fuel)', "casey'?s general", "^casey'?s$", 'pilot travel',
+  "love'?s travel", 'circle k', '7-eleven', 'sheetz', 'wawa', 'quiktrip', 'racetrac',
+  'great clips', 'sport clips', 'supercuts', 'smartstyle', 'anytime fitness', 'planet fitness',
+  'crunch fitness', "gold'?s gym", 'gnc', 'h&r block', 'jackson hewitt', 'liberty tax',
+  'state farm', 'allstate', 'geico', 'progressive insurance', '^progressive$', 'nationwide insurance', 'edward jones',
+  "aaron'?s (rents?|furniture|stores?)", "^aaron'?s$", 'rent-a-center', 'gamestop', 'bath & body', "victoria'?s secret",
+  'belk', "kohl'?s", 'tj ?maxx', 'ross dress', 'burlington (coat|stores?)', 'old navy', 'shoe show',
+  'hibbett', "dunham'?s sports", "^dunham'?s$", "dick'?s sporting", 'books-a-million', 'batteries plus',
+  'sherwin-williams', 'ace hardware', 'true value', 'firestone', 'goodyear', 'jiffy lube',
+  'valvoline', 'take 5 (oil|car wash)', '^take 5$', 'meineke', '^midas$', 'midas auto', 'aamco', 'caliber collision', 'gerber collision',
+  'safelite', 'mattress firm', 'la-z-boy', 'ashley (furniture|homestore)', 'badcock',
+  'big lots', "ollie'?s bargain", 'hobby lobby', '^michaels$', 'michaels (stores?|arts|crafts?)', 'jo-?ann fabrics?', 'jo-?ann stores?', '^jo-?ann$', 'party city',
+  'krispy kreme', 'dunkin', 'panera', 'chipotle', 'five guys', "jersey mike'?s?", 'firehouse subs',
+  "jimmy john'?s?", "moe'?s southwest", "marco'?s pizza", "hungry howie'?s?", 'cicis',
+  "captain d'?s?", "long john silver'?s?", 'bojangle', 'el paso mexican', 'la carreta',
+  'holiday hair', 'regis (salons?|hair)', 'massage envy', 'european wax',
+  'cookout', 'cook out', 'biscuitville', 'zaxby', "culver'?s", 'whataburger', 'popeyes',
+  "chili'?s", 'red lobster', 'texas roadhouse', 'longhorn steakhouse', 'golden corral', 'ruby tuesday',
+  '^target$', "sam'?s club", 'costco', "bj'?s wholesale", "^bj'?s$", "trader joe'?s?", 'whole foods', 'sprouts farmers',
+  'bank of the ozarks', 'suntrust', 'bb&t', 'first citizens', 'south state bank',
+  'quest diagnostics', 'labcorp', 'minuteclinic', 'fastmed', 'medexpress',
+];
+export const CHAIN_RE = new RegExp('\\b(?:' + CHAIN_TOKENS.join('|') + ')\\b', 'i');
 
 // Vertical buckets → used for IT-need weighting and audit prioritization.
 export const IT_HEAVY = new Set([

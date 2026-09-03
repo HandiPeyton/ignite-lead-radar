@@ -123,6 +123,14 @@ plus a redeploy.
   keyed to their worst finding, talking points, what to pitch (Ridge/Ignite/both), best
   call window + who answers by vertical, multi-location flag (same name in 2+ towns),
   and the checkup link with copy-to-send.
+- **Depth signals (all free, accuracy-first — a lookup that fails records nothing)**: registry
+  status from RDAP (pending delete / redemption / registrar hold / auto-renew grace), DMARC
+  policy and percentage, SPF terminal qualifier and recursive lookup count, DKIM selectors
+  found (never "missing"), MTA-STS, self-hosted mail, remote-access hostnames that exist in
+  DNS (with a wildcard-zone guard), broken homepage links (404/410 only), and on the weekly
+  render: largest-paint, layout shift, images without text alternatives, unlabeled form
+  fields. Places-data phone numbers are adopted for businesses OSM lists without one (marked
+  Verify). The chain filter matches whole words and skips town-name collisions.
 - **Deep audit pass** (`audit-deep.mjs`) enriches leads with passive public checks:
   TLS cert expiry/issuer, SPF/DMARC/MX records (email-spoofing exposure), SEO basics
   (title/description/H1), page weight, HSTS. No systems are probed — DNS + one page GET.

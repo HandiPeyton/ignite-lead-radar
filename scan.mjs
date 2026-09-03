@@ -321,7 +321,7 @@ function parseElements(elements) {
     const tags = el.tags || {};
     const name = (tags.name || '').trim();
     if (!name) continue;
-    if (tags.brand || CHAIN_RE.test(name)) continue;
+    if (tags.brand || CHAIN_RE.test(name.replace(/[’‘]/g, "'"))) continue;
     const lat = el.lat ?? el.center?.lat;
     const lng = el.lon ?? el.center?.lon;
     if (lat == null || lng == null) continue;
@@ -333,11 +333,14 @@ function parseElements(elements) {
     if (distKm > RADIUS_KM) continue; // tile corners poke outside the circle
     const town = nearestPlace(lat, lng);
     if (!town) continue;
+    // first non-empty of the phone tags OSM uses (a lot of rural listings only carry contact:phone or mobile)
+    const phone = [tags.phone, tags['contact:phone'], tags['contact:mobile'], tags.mobile]
+      .map((v) => String(v || '').split(';')[0].trim()).find(Boolean) || '';
     out.push({
       name,
       vertical,
       website,
-      phone: (tags.phone || tags['contact:phone'] || '').split(';')[0].trim(),
+      phone,
       email: (tags.email || tags['contact:email'] || '').split(';')[0].trim(),
       hours: (tags.opening_hours || '').trim(),
       address: [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '),
@@ -378,7 +381,7 @@ async function googlePlaces(regionKey) {
         const data = await res.json();
         for (const p of data.places || []) {
           const name = p.displayName?.text || '';
-          if (!name || CHAIN_RE.test(name)) continue;
+          if (!name || CHAIN_RE.test(name.replace(/[’‘]/g, "'"))) continue;
           if (p.businessStatus && p.businessStatus !== 'OPERATIONAL') continue;
           out.push({
             name,
@@ -628,6 +631,7 @@ function scoreRow(b) {
   if (emailIsFree) { it += 1; w += 1; ev.push(`Business email is ${b.email}`); }
   if (b.corrected) ev.push('Using the corrected domain from the board');
   if (b.fsqSite) ev.push('Website found via Foursquare (OSM listed none)');
+  if (b.fsqPhone) { ev.push('Phone from places data (OSM listed none) — confirm when you call'); confidence = 'Verify'; }
 
   let need = '';
   if (w >= 4 && it >= 4) need = 'Both';
@@ -799,21 +803,29 @@ async function main() {
     if (applied) log(`Applied ${applied} owner-corrected website domains from the board.`);
   } catch { /* no state snapshot — fine */ }
 
-  // Places-data websites (Overture / Foursquare / Google backfill in ratings.json): adopt for
-  // businesses OSM had no site for, so they get audited like everyone else this run.
+  // Places-data websites and phones (Overture / Foursquare / Google backfill in ratings.json):
+  // adopt for businesses OSM had no site / no phone for, so they get audited like everyone
+  // else this run — and so a phoneless OSM listing isn't dropped at the phone gate below when
+  // the places record has a number for it.
   try {
     const fsq = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'ratings.json'), 'utf8'));
-    let adopted = 0;
+    let adopted = 0, phones = 0;
+    const d10 = (p) => String(p || '').replace(/\D/g, '').slice(-10);
+    // a usable places phone = exactly 10 national digits (optionally with the leading 1)
+    const tenDigit = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.length === 10 || (d.length === 11 && d[0] === '1'); };
     for (const b of all) {
-      if (b.website) continue;
+      if (b.fsqPhone) { b.phone = ''; delete b.fsqPhone; } // light mode reloads inventory.json: never carry an adopted phone across runs
       const e = fsq[(b.name + '|' + b.town + '|' + b.st).toLowerCase()];
+      if (!e || !e.matched) continue;
+      const osmPhone = b.phone; // OSM's own number (may be empty) — the clash guard below compares against THIS only
+      if (!osmPhone && tenDigit(e.t) && !(!b.website && e.w && SOCIAL_RE.test(e.w))) { b.phone = String(e.t).trim(); b.fsqPhone = true; phones++; }
+      if (b.website) continue;
       // never adopt a directory / ordering / review page, and never adopt from a record whose
       // phone disagrees with OSM's — that record is probably a neighbouring business
-      const d10 = (p) => String(p || '').replace(/\D/g, '').slice(-10);
-      const phoneClash = e && e.t && b.phone && d10(e.t).length === 10 && d10(b.phone).length === 10 && d10(e.t) !== d10(b.phone);
-      if (e && e.matched && e.w && !SOCIAL_RE.test(e.w) && !DIRECTORY_RE.test(e.w) && !phoneClash) { b.website = e.w.includes('://') ? e.w : 'https://' + e.w; b.fsqSite = true; adopted++; }
+      const phoneClash = e.t && osmPhone && d10(e.t).length === 10 && d10(osmPhone).length === 10 && d10(e.t) !== d10(osmPhone);
+      if (e.w && !SOCIAL_RE.test(e.w) && !DIRECTORY_RE.test(e.w) && !phoneClash) { b.website = e.w.includes('://') ? e.w : 'https://' + e.w; b.fsqSite = true; adopted++; }
     }
-    if (adopted) log(`Adopted ${adopted} places-listed websites (Overture / Foursquare / Google) for no-site businesses.`);
+    if (adopted || phones) log(`Adopted ${adopted} places-listed websites and ${phones} places-listed phones (Overture / Foursquare / Google) for businesses OSM had none for.`);
   } catch { /* no ratings yet — fine */ }
 
   // Keep the previous inventory so the board can tell "newly listed" apart

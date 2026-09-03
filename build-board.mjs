@@ -24,6 +24,17 @@ const prevLeadMap = prevLeads ? new Map(prevLeads.map((l) => [keyOf(l), l])) : n
 const prevInv = readOpt('prev-inventory.json');
 const prevInvKeys = prevInv ? new Set(prevInv.map(keyOf)) : null;
 
+// A lapsed or registrar-held domain is the most time-critical hook there is (the
+// name is about to drop, or the site and email are already dark). Stable-sort those
+// leads to the top so the board's priority order, "Next lead", and the schedule all
+// see them first; everything else keeps scan.mjs's need → score order.
+const domainDark = (l) => {
+  const h = l.website ? hostnameOf(l.website) : null;
+  const d = h ? audits[h] : null;
+  return d && !d.platform && !d.ok && (d.domLapsed || d.domHold) ? 0 : 1;
+};
+leads.sort((a, b) => domainDark(a) - domainDark(b));
+
 // Break-timing: what changed for this business since the last scan.
 // Calling the week a site breaks is the warmest cold call there is.
 const BAD = new Set(['down', 'parked', 'ssl-error']);
@@ -109,6 +120,16 @@ for (const l of leads) {
     expDays = Math.round((Date.parse(deep.exp) - Date.now()) / 86400000);
     if (expDays >= 0 && expDays < 60) extra.push(`Domain registration expires ${deep.exp} (${expDays} days)`);
   }
+  if (deep && !deep.platform) {
+    if (deep.domLapsed && !deep.ok) extra.push(`Domain registration lapsed — registry status "${deep.domLapsed === 'pendingdelete' ? 'pending delete' : 'redemption period'}"`);
+    else if (deep.domHold && !deep.ok) extra.push('Domain suspended by the registrar (hold status) — site and email dark');
+    else if (deep.domGrace) extra.push('Domain registration in the registry’s auto-renew grace window (status autoRenewPeriod) — renewal not confirmed');
+    if (deep.spfAll === '+all' || deep.spfAll === '?all') extra.push(`SPF record ends in ${deep.spfAll} — it doesn’t restrict who can send as the domain`);
+    if (typeof deep.spfLookups === 'number' && deep.spfLookups > 10) extra.push(`SPF record needs ${deep.spfLookups} DNS lookups (limit 10) — legitimate mail can bounce`);
+  }
+  if (deep?.brokenLinks && typeof deep.brokenLinks.broken === 'number' && deep.brokenLinks.broken >= 2) {
+    extra.push(`${deep.brokenLinks.broken} homepage links go to missing pages (404)`);
+  }
   if (deep?.wbSince) extra.push(`Homepage unchanged since ${deep.wbSince} (archive.org)`);
   else if (deep?.wbLast) extra.push(`Not even archived since ${deep.wbLast} (archive.org)`);
   if (deep?.tech && deep.tech.length) { /* surfaced in prep, not as a flag */ }
@@ -170,6 +191,20 @@ for (const l of leads) {
     })(),
     ct: rat && rat.bs === 'CLOSED_TEMPORARILY' ? 1 : 0,             // temp closed
     gone: rat && rat.bs === 'CLOSED_PERMANENTLY' ? 1 : 0,
+    // deep-audit contract fields (absent → neutral defaults; never asserts absence)
+    dl: deep && !deep.platform && !deep.ok && (deep.domLapsed || deep.domHold) ? 1 : 0, // registration lapsed / registrar hold (and the site is down)
+    dp: (deep && !deep.platform && deep.dmarcPolicy) || '',           // DMARC policy tag
+    sa: (deep && !deep.platform && deep.spfAll) || '',                // SPF terminal qualifier
+    sl: deep && !deep.platform && typeof deep.spfLookups === 'number' ? deep.spfLookups : null,
+    dk: deep && Array.isArray(deep.dkim) ? deep.dkim.length : 0,     // common-selector DKIM hits (0 ≠ "no DKIM")
+    dkn: deep && Array.isArray(deep.dkim) ? deep.dkim.join(',') : '', // the selector names
+    sh: deep && deep.selfHostedMail === true ? 1 : 0,
+    dh: deep && Array.isArray(deep.dnsHosts) ? deep.dnsHosts.join(',') : '',
+    bl: deep?.brokenLinks && typeof deep.brokenLinks.broken === 'number' ? deep.brokenLinks.broken : 0,
+    lcp: ds && typeof ds.lcpMs === 'number' ? +(ds.lcpMs / 1000).toFixed(1) : null,
+    cls: ds && typeof ds.cls === 'number' ? ds.cls : null,
+    ina: ds && typeof ds.imgNoAlt === 'number' ? ds.imgNoAlt : 0,
+    inl: ds && typeof ds.inputsNoLabel === 'number' ? ds.inputsNoLabel : 0,
   };
   })(l);
   if (row.gone) { closedRemoved++; continue; }

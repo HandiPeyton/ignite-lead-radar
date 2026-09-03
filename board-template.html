@@ -200,6 +200,7 @@
   .badge.bup  { color: var(--accent-ink); background: var(--accent); }
   .badge.bcl  { color: var(--verify); border: 1px dashed var(--verify); }
   .badge.bbrk { color: #fff; background: var(--err); }
+  .badge.bdl  { color: #fff; background: var(--err); outline: 2px solid var(--err); outline-offset: 1px; }
   .rstar { font-size: 11px; color: var(--verify); margin-left: 6px; white-space: nowrap; font-weight: 500; }
   .chip.due-on { background: var(--verify); border-color: var(--verify); color: var(--bg); }
 
@@ -283,6 +284,8 @@
   }
   .today .tstat { color: var(--ink-soft); }
   .today .tstat b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .today.learn { border-left-color: var(--need-it); }
+  .today .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); }
   .duetag.overdue3 { font-weight: 700; text-decoration: underline; }
   .openline { display: none; }
   @media print {
@@ -396,6 +399,7 @@
   </div>
 
   <div class="today" id="todayStrip" hidden></div>
+  <div class="today learn" id="learnStrip" hidden></div>
 
   <div class="rail" role="toolbar" aria-label="Filters">
     <span class="lbl">Region</span>
@@ -569,7 +573,7 @@
     document.getElementById('progressRail'), document.getElementById('exportBtn'),
     document.getElementById('backupBtn'), document.getElementById('nextBtn'),
     document.getElementById('progressTh'), document.getElementById('todayStrip'),
-    document.getElementById('tabs'),
+    document.getElementById('learnStrip'), document.getElementById('tabs'),
   ];
   function relock() {
     unlocked = false;
@@ -608,6 +612,7 @@
     const newC = DATA.filter((d) => d.chg === 'new').length;
     const expC = DATA.filter((d) => d.xd != null).length;
     const brkC = DATA.filter((d) => d.brk && !/Newly listed/.test(d.brk) && stOf(d) === 'new').length;
+    const dlC = DATA.filter((d) => d.dl && stOf(d) === 'new').length;
     let dials = 0, convos = 0, wonC = 0, pipe = 0;
     for (const k in trackState) {
       const e = trackState[k]; if (!e) continue;
@@ -627,6 +632,7 @@
     mk('worked today', dials);
     mk('conversations', convos);
     mk('follow-ups due', due);
+    if (dlC) mk('domains lapsed / on hold — call now', dlC);
     if (brkC) mk('sites broke since last scan — call now', brkC);
     const nwC = DATA.filter((d) => (d.nw || /Newly listed/.test(d.brk || '')) && stOf(d) === 'new').length;
     if (nwC) mk('recently opened / newly listed', nwC);
@@ -651,6 +657,70 @@
       });
       el.append(sz);
     }
+    renderLearn();
+  }
+
+  // ---- outcome learning: which verticals actually reach Interested / Quoted / Won ----
+  // Read from the loaded tracking state. A vertical only gets a rate once it has
+  // LEARN_MIN called leads; rates are a schedule tie-breaker, never a replacement
+  // for the priority order.
+  const LEARN = { rates: {}, rows: [], called: 0 };
+  const LEARN_MIN = 8;
+  const CALLED = new Set(['noanswer', 'callback', 'interested', 'quoted', 'won', 'lost']); // bad number / closed down aren't outcomes
+  const REACHED = new Set(['interested', 'quoted', 'won']);
+  function computeLearn() {
+    const byV = {};
+    let called = 0;
+    for (const d of DATA) {
+      const s = stOf(d);
+      if (!CALLED.has(s)) continue;
+      called++;
+      const v = byV[d.vertical] || (byV[d.vertical] = { called: 0, reached: 0 });
+      v.called++;
+      if (REACHED.has(s)) v.reached++;
+    }
+    LEARN.rates = {}; LEARN.rows = []; LEARN.called = called;
+    for (const vert in byV) {
+      const v = byV[vert];
+      if (v.called < LEARN_MIN) continue;
+      LEARN.rates[vert] = v.reached / v.called;
+      LEARN.rows.push({ vert, called: v.called, reached: v.reached, rate: v.reached / v.called });
+    }
+    LEARN.rows.sort((a, b) => (b.rate - a.rate) || (b.called - a.called) || a.vert.localeCompare(b.vert));
+  }
+  function renderLearn() {
+    if (!TRACKING || !unlocked) return;
+    computeLearn();
+    const el = document.getElementById('learnStrip');
+    if (!el) return;
+    el.hidden = false; el.textContent = '';
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = 'Outcome learning';
+    el.append(lbl);
+    if (!LEARN.rows.length) {
+      const p = document.createElement('span'); p.className = 'tstat';
+      p.textContent = 'Too little data yet — a vertical shows its rate once ' + LEARN_MIN + '+ of its leads have been called (' + LEARN.called + ' called so far, all verticals).';
+      el.append(p);
+      return;
+    }
+    for (const r of LEARN.rows) {
+      const s = document.createElement('span'); s.className = 'tstat';
+      const b = document.createElement('b'); b.textContent = Math.round(r.rate * 100) + '%';
+      s.append(b, ' ' + r.vert + ' reach Interested+ (' + r.reached + ' of ' + r.called + ' called)');
+      el.append(s);
+    }
+    const note = document.createElement('span'); note.className = 'tstat';
+    note.textContent = 'Tie-breaker only in the schedule order.';
+    el.append(note);
+  }
+  // Stable re-order of a schedule group: leads equal on the primary key (priority =
+  // need then score, the scan's own order; closest = miles) are nudged so verticals
+  // with a better reach rate go first. Never reorders across different primary keys.
+  function tieBreak(arr) {
+    if (!Object.keys(LEARN.rates).length) return arr;
+    const pk = state.sortMode === 'closest'
+      ? (d) => (d.mi ?? 9999)
+      : (d) => d.needRank * 1000 + (999 - Math.min(999, d.wScore + d.itScore));
+    return arr.slice().sort((a, b) => (pk(a) - pk(b)) || ((LEARN.rates[b.vertical] || 0) - (LEARN.rates[a.vertical] || 0)) || (a.idx - b.idx));
   }
 
   if (TRACKING) {
@@ -908,6 +978,7 @@
 
   function headlineOf(d) {
     const ev = (d.evidence + '; ' + (d.x || '')).toLowerCase();
+    if (d.dl) return ev.includes('domain suspended') ? 'your domain is on hold with the registrar' : 'your domain registration has lapsed';
     if (ev.includes('domain registration expires')) return 'your domain registration is about to expire';
     if (ev.includes('unreachable')) return 'your website isn’t loading';
     if (ev.includes('domain parked')) return 'your old website domain is showing a parked page';
@@ -931,7 +1002,10 @@
     const brand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
     const intro = 'Hey, this is Peyton with ' + brand + ' — we’re a local team here in the Tri-Cities. ';
     let hook;
-    if (ev.includes('domain registration expires')) hook = 'This one’s time-sensitive — your domain registration is about to expire' + (d.xd != null ? ' in about ' + d.xd + ' days' : '') + '. If it lapses, the website and your email both go dark, and domain squatters snap these up. Wanted to make sure it doesn’t slip.';
+    if (d.dl) hook = ev.includes('domain suspended')
+      ? 'This one’s urgent — the domain registry shows your domain on hold with the registrar, which means your website and email are dark for everyone right now. Usually it’s a missed renewal or a verification email nobody saw. Wanted to make sure you knew today.'
+      : 'This one’s urgent — the domain registry shows your domain registration has lapsed. Once it finishes dropping, anyone can buy the name, and your website and email go with it. Your registrar can usually still restore it, but the clock’s running. Wanted to make sure you knew today.';
+    else if (ev.includes('domain registration expires')) hook = 'This one’s time-sensitive — your domain registration is about to expire' + (d.xd != null ? ' in about ' + d.xd + ' days' : '') + '. If it lapses, the website and your email both go dark, and domain squatters snap these up. Wanted to make sure it doesn’t slip.';
     else if (ev.includes('down/unreachable')) hook = 'I was looking up ' + d.vertical + ' businesses around ' + d.town + ' and noticed your website isn’t loading at all — wanted to make sure y’all knew before more customers run into it.';
     else if (ev.includes('domain parked')) hook = 'I noticed your old website domain is showing a "parked" page now — anyone who Googles you hits a dead end. Wanted to give you a heads up.';
     else if (ev.includes('ssl certificate broken') || ev.includes('certificate expired')) hook = 'I noticed your website is showing visitors a security warning — the "not secure" full-screen one. It’s usually a 10-minute fix, but it’s costing you customers every day it’s up.';
@@ -974,6 +1048,27 @@
           .catch(() => showToast('Copy failed — select it manually'));
       });
       return b;
+    };
+
+    // Sending the checkup (SMS link / mail app) appends a dated note once per day,
+    // so the follow-up trail writes itself.
+    const logSent = (channel) => {
+      if (!TRACKING || !unlocked) return;
+      const key = keyOf(d);
+      const line = TODAY + ' — Checkup sent (' + channel + ')';
+      const wrapEl = box.closest('.edwrap');
+      const ta = wrapEl ? wrapEl.querySelector('textarea') : null;
+      const cur = ta ? ta.value : noteOf(d);
+      if (cur.split('\n').some((ln) => ln.trim() === line)) return;
+      clearTimeout(noteTimers[key]);
+      const next = cur.trim() ? cur.replace(/\s+$/, '') + '\n' + line : line;
+      if (ta) ta.value = next;
+      const metaEl = wrapEl ? wrapEl.querySelector('.edmeta') : null;
+      saveLead(key, { n: next }, metaEl).then(() => {
+        const edrow = box.closest('tr.edrow');
+        const tr = edrow && edrow.previousElementSibling;
+        if (tr && tr.classList.contains('lead')) updateRowChip(tr, d);
+      });
     };
 
     const lf = document.createElement('div'); lf.className = 'pv';
@@ -1024,12 +1119,20 @@
     const pi = document.createElement('p'); pi.textContent = p.pitch;
     row('Pitch', pi);
 
-    if (d.mx || d.tech) {
+    if (d.mx || d.tech || d.dp || d.sa || d.dk || d.sh || d.dh) {
       const mp = document.createElement('p');
       const spoof = ((d.x || '') + (d.evidence || '')).toLowerCase().includes('spoofable');
       const bits = [];
       if (d.tech) bits.push('Built on ' + d.tech);
       if (d.mx) bits.push('email on ' + d.mx + (spoof ? ' (spoofable — clean Ignite opener)' : ''));
+      // plain facts from the deep DNS pass — absence is never stated (an empty DKIM
+      // list only means none of the common selectors answered)
+      if (d.dp) bits.push('DMARC policy ' + d.dp + (d.dp === 'none' ? ' (monitor only)' : ''));
+      if (d.sa) bits.push('SPF ends in ' + d.sa + (d.sl != null ? ', ' + d.sl + ' lookup' + (d.sl === 1 ? '' : 's') + (d.sl > 10 ? ' — over the limit of 10' : '') : ''));
+      else if (d.sl != null && d.sl > 10) bits.push('SPF needs ' + d.sl + ' lookups — over the limit of 10');
+      if (d.dk) bits.push('DKIM found: ' + (d.dkn ? d.dkn.split(',').join(', ') : d.dk + ' selector' + (d.dk === 1 ? '' : 's')));
+      if (d.sh) bits.push('self-hosted mail (MX on their own domain)');
+      if (d.dh) bits.push('DNS names published: ' + d.dh.split(',').join(', '));
       mp.textContent = bits.join('; ') + '.';
       row('Their stack', mp);
     }
@@ -1086,13 +1189,14 @@
       sms.className = 'minibtn';
       sms.href = 'sms:' + d.phone.replace(/[^+\d]/g, '') + '?&body=' + encodeURIComponent(smsBody);
       sms.textContent = 'Text it to them';
+      sms.addEventListener('click', () => logSent('SMS'));
       lk.append(a, sms, copyBtn(smsBody, 'Copy text msg'), copyBtn(full, 'Copy link'));
       row('Checkup', lk);
     }
 
     const checkupUrl = d.slug ? location.origin + '/a/' + d.slug + '.html' : '';
     const h = headlineOf(d);
-    const subj = h.includes('domain registration') ? 'Time-sensitive heads-up about your domain'
+    const subj = (h.includes('domain registration') || h.includes('domain is on hold')) ? 'Time-sensitive heads-up about your domain'
       : h.includes('couldn’t find a website') || h.includes('Facebook') ? 'Getting ' + d.name + ' findable on Google'
       : 'Quick heads-up about your website';
     const hour = new Date().getHours();
@@ -1111,6 +1215,7 @@
     const emP = document.createElement('p');
     emP.style.whiteSpace = 'pre-wrap'; emP.style.fontSize = '12px'; emP.style.color = 'var(--ink-soft)';
     const emA = document.createElement('a'); emA.className = 'minibtn'; emA.textContent = 'Open in mail app';
+    emA.addEventListener('click', () => { if (checkupUrl) logSent('email'); });
     const refreshEmail = () => {
       emP.textContent = draft(true);
       emA.href = 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(draft(true));
@@ -1295,6 +1400,7 @@
       if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
       else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
       if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed?'; b.title = 'Listings mark this business as temporarily or possibly closed'; biz.append(b); }
+      if (d.dl) { const b = document.createElement('span'); b.className = 'badge bdl'; b.textContent = 'domain lapsed'; b.title = (d.x || '').split('; ').find((s) => /^Domain (registration lapsed|suspended)/.test(s)) || 'Domain registration lapsed or on registrar hold'; biz.append(b); }
       if (d.brk && !/Newly listed/.test(d.brk)) { const b = document.createElement('span'); b.className = 'badge bbrk'; b.textContent = 'just broke'; b.title = d.brk; biz.append(b); }
       if (d.nw || /Newly listed/.test(d.brk || '')) { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new biz'; b.title = d.nw ? 'Listed on Foursquare since ' + d.nw : 'Just appeared on the map'; biz.append(b); }
       tr.append(biz);
@@ -1368,6 +1474,8 @@
       (state.need === 'all' || d.need === state.need) &&
       (!state.highConf || d.confidence === 'High') &&
       stOf(d) === 'new');
+    const lapsed = cand.filter((d) => d.dl);
+    if (lapsed.length) cand = lapsed;
     const high = cand.filter((d) => d.confidence === 'High');
     if (high.length) cand = high;
     if (!cand.length) { showToast('No untouched leads match the current region/need filters'); return; }
@@ -1470,14 +1578,19 @@
     const due = pool.filter(isDue).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
     const dueKeys = new Set(due.map(keyOf));
     const freshAll = pool.filter((d) => stOf(d) === 'new' && !dueKeys.has(keyOf(d)));
-    // Just-broke leads first (timing beats everything), then High-confidence,
-    // then Verify-grade fill in only after
-    const broke = freshAll.filter((d) => d.brk && !/Newly listed/.test(d.brk));
+    // Lapsed / registrar-held domains first (the name is dropping — nothing beats
+    // that), then just-broke leads, then High-confidence, then Verify-grade fill.
+    // Within each group the outcome-learning rate breaks ties only.
+    computeLearn();
+    const lapsed = freshAll.filter((d) => d.dl);
+    const lapsedKeys = new Set(lapsed.map(keyOf));
+    const broke = freshAll.filter((d) => !lapsedKeys.has(keyOf(d)) && d.brk && !/Newly listed/.test(d.brk));
     const brokeKeys = new Set(broke.map(keyOf));
-    const rest = freshAll.filter((d) => !brokeKeys.has(keyOf(d)));
-    const fresh = broke
-      .concat(rest.filter((d) => d.confidence === 'High'))
-      .concat(rest.filter((d) => d.confidence !== 'High'));
+    const rest = freshAll.filter((d) => !lapsedKeys.has(keyOf(d)) && !brokeKeys.has(keyOf(d)));
+    const fresh = tieBreak(lapsed)
+      .concat(tieBreak(broke))
+      .concat(tieBreak(rest.filter((d) => d.confidence === 'High')))
+      .concat(tieBreak(rest.filter((d) => d.confidence !== 'High')));
 
     if (!slots.length) {
       const p = document.createElement('div'); p.className = 'empty';
