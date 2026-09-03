@@ -1,378 +1,592 @@
+<meta charset="utf-8">
 <title>Ignite Lead Radar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+  /* Dark "ink" ground is the default look; the light palette maps the same tokens
+     and switches in via prefers-color-scheme (or data-theme="light" on the root). */
   :root {
-    --bg: #FAF7F4;
+    --bg: #1B1714;
+    --surface: #241F1B;
+    --surface-2: #2D2723;
+    --surface-3: #37302A;
+    --ink: #EDE6DF;
+    --ink-soft: #A89C90;
+    --ink-mute: #7E7369;
+    --line: #3A332D;
+    --line-strong: #4B433B;
+    --accent: #E0561F;
+    --accent-ink: #FFF7F2;
+    --accent-soft: rgba(224, 86, 31, .14);
+    --focus: #F08A5B;
+    --red: #F27D62;     --red-bg: #43231C;
+    --amber: #E3B44C;   --amber-bg: #3A311A;
+    --green: #5FC2A9;   --green-bg: #173832;
+    --blue: #85B4DC;    --blue-bg: #1F3245;
+    --violet: #B49BE0;  --violet-bg: #2E2540;
+    --need-both: #F0956B; --need-both-bg: #45291B;
+    --need-web: #85B4DC;  --need-web-bg: #1F3245;
+    --need-it: #6FC4B5;   --need-it-bg: #173832;
+    --verify: #D6B75E;    --verify-bg: #3A311A;
+    --quoted: #B49BE0;    --quoted-bg: #2E2540;
+    --row-hover: #2A2420;
+    --ok: #5FC2A9;
+    --err: #F27D62;
+    --shadow: 0 18px 48px rgba(0, 0, 0, .55);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #F6F2EE;
+      --surface: #FFFFFF;
+      --surface-2: #F1EBE5;
+      --surface-3: #E8E0D8;
+      --ink: #26211D;
+      --ink-soft: #6B6259;
+      --ink-mute: #8E8379;
+      --line: #E3DAD1;
+      --line-strong: #CFC4B9;
+      --accent: #C2410C;
+      --accent-ink: #FFFFFF;
+      --accent-soft: rgba(194, 65, 12, .10);
+      --focus: #C2410C;
+      --red: #B3400F;     --red-bg: #F7E3D7;
+      --amber: #8A6D1C;   --amber-bg: #F5ECD4;
+      --green: #177E70;   --green-bg: #DCF0EB;
+      --blue: #2F6FAB;    --blue-bg: #E1ECF5;
+      --violet: #6D4FA1;  --violet-bg: #EAE3F5;
+      --need-both: #B3400F; --need-both-bg: #F7E3D7;
+      --need-web: #2F6FAB;  --need-web-bg: #E1ECF5;
+      --need-it: #177E70;   --need-it-bg: #DCF0EB;
+      --verify: #8A6D1C;    --verify-bg: #F5ECD4;
+      --quoted: #6D4FA1;    --quoted-bg: #EAE3F5;
+      --row-hover: #F4EDE6;
+      --ok: #177E70;
+      --err: #B3400F;
+      --shadow: 0 18px 48px rgba(38, 33, 29, .22);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F2EE;
     --surface: #FFFFFF;
     --surface-2: #F1EBE5;
+    --surface-3: #E8E0D8;
     --ink: #26211D;
     --ink-soft: #6B6259;
+    --ink-mute: #8E8379;
     --line: #E3DAD1;
+    --line-strong: #CFC4B9;
     --accent: #C2410C;
     --accent-ink: #FFFFFF;
-    --need-both: #B3400F;      --need-both-bg: #F7E3D7;
-    --need-web: #2F6FAB;       --need-web-bg: #E1ECF5;
-    --need-it: #177E70;        --need-it-bg: #DCF0EB;
-    --verify: #8A6D1C;         --verify-bg: #F5ECD4;
-    --quoted: #6D4FA1;         --quoted-bg: #EAE3F5;
+    --accent-soft: rgba(194, 65, 12, .10);
+    --focus: #C2410C;
+    --red: #B3400F;     --red-bg: #F7E3D7;
+    --amber: #8A6D1C;   --amber-bg: #F5ECD4;
+    --green: #177E70;   --green-bg: #DCF0EB;
+    --blue: #2F6FAB;    --blue-bg: #E1ECF5;
+    --violet: #6D4FA1;  --violet-bg: #EAE3F5;
+    --need-both: #B3400F; --need-both-bg: #F7E3D7;
+    --need-web: #2F6FAB;  --need-web-bg: #E1ECF5;
+    --need-it: #177E70;   --need-it-bg: #DCF0EB;
+    --verify: #8A6D1C;    --verify-bg: #F5ECD4;
+    --quoted: #6D4FA1;    --quoted-bg: #EAE3F5;
     --row-hover: #F4EDE6;
     --ok: #177E70;
     --err: #B3400F;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #201B17;
-      --surface: #292320;
-      --surface-2: #322B26;
-      --ink: #EDE6DF;
-      --ink-soft: #A89C90;
-      --line: #3D3630;
-      --accent: #E0561F;
-      --accent-ink: #FFF7F2;
-      --need-both: #F0956B;    --need-both-bg: #45291B;
-      --need-web: #85B4DC;     --need-web-bg: #1F3245;
-      --need-it: #6FC4B5;      --need-it-bg: #173832;
-      --verify: #D6B75E;       --verify-bg: #3A311A;
-      --quoted: #B49BE0;       --quoted-bg: #2E2540;
-      --row-hover: #2E2723;
-      --ok: #6FC4B5;
-      --err: #F0956B;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #201B17;
-    --surface: #292320;
-    --surface-2: #322B26;
-    --ink: #EDE6DF;
-    --ink-soft: #A89C90;
-    --line: #3D3630;
-    --accent: #E0561F;
-    --accent-ink: #FFF7F2;
-    --need-both: #F0956B;    --need-both-bg: #45291B;
-    --need-web: #85B4DC;     --need-web-bg: #1F3245;
-    --need-it: #6FC4B5;      --need-it-bg: #173832;
-    --verify: #D6B75E;       --verify-bg: #3A311A;
-    --quoted: #B49BE0;       --quoted-bg: #2E2540;
-    --row-hover: #2E2723;
-    --ok: #6FC4B5;
-    --err: #F0956B;
+    --shadow: 0 18px 48px rgba(38, 33, 29, .22);
+    color-scheme: light;
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-padding-top: 12px; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font: 400 14px/1.5 "Barlow", "Segoe UI", system-ui, sans-serif;
+    font: 400 15px/1.45 "Barlow", "Segoe UI", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
   }
-  a { color: var(--need-web); }
+  a { color: var(--blue); }
+  h1, h2, h3 { margin: 0; }
+  .mono { font-family: "IBM Plex Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .disp { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+  kbd {
+    display: inline-block; min-width: 18px; padding: 1px 5px; margin-left: 6px;
+    border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 3px;
+    background: var(--surface-2); color: var(--ink-soft);
+    font: 500 11px/1.3 "IBM Plex Mono", Consolas, monospace; text-align: center; vertical-align: 1px;
+  }
+  .primary kbd { background: rgba(0, 0, 0, .18); border-color: rgba(0, 0, 0, .25); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  .wrap { max-width: 1420px; margin: 0 auto; padding: 20px 20px 48px; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 18px 20px 48px; }
+  /* On wide screens the board sits beside the open prep drawer instead of under it,
+     so the toolbar (Filters button included) and every row stay clickable. The
+     padding is exactly what the 520px drawer overlaps: 540px while the wrap fills
+     the viewport, 1200px − half the viewport once the wrap is centered, never < 20px. */
+  @media (min-width: 1100px) {
+    body.prep-open .wrap { padding-right: clamp(20px, calc(1200px - 50%), 540px); }
+  }
 
+  /* ---- header ---- */
   header.top {
-    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 28px;
-    padding-bottom: 14px; border-bottom: 2px solid var(--ink);
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px;
+    padding-bottom: 12px; border-bottom: 2px solid var(--ink);
   }
   .brand h1 {
-    margin: 0;
     font: 700 34px/1 "Barlow Condensed", "Arial Narrow", sans-serif;
     letter-spacing: .02em; text-transform: uppercase;
   }
   .brand h1 .tick { color: var(--accent); }
   .brand p { margin: 4px 0 0; color: var(--ink-soft); font-size: 13px; }
-  .scanmeta {
-    margin-left: auto; display: flex; gap: 20px; align-items: flex-end;
-    font-variant-numeric: tabular-nums;
-  }
+  .scanmeta { margin-left: auto; display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; }
   .stat { text-align: right; }
-  .stat b {
-    display: block;
-    font: 600 24px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif;
-  }
-  .stat span {
-    font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft);
-  }
+  .stat b { display: block; font: 600 24px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; }
+  .stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
 
-  .rail {
-    display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;
-    padding: 14px 0 4px;
+  /* ---- buttons, chips, pills: one system ---- */
+  .btn, .chip, .minibtn, .stbtn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+    font: 500 14px/1 "Barlow", sans-serif; padding: 8px 12px; border-radius: 4px; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+    transition: background .12s, border-color .12s, color .12s;
   }
-  .rail.second { padding: 4px 0 12px; }
-  .rail .lbl {
-    font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
-    color: var(--ink-soft); margin-right: 2px;
+  .btn:hover, .chip:hover, .minibtn:hover, .stbtn:hover { border-color: var(--ink-soft); background: var(--surface-2); }
+  .btn:disabled, .minibtn:disabled { opacity: .45; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn.primary:hover { background: var(--accent); filter: brightness(1.08); }
+  .btn.sm, .minibtn { font-size: 13px; padding: 5px 9px; }
+  .btn.lg { font-size: 16px; padding: 12px 18px; }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .iconbtn {
+    border: 1px solid transparent; background: transparent; color: var(--ink-soft);
+    font: 500 22px/1 "Barlow", sans-serif; width: 34px; height: 34px; border-radius: 4px; cursor: pointer;
   }
-  .chip {
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    font: 500 13px/1 "Barlow", sans-serif;
-    padding: 7px 11px; border-radius: 4px; cursor: pointer;
-    transition: background .12s, border-color .12s;
+  .iconbtn:hover { background: var(--surface-2); color: var(--ink); }
+  .chip[aria-pressed="true"], .stbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip .n { opacity: .7; margin-left: 2px; font-size: 12px; }
+  .chip.due-on { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ctl {
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 8px 10px;
+    background: var(--surface); color: var(--ink); font: 400 14px/1.2 "Barlow", sans-serif;
   }
-  .chip:hover { border-color: var(--ink-soft); }
-  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .chip .n { opacity: .7; font-variant-numeric: tabular-nums; margin-left: 4px; }
-  .chip:focus-visible, #q:focus-visible, .pager button:focus-visible, th.sortable:focus-visible,
-  .edwrap textarea:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
-  }
-  .rail .gap { width: 10px; }
-  #q {
-    margin-left: auto; min-width: 220px; flex: 0 1 280px;
-    border: 1px solid var(--line); border-radius: 4px;
-    background: var(--surface); color: var(--ink);
-    font: 400 13px/1 "Barlow", sans-serif; padding: 8px 10px;
-  }
-  #q::placeholder { color: var(--ink-soft); }
+  .ctl::placeholder { color: var(--ink-mute); }
+  .schedctl { border: 1px solid var(--line-strong); border-radius: 4px; padding: 8px 10px; background: var(--surface); color: var(--ink); font: 400 14px/1.2 "Barlow", sans-serif; }
 
-  .count { font-size: 12px; color: var(--ink-soft); padding: 4px 0 8px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .count .export { margin-left: auto; }
-
-  .tablewrap {
-    overflow-x: auto; border: 1px solid var(--line); border-radius: 6px;
-    background: var(--surface);
-  }
-  table { border-collapse: collapse; width: 100%; min-width: 1250px; }
-  thead th {
-    position: sticky; top: 0; z-index: 2;
-    background: var(--surface-2);
-    font: 600 11px/1.2 "Barlow", sans-serif;
-    text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft);
-    text-align: left; padding: 9px 10px; border-bottom: 2px solid var(--line);
-    white-space: nowrap;
-  }
-  th.sortable { cursor: pointer; }
-  th.sortable:hover { color: var(--ink); }
-  th .dir { color: var(--accent); }
-  tbody td {
-    padding: 8px 10px; border-bottom: 1px solid var(--line);
-    vertical-align: top; font-size: 13px;
-  }
-  tbody tr.lead { cursor: default; }
-  tbody tr.lead.trackable { cursor: pointer; }
-  tbody tr.lead:hover { background: var(--row-hover); }
-  tbody tr:last-child td { border-bottom: none; }
-
-  td.biz { font-weight: 600; max-width: 220px; }
-  td.town, td.vert { white-space: nowrap; color: var(--ink-soft); }
-  td.vert { text-transform: capitalize; }
-  .needchip {
-    display: inline-block; padding: 3px 8px; border-radius: 4px;
-    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
-    white-space: nowrap;
+  .pill {
+    display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px;
+    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
   }
   .need-Both    { color: var(--need-both); background: var(--need-both-bg); }
   .need-Website { color: var(--need-web);  background: var(--need-web-bg); }
   .need-IT      { color: var(--need-it);   background: var(--need-it-bg); }
-  .vchip {
-    display: inline-block; margin-top: 3px; padding: 2px 6px; border-radius: 4px;
-    border: 1px dashed var(--verify); color: var(--verify); background: var(--verify-bg);
-    font: 500 10px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  .pill.verify { border: 1px dashed var(--verify); color: var(--verify); background: var(--verify-bg); }
+  .needchip { display: inline-flex; padding: 3px 8px; border-radius: 4px; font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 3px;
+    font: 600 10px/1.4 "Barlow", sans-serif; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
   }
+  .badge.bnew { color: var(--blue); border: 1px solid var(--blue); }
+  .badge.bup  { color: var(--accent-ink); background: var(--accent); }
+  .badge.bcl  { color: var(--amber); border: 1px dashed var(--amber); }
+  .badge.bbrk { color: #fff; background: var(--red); }
+  .badge.bdl  { color: #fff; background: var(--red); box-shadow: 0 0 0 2px var(--red-bg); }
+  .badge.bmulti { color: var(--violet); border: 1px solid var(--violet); }
+  .badge.bexp { color: var(--amber); background: var(--amber-bg); }
+  .rstar { font-size: 12px; color: var(--amber); white-space: nowrap; font-weight: 500; }
 
   .stchip {
-    display: inline-block; padding: 3px 8px; border-radius: 4px;
-    font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .03em; white-space: nowrap;
-    border: 1px solid transparent;
+    display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px;
+    font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .04em; white-space: nowrap;
+    border: 1px solid transparent; text-transform: uppercase;
   }
-  .st-new        { color: var(--ink-soft); background: var(--surface-2); }
-  .st-noanswer   { color: var(--verify); background: var(--verify-bg); }
-  .st-callback   { color: var(--need-web); background: var(--need-web-bg); }
-  .st-interested { color: var(--need-it); background: var(--need-it-bg); }
-  .st-quoted     { color: var(--quoted); background: var(--quoted-bg); }
-  .st-won        { color: var(--bg); background: var(--need-it); }
-  .st-lost       { color: var(--need-both); background: var(--need-both-bg); }
-  .st-bad        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line); border-style: dashed; opacity: .8; }
-  .st-gone       { color: var(--err); background: var(--surface-2); border: 1px dashed var(--err); opacity: .85; }
-  .notedot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent); margin-left: 6px; vertical-align: middle;
-  }
-  .duetag { font: 500 10px/1.4 "IBM Plex Mono", monospace; color: var(--verify); margin-top: 3px; white-space: nowrap; }
-  .duetag.overdue { color: var(--err); font-weight: 600; }
-  .badge {
-    display: inline-block; margin-left: 6px; padding: 1px 5px; border-radius: 3px;
-    font: 600 9px/1.4 "Barlow", sans-serif; letter-spacing: .07em; text-transform: uppercase;
-    vertical-align: 2px;
-  }
-  .badge.bnew { color: var(--need-web); border: 1px solid var(--need-web); }
-  .badge.bup  { color: var(--accent-ink); background: var(--accent); }
-  .badge.bcl  { color: var(--verify); border: 1px dashed var(--verify); }
-  .badge.bbrk { color: #fff; background: var(--err); }
-  .badge.bdl  { color: #fff; background: var(--err); outline: 2px solid var(--err); outline-offset: 1px; }
-  .rstar { font-size: 11px; color: var(--verify); margin-left: 6px; white-space: nowrap; font-weight: 500; }
-  .chip.due-on { background: var(--verify); border-color: var(--verify); color: var(--bg); }
+  .st-new        { color: var(--ink-soft); background: var(--surface-3); }
+  .st-noanswer   { color: var(--amber); background: var(--amber-bg); }
+  .st-callback   { color: var(--blue); background: var(--blue-bg); }
+  .st-interested { color: var(--green); background: var(--green-bg); }
+  .st-quoted     { color: var(--violet); background: var(--violet-bg); }
+  .st-won        { color: var(--bg); background: var(--green); }
+  .st-lost       { color: var(--red); background: var(--red-bg); }
+  .st-bad        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line-strong); border-style: dashed; }
+  .st-gone       { color: var(--red); background: var(--surface-2); border: 1px dashed var(--red); }
+  .notedot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+  .duetag { font: 500 12px/1.3 "IBM Plex Mono", monospace; color: var(--amber); white-space: nowrap; }
+  .duetag.overdue { color: var(--red); font-weight: 600; }
+  .duetag.overdue3 { text-decoration: underline; }
 
-  td.score { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  td.why { color: var(--ink-soft); font-size: 12px; line-height: 1.45; max-width: 340px; min-width: 220px; }
-  td.phone { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
-  td.phone a, td.links a { color: var(--need-web); text-decoration: none; }
-  td.phone a:hover, td.links a:hover { text-decoration: underline; }
-  td.links { white-space: nowrap; font-size: 12px; }
-  td.links .site { display: block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: 0; margin-top: 14px; border-bottom: 1px solid var(--line); }
+  .tab {
+    border: none; border-bottom: 3px solid transparent; background: transparent; color: var(--ink-soft);
+    font: 600 15px/1 "Barlow", sans-serif; padding: 10px 14px; cursor: pointer; margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 
-  tr.edrow > td { background: var(--surface-2); padding: 0; }
-  .edwrap {
-    position: sticky; left: 0;
-    max-width: min(720px, calc(100vw - 80px));
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 14px 16px 16px;
+  /* ---- unlock ---- */
+  .unlockbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    border: 1px solid var(--amber); background: var(--amber-bg); color: var(--ink);
+    border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 14px;
   }
-  .edwrap .stbtns { display: flex; flex-wrap: wrap; gap: 6px; }
-  .edwrap .stbtn {
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    font: 500 12px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  .unlockbar b { color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  #keyinput {
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 7px 10px;
+    background: var(--surface); color: var(--ink); font: 500 15px/1 "IBM Plex Mono", monospace;
+    letter-spacing: .2em; width: 140px;
   }
-  .edwrap .stbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .edwrap textarea {
-    width: 100%; min-height: 74px; resize: vertical;
-    border: 1px solid var(--line); border-radius: 4px;
+  .unlockbar .msg { color: var(--err); font-size: 13px; }
+
+  /* ---- today tiles + learning ---- */
+  .today {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 22px; align-items: center;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+    padding: 12px 14px; margin-top: 12px;
+  }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 8px; }
+  .tile {
+    border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 4px;
+    background: var(--surface-2); padding: 8px 12px 7px; min-width: 0;
+  }
+  .tile b { display: block; font: 700 30px/1 "Barlow Condensed", "Arial Narrow", sans-serif; }
+  .tile span { display: block; font-size: 11px; line-height: 1.3; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-top: 3px; }
+  .tile small { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .tile.t-due.on { border-left-color: var(--amber); }
+  .tile.t-due.on b { color: var(--amber); }
+  .tile.t-dom.on { border-left-color: var(--red); }
+  .tile.t-dom.on b { color: var(--red); }
+  .tile.t-conv.on { border-left-color: var(--green); }
+  .tactions { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+  .tsub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-soft); }
+  .tsub b { color: var(--ink); }
+  .tsub .hot b { color: var(--red); }
+  .learn {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+    border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 6px;
+    background: var(--surface); padding: 9px 14px; margin-top: 8px; font-size: 13px; color: var(--ink-soft);
+  }
+  .learn .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); font-weight: 600; }
+  .learn .tstat b { color: var(--ink); font-size: 15px; }
+  .today .tstat b { color: var(--ink); }
+
+  /* ---- toolbar ---- */
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;
+    padding: 14px 0 8px;
+  }
+  #q {
+    flex: 1 1 240px; min-width: 180px; max-width: 360px;
+    border: 1px solid var(--line-strong); border-radius: 4px;
     background: var(--surface); color: var(--ink);
-    font: 400 13px/1.5 "Barlow", sans-serif; padding: 9px 10px;
+    font: 400 15px/1.2 "Barlow", sans-serif; padding: 8px 12px;
   }
-  .edwrap textarea::placeholder { color: var(--ink-soft); }
-  .furow { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; }
+  #q::placeholder { color: var(--ink-mute); }
+  .toolbar .sep { width: 1px; height: 24px; background: var(--line); margin: 0 2px; }
+  #filtersBtn .n {
+    display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; justify-content: center; align-items: center;
+    border-radius: 9px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 600;
+  }
+  #filtersBtn .n[hidden] { display: none; }
+  .achips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .achip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink);
+    font: 500 13px/1 "Barlow", sans-serif; padding: 5px 6px 5px 9px; border-radius: 4px; cursor: pointer;
+  }
+  .achip i { font-style: normal; color: var(--ink-soft); }
+  .achip .x { font-size: 15px; line-height: 1; color: var(--accent); }
+  .achip:hover .x { color: var(--ink); }
+
+  .listbar {
+    display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+    padding: 6px 0 8px; font-size: 13px; color: var(--ink-soft);
+  }
+  .listbar .grow { flex: 1; }
+  .listbar label { display: inline-flex; gap: 6px; align-items: center; }
+  .listbar select { padding: 6px 8px; font-size: 13px; }
+
+  /* ---- rows ---- */
+  .board { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+  .row {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; align-items: start;
+    padding: 10px 14px 10px 11px; border-left: 3px solid transparent; border-bottom: 1px solid var(--line);
+    cursor: default;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.trackable { cursor: pointer; }
+  .row:hover { background: var(--row-hover); }
+  .row.sev-red { border-left-color: var(--red); }
+  .row.sev-amber { border-left-color: var(--amber); }
+  .row.sev-green { border-left-color: var(--green); }
+  .row.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .rmain { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .l1 .name { font-weight: 600; font-size: 16px; line-height: 1.25; }
+  .scores { display: inline-flex; gap: 8px; font: 500 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--ink-soft); }
+  .scores b { color: var(--ink); font-weight: 500; }
+  .scores i { font-style: normal; font-size: 10px; letter-spacing: .06em; margin-right: 3px; }
+  .l2 { font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+  .l2 .geo { color: var(--ink); }
+  .l2 .geo .vert { text-transform: capitalize; }
+  .l2 .why { color: var(--ink-soft); }
+  .l2 .xtra { color: var(--ink-mute); }
+  .rside { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 1px; }
+  .rside .phone {
+    font: 500 15px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--ink); text-decoration: none;
+    border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; white-space: nowrap;
+  }
+  .rside .phone:hover { border-bottom-color: var(--accent); color: var(--accent); }
+  .rside .links { display: flex; gap: 10px; font-size: 13px; white-space: nowrap; }
+  .rside .links a { color: var(--blue); text-decoration: none; }
+  .rside .links a:hover { text-decoration: underline; }
+  .rside .links .site { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  .empty { padding: 40px; text-align: center; color: var(--ink-soft); }
+
+  .pager { display: inline-flex; gap: 6px; align-items: center; }
+  .pager button {
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+    font: 500 13px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .pager .plabel { font-size: 13px; color: var(--ink-soft); padding: 0 6px; white-space: nowrap; }
+  .pager.bottom { display: flex; justify-content: center; margin-top: 14px; }
+
+  /* ---- drawers ---- */
+  .scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 40; }
+  .drawer {
+    position: fixed; top: 0; bottom: 0; z-index: 41; width: min(460px, 100vw);
+    background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .drawer.left { left: 0; border-left: none; border-right: 1px solid var(--line); width: min(400px, 100vw); }
+  .drawer.right { right: 0; width: min(520px, 100vw); }
+  .dhead {
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .dhead h2 { font: 700 22px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+  .dhead .iconbtn { margin-left: auto; flex: none; }
+  .dbody { flex: 1; overflow-y: auto; padding: 14px 16px 24px; }
+  .dfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .fsec { margin-bottom: 18px; }
+  .fsec h3 { font: 600 11px/1.4 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); margin-bottom: 8px; }
+  .fsec .ctl, .fsec .schedctl { width: 100%; }
+  .prepsub { font-size: 14px; color: var(--ink-soft); margin-top: 3px; }
+  .prepsub .vert { text-transform: capitalize; }
+  #prepPhone {
+    display: inline-block; margin-top: 8px; font: 500 20px/1 "IBM Plex Mono", Consolas, monospace;
+    color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-strong);
+  }
+  #prepPhone:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ---- lead panel (prep + tracking) ---- */
+  .edwrap { display: flex; flex-direction: column; gap: 12px; }
+  .edwrap .stbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .edwrap .stbtn { font-size: 13px; padding: 6px 10px; }
+  .edwrap textarea, .cnotes {
+    width: 100%; min-height: 84px; resize: vertical;
+    border: 1px solid var(--line-strong); border-radius: 4px;
+    background: var(--surface); color: var(--ink);
+    font: 400 15px/1.5 "Barlow", sans-serif; padding: 9px 10px;
+  }
+  .edwrap textarea::placeholder, .cnotes::placeholder { color: var(--ink-mute); }
+  .furow { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-soft); flex-wrap: wrap; }
+  .furow .fuval { display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
   .furow input[type="date"] {
-    border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px;
-    background: var(--surface); color: var(--ink); font: 400 12px/1 "Barlow", sans-serif;
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 5px 8px;
+    background: var(--surface); color: var(--ink); font: 400 13px/1 "Barlow", sans-serif;
   }
-  .edmeta { font-size: 11px; color: var(--ink-soft); }
+  .edmeta { font-size: 12px; color: var(--ink-soft); }
   .edmeta .saved { color: var(--ok); }
   .edmeta .fail { color: var(--err); }
 
   .prep {
     border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    border-radius: 6px; background: var(--surface);
-    padding: 12px 14px; display: flex; flex-direction: column; gap: 9px;
+    border-radius: 6px; background: var(--surface-2);
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
   }
   .prow { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: start; }
-  .plbl {
-    font: 600 10px/1.6 "Barlow", sans-serif; text-transform: uppercase;
-    letter-spacing: .08em; color: var(--ink-soft); padding-top: 2px;
-  }
-  .prow p, .prow ul { margin: 0; font-size: 13px; line-height: 1.5; }
+  .plbl { font: 600 10px/1.7 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); padding-top: 2px; }
+  .prow p, .prow ul { margin: 0; font-size: 14px; line-height: 1.5; }
   .prow ul { padding-left: 18px; }
   .prow li { margin-bottom: 2px; }
   .prow .pv { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
-  .minibtn {
-    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
-    font: 500 11px/1 "Barlow", sans-serif; padding: 4px 8px; border-radius: 4px; cursor: pointer;
-    white-space: nowrap;
-  }
-  .minibtn:hover { border-color: var(--ink-soft); }
-  .prow .warn { color: var(--verify); font-weight: 600; }
+  .prow .warn { color: var(--amber); font-weight: 600; }
   @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
 
-  .unlockbar {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-    border: 1px solid var(--verify); background: var(--verify-bg); color: var(--ink);
-    border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 13px;
+  /* ---- call mode ---- */
+  #callMode { margin-top: 14px; }
+  .chead {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px 20px; align-items: center;
+    padding: 10px 0 12px;
   }
-  .unlockbar b { color: var(--verify); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
-  #keyinput {
-    border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
-    background: var(--surface); color: var(--ink); font: 500 14px/1 "IBM Plex Mono", monospace;
-    letter-spacing: .2em; width: 140px;
+  .cprog { font-size: 14px; color: var(--ink-soft); }
+  .cprog b { color: var(--ink); font-size: 15px; }
+  .cbar { height: 3px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .cbar div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .ctimer { font: 500 20px/1 "IBM Plex Mono", Consolas, monospace; color: var(--ink-soft); }
+  .ccard {
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 0;
   }
-  .unlockbar .msg { color: var(--err); font-size: 12px; }
+  .ccard > .cl { padding: 22px 26px 22px; border-right: 1px solid var(--line); min-width: 0; }
+  .ccard > .cr { padding: 22px 22px; background: var(--surface-2); min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .cname { font: 700 38px/1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
+  .cmeta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 8px; color: var(--ink-soft); font-size: 15px; }
+  .cmeta .vert { text-transform: capitalize; }
+  .cphone {
+    display: inline-block; margin: 18px 0 4px;
+    font: 500 52px/1 "IBM Plex Mono", Consolas, monospace; letter-spacing: -.01em; color: var(--ink);
+    text-decoration: none; border-bottom: 3px solid var(--accent); padding-bottom: 4px; overflow-wrap: anywhere;
+  }
+  .cphone:hover { color: var(--accent); }
+  .calt { font-size: 14px; color: var(--ink-soft); margin: 4px 0 0; }
+  .clook { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 18px; }
+  .csec { margin-top: 18px; }
+  .csec h3 { font: 600 11px/1.4 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); margin-bottom: 6px; }
+  .csec p { margin: 0; font-size: 16px; line-height: 1.5; }
+  .csec ul { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.5; }
+  .csec li { margin-bottom: 3px; }
+  .csec .warn { color: var(--amber); font-weight: 600; }
+  .csec .timing { color: var(--red); font-weight: 600; }
+  .copyline { display: flex; gap: 10px; align-items: flex-start; }
+  .copyline p { flex: 1; }
+  .outcomes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .outcomes .stbtn { justify-content: space-between; padding: 10px 12px; font-size: 15px; }
+  .outcomes .stbtn kbd { margin-left: 8px; }
+  .cnav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .cnav .spacer { flex: 1; }
+  .cdone { text-align: center; padding: 60px 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  .cdone h2 { font: 700 34px/1.1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+  .cdone p { color: var(--ink-soft); margin: 8px 0 18px; }
+  .csend { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cstate { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-soft); }
+  @media (max-width: 860px) {
+    .ccard { grid-template-columns: 1fr; }
+    .ccard > .cl { border-right: none; border-bottom: 1px solid var(--line); }
+    .cphone { font-size: 38px; }
+    .cname { font-size: 30px; }
+  }
 
-  .today {
-    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
-    border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px;
-    background: var(--surface); padding: 10px 14px; margin-top: 12px; font-size: 13px;
+  /* ---- undo toast / toast ---- */
+  .toast {
+    position: fixed; right: 16px; bottom: 16px; z-index: 60;
+    background: var(--ink); color: var(--bg);
+    padding: 10px 14px; border-radius: 6px; font-size: 14px;
+    opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s;
+    pointer-events: none;
   }
-  .today .tstat { color: var(--ink-soft); }
-  .today .tstat b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  .today.learn { border-left-color: var(--need-it); }
-  .today .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); }
-  .duetag.overdue3 { font-weight: 700; text-decoration: underline; }
-  .openline { display: none; }
-  @media print {
-    .tabs, .rail, .count, .tablewrap, .pager, .today, .toast, .outc, .slot .minibtn, footer { display: none !important; }
-    .slot { border: none; border-bottom: 1px solid #bbb; border-radius: 0; margin: 0; padding: 6px 2px; grid-template-columns: 70px 1fr auto; }
-    .slot .openline { display: block; color: #444; font-size: 11px; margin-top: 2px; }
-    body { background: #fff; color: #000; }
+  .toast.show { opacity: 1; transform: none; }
+  .undo {
+    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 8px); z-index: 61;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--ink); color: var(--bg); padding: 10px 10px 10px 16px; border-radius: 6px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s;
+    box-shadow: var(--shadow);
   }
+  .undo.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .undo button {
+    border: 1px solid var(--bg); background: transparent; color: var(--bg);
+    font: 600 13px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .undo button:hover { background: var(--bg); color: var(--ink); }
+  .undo kbd { border-color: rgba(255, 255, 255, .3); background: transparent; color: var(--bg); }
 
-  .tabs { display: flex; gap: 8px; margin-top: 14px; }
-  .tab {
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
-    font: 600 13px/1 "Barlow", sans-serif; padding: 9px 16px; border-radius: 5px; cursor: pointer;
-  }
-  .tab:hover { border-color: var(--ink-soft); }
-  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .schedctl {
-    border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px;
-    background: var(--surface); color: var(--ink); font: 400 13px/1 "Barlow", sans-serif;
-  }
-  #schedSummary { font-size: 13px; color: var(--ink-soft); }
+  /* ---- schedule ---- */
+  .schedrail { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 14px 0 6px; }
+  .schedrail .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); }
+  #schedSummary { font-size: 14px; color: var(--ink-soft); }
   .windowhdr {
     font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em;
-    color: var(--ink-soft); margin: 20px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;
+    color: var(--ink-soft); margin: 18px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;
   }
   .slot {
-    display: grid; grid-template-columns: 88px minmax(0,1fr) auto auto auto; gap: 12px; align-items: center;
-    padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px;
+    display: grid; grid-template-columns: 84px minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center;
+    padding: 9px 12px; border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 6px;
     background: var(--surface); margin-bottom: 6px;
   }
+  .slot.sev-red { border-left-color: var(--red); }
+  .slot.sev-amber { border-left-color: var(--amber); }
   .slot.done { opacity: .55; }
   .slotpanel {
     border: 1px solid var(--line); border-left: 3px solid var(--accent);
     border-radius: 0 0 6px 6px; background: var(--surface-2);
     padding: 14px 16px; margin: -6px 0 10px;
   }
-  @media print { .slotpanel { display: none !important; } }
   .outc { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
-  .slot .time { font: 600 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
-  .slot .who b { font-weight: 600; }
-  .slot .meta { color: var(--ink-soft); font-size: 12px; }
+  .slot .time { font: 600 14px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
+  .slot .who b { font-weight: 600; font-size: 16px; }
+  .slot .meta { color: var(--ink-soft); font-size: 14px; }
+  .slot .meta a { color: var(--blue); text-decoration: none; }
+  .slot .meta a:hover { text-decoration: underline; }
   .slot .fchip {
     display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 3px;
-    background: var(--verify-bg); color: var(--verify);
+    background: var(--amber-bg); color: var(--amber);
     font: 600 10px/1.3 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
   }
-  .slot .phone { font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
-  .slot .phone a { color: var(--need-web); text-decoration: none; }
+  .slot .phone { font: 500 15px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
+  .slot .phone a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+  .slot .phone a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .openline { display: none; }
   @media (max-width: 680px) {
-    .slot { grid-template-columns: 70px minmax(0,1fr); }
+    .slot { grid-template-columns: 70px minmax(0, 1fr); }
     .slot .phone, .slot .minibtn, .slot .outc { grid-column: 2; justify-self: start; }
   }
 
-  .pager { display: inline-flex; gap: 6px; align-items: center; }
-  .pager button {
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    font: 500 13px/1 "Barlow", sans-serif; padding: 7px 12px; border-radius: 4px; cursor: pointer;
-  }
-  .pager button:hover:not(:disabled) { border-color: var(--ink-soft); }
-  .pager button:disabled { opacity: .4; cursor: default; }
-  .pager .plabel {
-    font-size: 12px; color: var(--ink-soft); padding: 0 6px;
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
-  .pager.bottom { display: flex; justify-content: center; margin-top: 14px; }
-
-  .toast {
-    position: fixed; right: 16px; bottom: 16px; z-index: 50;
-    background: var(--ink); color: var(--bg);
-    padding: 10px 14px; border-radius: 6px; font-size: 13px;
-    opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: none; }
-
   footer {
-    margin-top: 22px; color: var(--ink-soft); font-size: 12px; line-height: 1.6;
+    margin-top: 22px; color: var(--ink-soft); font-size: 13px; line-height: 1.6;
     border-top: 1px solid var(--line); padding-top: 12px;
   }
-  .empty { padding: 40px; text-align: center; color: var(--ink-soft); }
+  footer kbd { margin-left: 0; }
+
+  @media print {
+    /* the day sheet always prints black on white, whatever the screen theme */
+    :root, :root[data-theme="dark"] {
+      --bg: #fff; --surface: #fff; --surface-2: #fff; --surface-3: #eee;
+      --ink: #000; --ink-soft: #444; --ink-mute: #666; --line: #bbb; --line-strong: #999;
+      --accent: #C2410C; --accent-ink: #fff; --blue: #1f4e79; --amber: #8A6D1C; --amber-bg: #fff;
+      --need-both: #B3400F; --need-both-bg: #fff; --need-web: #2F6FAB; --need-web-bg: #fff; --need-it: #177E70; --need-it-bg: #fff;
+      color-scheme: light;
+    }
+    .needchip, .fchip { border: 1px solid currentColor; }
+    .tabs, .toolbar, .listbar, .board, .pager, .today, .learn, .toast, .undo, .outc, .slot .minibtn,
+    .drawer, .scrim, #callMode, .unlockbar, .schedrail, footer, header.top .scanmeta { display: none !important; }
+    .slot { border: none; border-bottom: 1px solid #bbb; border-radius: 0; margin: 0; padding: 6px 2px; grid-template-columns: 70px 1fr auto; opacity: 1; }
+    .slot .openline { display: block; color: #444; font-size: 11px; margin-top: 2px; }
+    .slotpanel { display: none !important; }
+    body { background: #fff; color: #000; }
+    .slot .time, .slot .phone a { color: #000; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    .chip, .toast { transition: none; }
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+  @media (max-width: 820px) {
+    .today { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tactions { flex-direction: row; flex-wrap: wrap; }
+    .chead { gap: 10px 12px; }
+    .ctimer { font-size: 17px; }
   }
   @media (max-width: 720px) {
-    .scanmeta { margin-left: 0; }
-    #q { margin-left: 0; flex-basis: 100%; }
+    .wrap { padding: 14px 12px 40px; }
+    .scanmeta { margin-left: 0; gap: 14px; }
+    #q { max-width: none; flex-basis: 100%; }
+    .toolbar .sep { display: none; }
+    .row { grid-template-columns: 1fr; gap: 6px; }
+    .rside { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px 14px; }
+    .rside .phone { font-size: 17px; }
+    .outcomes { grid-template-columns: 1fr 1fr; }
   }
 </style>
 
@@ -385,116 +599,158 @@
     <div class="scanmeta" id="scanmeta"></div>
   </header>
 
-  <div class="tabs" id="tabs" hidden>
-    <button class="tab" id="tabLeads" aria-selected="true">Lead board</button>
-    <button class="tab" id="tabSched" aria-selected="false">Call schedule</button>
+  <div class="tabs" id="tabs" hidden role="tablist">
+    <button class="tab" id="tabLeads" role="tab" aria-selected="true">Lead board</button>
+    <button class="tab" id="tabSched" role="tab" aria-selected="false">Call schedule</button>
   </div>
 
   <div class="unlockbar" id="unlockbar" hidden>
     <b>PIN required</b>
     <span>Enter the board PIN to unlock tracking, schedule, and call prep:</span>
-    <input id="keyinput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="········">
-    <button class="chip" id="unlockbtn">Unlock</button>
+    <input id="keyinput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="········" aria-label="Board PIN">
+    <button class="btn" id="unlockbtn">Unlock</button>
     <span class="msg" id="unlockmsg"></span>
   </div>
 
-  <div class="today" id="todayStrip" hidden></div>
-  <div class="today learn" id="learnStrip" hidden></div>
+  <section class="today" id="todayStrip" hidden aria-label="Today"></section>
+  <div class="learn" id="learnStrip" hidden></div>
 
-  <div class="rail" role="toolbar" aria-label="Filters">
-    <span class="lbl">Region</span>
-    <span id="regionChips"></span>
-    <span class="gap"></span>
-    <span class="lbl">Need</span>
-    <span id="needChips"></span>
-    <span class="gap"></span>
-    <span class="lbl">Miles from Bristol</span>
-    <span id="distChips"></span>
-    <span class="gap"></span>
-    <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence only</button>
-    <input id="q" type="search" placeholder="Search name, town, notes&hellip;" aria-label="Search leads">
-  </div>
-  <div class="rail second" id="toolsRail">
-    <span class="lbl">Vertical</span>
-    <select id="vertSel" class="schedctl"><option value="all">All verticals</option></select>
-    <span class="lbl">Town</span>
-    <input id="townIn" class="schedctl" list="townList" placeholder="Start typing a town…" style="min-width:200px">
-    <datalist id="townList"></datalist>
-    <span class="gap"></span>
-    <span class="lbl">Sort</span>
-    <select id="sortSel" class="schedctl">
-      <option value="priority">Priority (need, then score)</option>
-      <option value="closest">Closest to Bristol</option>
-      <option value="hottest">Hottest (highest score)</option>
-      <option value="newest">Newest since last scan</option>
-    </select>
-    <span class="lbl">Per page</span>
-    <select id="pageSel" class="schedctl">
-      <option value="15">15</option><option value="30">30</option><option value="50">50</option>
-    </select>
-  </div>
-  <div class="rail second" id="progressRail" hidden>
-    <span class="lbl">Progress</span>
-    <span id="statusChips"></span>
+  <section id="callMode" hidden aria-label="Call mode">
+    <div class="chead">
+      <div class="cprog"><b id="callProg"></b><div class="cbar"><div id="callBarFill"></div></div></div>
+      <span class="ctimer" id="callTimer" aria-label="Time on this lead">00:00</span>
+      <button class="btn" id="callExit">Exit <kbd>Esc</kbd></button>
+    </div>
+    <div id="callCard"></div>
+  </section>
+
+  <div id="boardView">
+    <div class="toolbar" role="toolbar" aria-label="Search and filters">
+      <input id="q" type="search" placeholder="Search name, town, notes…  /" aria-label="Search leads">
+      <span class="chips" id="needChips" aria-label="Need"></span>
+      <span class="sep"></span>
+      <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence</button>
+      <button class="btn" id="filtersBtn" aria-haspopup="dialog" aria-expanded="false">Filters <span class="n" id="filtersN" hidden></span></button>
+      <span class="achips" id="activeChips"></span>
+    </div>
+
+    <div class="listbar">
+      <span id="count"></span>
+      <span class="pager" id="pagerTop"></span>
+      <span class="grow"></span>
+      <label>Sort
+        <select id="sortSel" class="ctl" aria-label="Sort order">
+          <optgroup label="Order">
+            <option value="priority">Priority (need, then score)</option>
+            <option value="closest">Closest to Bristol</option>
+            <option value="hottest">Hottest (highest score)</option>
+            <option value="newest">Newest since last scan</option>
+          </optgroup>
+          <optgroup label="Column">
+            <option value="k:name:1">Business A–Z</option>
+            <option value="k:name:-1">Business Z–A</option>
+            <option value="k:town:1">Town A–Z</option>
+            <option value="k:town:-1">Town Z–A</option>
+            <option value="k:needRank:1">Need (Both first)</option>
+            <option value="k:wScore:1">Web score high→low</option>
+            <option value="k:wScore:-1">Web score low→high</option>
+            <option value="k:itScore:1">IT score high→low</option>
+            <option value="k:itScore:-1">IT score low→high</option>
+          </optgroup>
+        </select>
+      </label>
+      <button class="btn sm" id="nextBtn" hidden>Next lead <kbd>N</kbd></button>
+      <button class="btn sm" id="exportBtn" hidden>Export CSV</button>
+      <button class="btn sm" id="backupBtn" hidden title="Download all progress + notes as a JSON backup">Backup</button>
+    </div>
+
+    <div class="board" id="boardList">
+      <div id="rows" role="list" aria-label="Leads"></div>
+      <div class="empty" id="empty" hidden>No leads match these filters.</div>
+    </div>
+    <div class="pager bottom" id="pagerBottom"></div>
   </div>
 
   <section id="schedView" hidden>
-    <div class="rail">
+    <div class="schedrail">
       <span class="lbl">Day</span>
-      <input type="date" id="schedDate" class="schedctl">
+      <input type="date" id="schedDate" class="schedctl" aria-label="Schedule day">
       <span class="lbl">Spacing</span>
-      <select id="schedGap" class="schedctl">
+      <select id="schedGap" class="schedctl" aria-label="Call spacing">
         <option value="5">5 min</option>
         <option value="10">10 min</option>
         <option value="15">15 min</option>
       </select>
       <span id="schedSummary"></span>
-      <button class="chip" id="printBtn" title="Print a one-page day sheet: times, names, numbers, openers">Print day sheet</button>
+      <button class="btn sm" id="printBtn" title="Print a one-page day sheet: times, names, numbers, openers">Print day sheet</button>
     </div>
     <div id="slots"></div>
   </section>
 
-  <div class="count">
-    <span id="count"></span>
-    <span class="pager" id="pagerTop"></span>
-    <button class="chip export" id="nextBtn" hidden>Next lead &rsaquo;</button>
-    <button class="chip" id="exportBtn" hidden>Export CSV</button>
-    <button class="chip" id="backupBtn" hidden title="Download all progress + notes as a JSON backup">Backup</button>
-  </div>
-
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="sortable" data-k="name" tabindex="0">Business <span class="dir"></span></th>
-          <th class="sortable" data-k="town" tabindex="0">Town <span class="dir"></span></th>
-          <th id="progressTh" hidden>Progress</th>
-          <th class="sortable" data-k="needRank" tabindex="0">Needs <span class="dir"></span></th>
-          <th class="sortable" data-k="wScore" tabindex="0">Web <span class="dir"></span></th>
-          <th class="sortable" data-k="itScore" tabindex="0">IT <span class="dir"></span></th>
-          <th>Why flagged</th>
-          <th>Phone</th>
-          <th>Region</th>
-          <th>Vertical</th>
-          <th>Links</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <div class="empty" id="empty" hidden>No leads match these filters.</div>
-  </div>
-  <div class="pager bottom" id="pagerBottom"></div>
-
   <div class="toast" id="toast" role="status"></div>
+  <div class="undo" id="undo" role="status"><span id="undoMsg"></span><button id="undoBtn">Undo <kbd>Z</kbd></button></div>
 
   <footer>
     <strong>Need</strong> = what the evidence points to: a new <em>website</em> (Ridge Web Designs pitch), an <em>IT</em> partner (Ignite Cyber pitch), or <em>both</em>.
     Rows marked <em>verify</em> came from listings without a website on file &mdash; do a 30-second Google check before dialing.
-    Click any row for the call-prep brief, progress label, and call notes.
-    Every lead has a phone number. Hotkeys: <em>N</em> = next lead &middot; <em>1&ndash;8</em> = set status on the open lead.
+    Click any row (or press Enter on it) for the call-prep brief, progress label, and call notes. Every lead has a phone number.
+    Keys: <kbd>C</kbd> start calling &middot; <kbd>N</kbd> next lead &middot; <kbd>↑</kbd><kbd>↓</kbd> move &middot; <kbd>Enter</kbd> prep &middot; <kbd>1</kbd>&ndash;<kbd>8</kbd> set status on the open lead &middot; <kbd>/</kbd> search &middot; <kbd>Esc</kbd> close.
     Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
   </footer>
 </div>
+
+<div class="scrim" id="filterScrim" hidden></div>
+<aside class="drawer left" id="filterDrawer" role="dialog" aria-modal="true" aria-labelledby="filterTitle" hidden>
+  <div class="dhead">
+    <h2 id="filterTitle">Filters</h2>
+    <button class="iconbtn" id="filterClose" aria-label="Close filters" title="Close (Esc)">&times;</button>
+  </div>
+  <div class="dbody">
+    <section class="fsec" id="progressSec" hidden>
+      <h3>Progress</h3>
+      <div class="chips" id="statusChips"></div>
+    </section>
+    <section class="fsec">
+      <h3>Region</h3>
+      <div class="chips" id="regionChips"></div>
+    </section>
+    <section class="fsec">
+      <h3>Miles from Bristol</h3>
+      <div class="chips" id="distChips"></div>
+    </section>
+    <section class="fsec">
+      <h3><label for="vertSel">Vertical</label></h3>
+      <select id="vertSel" class="ctl"><option value="all">All verticals</option></select>
+    </section>
+    <section class="fsec">
+      <h3><label for="townIn">Town</label></h3>
+      <input id="townIn" class="ctl" list="townList" placeholder="Start typing a town…">
+      <datalist id="townList"></datalist>
+    </section>
+    <section class="fsec">
+      <h3><label for="pageSel">Per page</label></h3>
+      <select id="pageSel" class="ctl">
+        <option value="15">15</option><option value="30">30</option><option value="50">50</option>
+      </select>
+    </section>
+  </div>
+  <div class="dfoot">
+    <button class="btn" id="filterClear">Clear all</button>
+    <button class="btn primary" id="filterDone">Done</button>
+  </div>
+</aside>
+
+<aside class="drawer right" id="prepDrawer" role="dialog" aria-label="Call prep" hidden>
+  <div class="dhead">
+    <div style="min-width:0">
+      <h2 id="prepName"></h2>
+      <div class="prepsub" id="prepSub"></div>
+      <a id="prepPhone" href="#"></a>
+    </div>
+    <button class="iconbtn" id="prepClose" aria-label="Close call prep" title="Close (Esc)">&times;</button>
+  </div>
+  <div class="dbody" id="prepBody"></div>
+</aside>
 
 <script>
   const DATA = /*__DATA__*/[];
@@ -503,7 +759,10 @@
   const TRACKING = /*__TRACKING__*/false;
 
   const needRank = { Both: 0, Website: 1, IT: 2 };
-  DATA.forEach((d, i) => { d.needRank = needRank[d.need] ?? 9; d.idx = i; });
+  DATA.forEach((d, i) => {
+    d.needRank = needRank[d.need] ?? 9; d.idx = i;
+    d.evidence = Array.isArray(d.evidence) ? d.evidence.join('; ') : String(d.evidence ?? '');
+  });
 
   const STATUSES = [
     ['new', 'To call'], ['noanswer', 'No answer'], ['callback', 'Call back'],
@@ -511,8 +770,9 @@
     ['lost', 'Not interested'], ['bad', 'Bad number'], ['gone', 'Closed down'],
   ];
   const ST_LABEL = Object.fromEntries(STATUSES);
+  const HOTKEY_ORDER = ['noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad', 'gone']; // keys 1–8
 
-  const state = { region: 'all', need: 'all', status: 'all', dist: 'all', vert: 'all', town: '', sortMode: 'priority', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads' };
+  const state = { region: 'all', need: 'all', status: 'all', dist: 'all', vert: 'all', town: '', sortMode: 'priority', due: false, highConf: false, q: '', sortK: null, sortDir: 1, page: 1, view: 'leads', sel: null };
   let PAGE_SIZE = 15; // small pages by default: the board must stay light on modest hardware
 
   // Filters live in the URL hash → bookmarkable views ("Kingsport dentists ≤50 mi")
@@ -535,10 +795,13 @@
   }
   const now = new Date();
   const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
   // ---- tracking state ----
   let trackState = {};              // key -> {s, n, t}
   let unlocked = false;
+  let callActive = false;           // call mode (declared early: renderToday/renderLearn guard on it)
   const keyOf = (d) => (d.name + '|' + d.town + '|' + d.st).toLowerCase();
   const stOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].s) || 'new';
   const noteOf = (d) => (trackState[keyOf(d)] && trackState[keyOf(d)].n) || '';
@@ -547,8 +810,9 @@
     const dd = dueOf(d);
     return !!dd && dd <= TODAY && !['won', 'lost', 'bad', 'gone'].includes(stOf(d));
   };
+  const telOf = (d) => 'tel:' + (d.phone || '').replace(/[^+\d]/g, '');
 
-  const toast = document.getElementById('toast');
+  const toast = $('toast');
   let toastT;
   function showToast(msg) {
     toast.textContent = msg; toast.classList.add('show');
@@ -570,33 +834,34 @@
   }
 
   const GATED = () => [
-    document.getElementById('progressRail'), document.getElementById('exportBtn'),
-    document.getElementById('backupBtn'), document.getElementById('nextBtn'),
-    document.getElementById('progressTh'), document.getElementById('todayStrip'),
-    document.getElementById('learnStrip'), document.getElementById('tabs'),
+    $('progressSec'), $('exportBtn'), $('backupBtn'), $('nextBtn'),
+    $('todayStrip'), $('learnStrip'), $('tabs'),
   ];
   function relock() {
     unlocked = false;
-    document.getElementById('unlockbar').hidden = false;
-    GATED().forEach((el) => { if (el) el.hidden = true; });
+    if (callActive) exitCallMode(false);
+    closePrep();
+    $('unlockbar').hidden = false;
+    GATED().forEach((e) => { if (e) e.hidden = true; });
     setView('leads');
+    renderActiveChips();
   }
   async function tryUnlock() {
-    const msg = document.getElementById('unlockmsg');
+    const msg = $('unlockmsg');
     msg.textContent = '';
     try {
       trackState = await api('GET');
       unlocked = true;
-      document.getElementById('unlockbar').hidden = true;
-      GATED().forEach((el) => { if (el) el.hidden = false; });
-      if (state.view !== 'leads') document.getElementById('progressRail').hidden = true;
+      $('unlockbar').hidden = true;
+      GATED().forEach((e) => { if (e) e.hidden = false; });
       buildStatusChips();
       render();
       renderToday();
+      renderActiveChips();
       if (state.view === 'schedule') renderSchedule();
     } catch (e) {
       if (e.message === 'locked') {
-        document.getElementById('unlockbar').hidden = false;
+        $('unlockbar').hidden = false;
         if (localStorage.getItem('lead-board-key')) msg.textContent = 'Wrong PIN.';
       } else {
         msg.textContent = 'Tracking service unreachable right now.';
@@ -604,10 +869,12 @@
     }
   }
 
+  // ---- today: four tiles + start calling, then the smaller counts ----
   function renderToday() {
     if (!TRACKING || !unlocked) return;
-    const el = document.getElementById('todayStrip');
-    el.hidden = false; el.textContent = '';
+    if (callActive) return;   // exitCallMode re-renders it
+    const root = $('todayStrip');
+    root.hidden = false; root.textContent = '';
     const due = DATA.filter(isDue).length;
     const newC = DATA.filter((d) => d.chg === 'new').length;
     const expC = DATA.filter((d) => d.xd != null).length;
@@ -624,29 +891,28 @@
       }
       if (e.s === 'won') { wonC++; pipe += parseFloat(e.v || 0) || 0; }
     }
-    const mk = (label, val) => {
-      const s = document.createElement('span'); s.className = 'tstat';
-      const b = document.createElement('b'); b.textContent = val;
-      s.append(b, ' ' + label); el.append(s);
+    const tiles = el('div', 'tiles');
+    const tile = (cls, val, label, sub, on) => {
+      const t = el('div', 'tile ' + cls + (on ? ' on' : ''));
+      t.append(el('b', null, String(val)), el('span', null, label));
+      if (sub) t.append(el('small', null, sub));
+      tiles.append(t); return t;
     };
-    mk('worked today', dials);
-    mk('conversations', convos);
-    mk('follow-ups due', due);
-    if (dlC) mk('domains lapsed / on hold — call now', dlC);
-    if (brkC) mk('sites broke since last scan — call now', brkC);
-    const nwC = DATA.filter((d) => (d.nw || /Newly listed/.test(d.brk || '')) && stOf(d) === 'new').length;
-    if (nwC) mk('recently opened / newly listed', nwC);
-    if (expC) mk('domains expiring soon', expC);
-    if (newC) mk('new since last scan', newC);
-    if (wonC) mk('won' + (pipe ? ' · $' + pipe.toLocaleString() : ''), wonC);
-    const start = document.createElement('button');
-    start.className = 'chip'; start.setAttribute('aria-pressed', 'true');
-    start.textContent = 'Start calling ›';
-    start.addEventListener('click', () => setView('schedule'));
-    el.append(start);
+    tile('t-worked', dials, 'worked today', null, dials > 0);
+    tile('t-conv', convos, 'conversations', null, convos > 0);
+    tile('t-due', due, 'follow-ups due', null, due > 0);
+    tile('t-dom', dlC + expC, 'domains lapsed / expiring',
+      (dlC || expC) ? [dlC ? dlC + ' lapsed — call now' : '', expC ? expC + ' expiring' : ''].filter(Boolean).join(' · ') : null, dlC + expC > 0);
+    root.append(tiles);
+
+    const actions = el('div', 'tactions');
+    const start = el('button', 'btn primary lg');
+    start.id = 'startCallBtn';
+    start.append('Start calling', el('kbd', null, 'C'));
+    start.addEventListener('click', () => { if (callActive) exitCallMode(true); else startCallMode(); });
+    actions.append(start);
     if (due > 0) {
-      const sz = document.createElement('button'); sz.className = 'minibtn';
-      sz.textContent = 'Push due → tomorrow';
+      const sz = el('button', 'btn sm', 'Push due → tomorrow');
       sz.title = 'Move every follow-up dated today or earlier to tomorrow';
       sz.addEventListener('click', async () => {
         if (!confirm('Move all ' + due + ' due follow-ups to tomorrow?')) return;
@@ -655,8 +921,21 @@
         buildStatusChips(); render(); renderToday();
         showToast('Snoozed to tomorrow');
       });
-      el.append(sz);
+      actions.append(sz);
     }
+    root.append(actions);
+
+    const sub = el('div', 'tsub');
+    const mk = (label, val, hot) => {
+      const s = el('span', 'tstat' + (hot ? ' hot' : ''));
+      s.append(el('b', null, String(val)), ' ' + label); sub.append(s);
+    };
+    if (brkC) mk('sites broke since last scan — call now', brkC, true);
+    const nwC = DATA.filter((d) => (d.nw || /Newly listed/.test(d.brk || '')) && stOf(d) === 'new').length;
+    if (nwC) mk('recently opened / newly listed', nwC);
+    if (newC) mk('new since last scan', newC);
+    if (wonC) mk('won' + (pipe ? ' · $' + pipe.toLocaleString() : ''), wonC);
+    if (sub.childElementCount) root.append(sub);
     renderLearn();
   }
 
@@ -690,27 +969,22 @@
   }
   function renderLearn() {
     if (!TRACKING || !unlocked) return;
+    if (callActive) return;   // exitCallMode re-renders it
     computeLearn();
-    const el = document.getElementById('learnStrip');
-    if (!el) return;
-    el.hidden = false; el.textContent = '';
-    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = 'Outcome learning';
-    el.append(lbl);
+    const root = $('learnStrip');
+    if (!root) return;
+    root.hidden = false; root.textContent = '';
+    root.append(el('span', 'lbl', 'Outcome learning'));
     if (!LEARN.rows.length) {
-      const p = document.createElement('span'); p.className = 'tstat';
-      p.textContent = 'Too little data yet — a vertical shows its rate once ' + LEARN_MIN + '+ of its leads have been called (' + LEARN.called + ' called so far, all verticals).';
-      el.append(p);
+      root.append(el('span', 'tstat', 'Too little data yet — a vertical shows its rate once ' + LEARN_MIN + '+ of its leads have been called (' + LEARN.called + ' called so far, all verticals).'));
       return;
     }
     for (const r of LEARN.rows) {
-      const s = document.createElement('span'); s.className = 'tstat';
-      const b = document.createElement('b'); b.textContent = Math.round(r.rate * 100) + '%';
-      s.append(b, ' ' + r.vert + ' reach Interested+ (' + r.reached + ' of ' + r.called + ' called)');
-      el.append(s);
+      const s = el('span', 'tstat');
+      s.append(el('b', null, Math.round(r.rate * 100) + '%'), ' ' + r.vert + ' reach Interested+ (' + r.reached + ' of ' + r.called + ' called)');
+      root.append(s);
     }
-    const note = document.createElement('span'); note.className = 'tstat';
-    note.textContent = 'Tie-breaker only in the schedule order.';
-    el.append(note);
+    root.append(el('span', 'tstat', 'Tie-breaker only in the schedule order.'));
   }
   // Stable re-order of a schedule group: leads equal on the primary key (priority =
   // need then score, the scan's own order; closest = miles) are nudged so verticals
@@ -724,22 +998,28 @@
   }
 
   if (TRACKING) {
-    document.getElementById('unlockbtn').addEventListener('click', () => {
-      localStorage.setItem('lead-board-key', document.getElementById('keyinput').value.trim());
+    $('unlockbtn').addEventListener('click', () => {
+      localStorage.setItem('lead-board-key', $('keyinput').value.trim());
       tryUnlock();
     });
-    document.getElementById('keyinput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('unlockbtn').click();
+    $('keyinput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('unlockbtn').click();
     });
     if (localStorage.getItem('lead-board-key')) tryUnlock();
-    else document.getElementById('unlockbar').hidden = false;
+    else $('unlockbar').hidden = false;
   }
 
-  // save queue: status saves immediately, notes debounced per lead
+  // save queue: status saves immediately, notes debounced per lead.
+  // Saves are serialized per key (pending[key]) so a later save always builds its
+  // body from the earlier save's response — never from stale trackState.
   const noteTimers = {};
-  async function saveLead(key, patch, metaEl) {
+  const pending = {};
+  const lastSentNote = {};   // key -> last note value sent (skips no-op note saves)
+  const sentNote = (key) => (key in lastSentNote ? lastSentNote[key] : ((trackState[key] && trackState[key].n) || ''));
+  function saveLead(key, patch, metaEl) {
     if (metaEl) metaEl.innerHTML = 'Saving&hellip;';
-    try {
+    if (typeof patch.n === 'string') lastSentNote[key] = patch.n;
+    const run = (pending[key] || Promise.resolve()).then(async () => {
       const cur = trackState[key] || {};
       const body = { key, s: patch.s ?? cur.s ?? 'new', n: patch.n ?? cur.n ?? '', d: patch.d ?? cur.d ?? '', w: patch.w ?? cur.w ?? '', v: patch.v ?? cur.v ?? '' };
       const r = await api('POST', body);
@@ -747,20 +1027,22 @@
       if (metaEl) metaEl.innerHTML = '<span class="saved">Saved</span> &middot; ' + new Date(r.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
       buildStatusChips();
       renderToday();
-    } catch (e) {
+    });
+    pending[key] = run.catch(() => {});
+    return run.catch((e) => {
+      if (typeof patch.n === 'string' && lastSentNote[key] === patch.n) delete lastSentNote[key];
       if (metaEl) metaEl.innerHTML = '<span class="fail">Couldn&rsquo;t save — check connection</span>';
       showToast('Save failed — check connection');
-    }
+      throw e;
+    });
   }
 
   // ---- header stats ----
   const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  const sm = document.getElementById('scanmeta');
+  const sm = $('scanmeta');
   function stat(v, label) {
-    const d = document.createElement('div'); d.className = 'stat';
-    const b = document.createElement('b'); b.textContent = v;
-    const s = document.createElement('span'); s.textContent = label;
-    d.append(b, s); sm.append(d);
+    const d = el('div', 'stat');
+    d.append(el('b', null, String(v)), el('span', null, label)); sm.append(d);
   }
   stat(DATA.length, 'callable leads');
   stat(META.byNeed ? META.byNeed.Both : 0, 'need both');
@@ -771,20 +1053,19 @@
 
   // ---- filter chips ----
   function chip(label, count, pressed) {
-    const b = document.createElement('button');
-    b.className = 'chip'; b.setAttribute('aria-pressed', pressed);
-    b.textContent = label;
-    if (count != null) { const n = document.createElement('span'); n.className = 'n'; n.textContent = count; b.append(n); }
+    const b = el('button', 'chip', label);
+    b.setAttribute('aria-pressed', pressed);
+    if (count != null) b.append(el('span', 'n', String(count)));
     return b;
   }
-  const regionWrap = document.getElementById('regionChips');
+  const regionWrap = $('regionChips');
   const regionCounts = {}; DATA.forEach((d) => { regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; });
   const regionChips = [['all', 'All']].concat(Object.entries(REGION_LABELS)).map(([key, label]) => {
     const b = chip(label, key === 'all' ? DATA.length : (regionCounts[key] || 0), String(state.region === key));
     b.addEventListener('click', () => { state.region = key; syncChips(regionChips, key); refresh(); });
     b.dataset.key = key; regionWrap.append(b); return b;
   });
-  const needWrap = document.getElementById('needChips');
+  const needWrap = $('needChips');
   const needCounts = {}; DATA.forEach((d) => { needCounts[d.need] = (needCounts[d.need] || 0) + 1; });
   const needChips = [['all', 'All'], ['Both', 'Both'], ['Website', 'Website'], ['IT', 'IT']].map(([key, label]) => {
     const b = chip(label, key === 'all' ? DATA.length : (needCounts[key] || 0), String(state.need === key));
@@ -795,12 +1076,13 @@
 
   // distance bands (miles from Bristol) — day-trip planning
   const DIST_BANDS = [['all', 'All'], ['50', '≤ 50'], ['100', '50–100'], ['150', '100–150'], ['200', '150–200']];
+  const DIST_LABEL = Object.fromEntries(DIST_BANDS);
   const inBand = (d, band) => {
     if (band === 'all' || d.mi == null) return band === 'all';
     const hi = +band, lo = hi - 50;
     return d.mi > lo && d.mi <= hi || (hi === 50 && d.mi <= 50);
   };
-  const distWrap = document.getElementById('distChips');
+  const distWrap = $('distChips');
   const distChips = DIST_BANDS.map(([key, label]) => {
     const b = chip(label, key === 'all' ? null : DATA.filter((d) => inBand(d, key)).length, String(state.dist === key));
     b.addEventListener('click', () => { state.dist = key; syncChips(distChips, key); refresh(); });
@@ -809,7 +1091,7 @@
 
   let statusChips = [];
   function buildStatusChips() {
-    const wrap = document.getElementById('statusChips');
+    const wrap = $('statusChips');
     wrap.textContent = '';
     const counts = { all: DATA.length };
     let dueCount = 0;
@@ -830,28 +1112,35 @@
   }
 
   // vertical / town / sort / page-size controls (populated from the data)
-  const vertSel = document.getElementById('vertSel');
+  const vertSel = $('vertSel');
   [...new Set(DATA.map((d) => d.vertical))].sort().forEach((v) => {
-    const o = document.createElement('option'); o.value = v; o.textContent = v; vertSel.append(o);
+    const o = el('option', null, v); o.value = v; vertSel.append(o);
   });
   vertSel.value = state.vert;
   vertSel.addEventListener('change', () => { state.vert = vertSel.value; refresh(); });
-  const townIn = document.getElementById('townIn');
-  const townList = document.getElementById('townList');
+  const townIn = $('townIn');
+  const townList = $('townList');
   [...new Set(DATA.map((d) => d.town + ', ' + d.st))].sort().forEach((t) => {
     const o = document.createElement('option'); o.value = t; townList.append(o);
   });
   townIn.value = state.town;
   let townT;
   townIn.addEventListener('input', () => { clearTimeout(townT); townT = setTimeout(() => { state.town = townIn.value.trim(); refresh(); }, 200); });
-  const sortSel = document.getElementById('sortSel');
+  const sortSel = $('sortSel');
+  const SORT_LABEL = { priority: 'Priority', closest: 'Closest', hottest: 'Hottest', newest: 'Newest' };
+  function sortValue() { return state.sortK ? 'k:' + state.sortK + ':' + state.sortDir : state.sortMode; }
   sortSel.value = state.sortMode;
   sortSel.addEventListener('change', () => {
-    state.sortMode = sortSel.value; state.sortK = null;
-    document.querySelectorAll('th.sortable .dir').forEach((el) => { el.textContent = ''; });
+    const v = sortSel.value;
+    if (v.startsWith('k:')) {
+      const [, k, dir] = v.split(':');
+      state.sortK = k; state.sortDir = parseInt(dir, 10) || 1; state.sortMode = 'priority';
+    } else {
+      state.sortMode = v; state.sortK = null; state.sortDir = 1;
+    }
     refresh();
   });
-  const pageSel = document.getElementById('pageSel');
+  const pageSel = $('pageSel');
   pageSel.value = String(PAGE_SIZE);
   pageSel.addEventListener('change', () => { PAGE_SIZE = parseInt(pageSel.value, 10); refresh(); });
   const townMatch = (d) => {
@@ -860,7 +1149,7 @@
     return t.includes(',') ? (d.town + ', ' + d.st).toLowerCase() === t : d.town.toLowerCase().startsWith(t);
   };
 
-  const confChip = document.getElementById('confChip');
+  const confChip = $('confChip');
   confChip.setAttribute('aria-pressed', String(state.highConf));
   confChip.addEventListener('click', () => {
     state.highConf = !state.highConf;
@@ -868,47 +1157,101 @@
     refresh();
   });
 
-  const q = document.getElementById('q');
+  const q = $('q');
   let qt; q.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { state.q = q.value.trim().toLowerCase(); refresh(); }, 150); });
+  q.addEventListener('keydown', (e) => { if (e.key === 'Escape') { q.value = ''; state.q = ''; q.blur(); refresh(); } });
 
-  // ---- sorting ----
-  document.querySelectorAll('th.sortable').forEach((th) => {
-    const act = () => {
-      const k = th.dataset.k;
-      if (state.sortK === k) state.sortDir *= -1; else { state.sortK = k; state.sortDir = 1; }
-      document.querySelectorAll('th.sortable .dir').forEach((d) => { d.textContent = ''; });
-      th.querySelector('.dir').textContent = state.sortDir > 0 ? '▴' : '▾';
-      refresh();
-    };
-    th.addEventListener('click', act);
-    th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  // ---- filter drawer ----
+  const filterDrawer = $('filterDrawer');
+  const filterScrim = $('filterScrim');
+  const filtersBtn = $('filtersBtn');
+  let filtersOpen = false;
+  let filterReturnFocus = null;
+  function openFilters() {
+    filtersOpen = true;
+    filterReturnFocus = document.activeElement;
+    filterDrawer.hidden = false; filterScrim.hidden = false;
+    filtersBtn.setAttribute('aria-expanded', 'true');
+    // Focus lands on the close button — the drawer's first focusable, same as the
+    // prep drawer — so the Tab cycle is close → controls → Done → (wrap) close.
+    $('filterClose').focus();
+  }
+  function closeFilters() {
+    if (!filtersOpen) return;
+    filtersOpen = false;
+    filterDrawer.hidden = true; filterScrim.hidden = true;
+    filtersBtn.setAttribute('aria-expanded', 'false');
+    (filterReturnFocus && filterReturnFocus.isConnected ? filterReturnFocus : filtersBtn).focus();
+  }
+  filtersBtn.addEventListener('click', () => (filtersOpen ? closeFilters() : openFilters()));
+  $('filterClose').addEventListener('click', closeFilters);
+  $('filterDone').addEventListener('click', closeFilters);
+  filterScrim.addEventListener('click', closeFilters);
+  $('filterClear').addEventListener('click', () => { clearFilters(); });
+  filterDrawer.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const f = [...filterDrawer.querySelectorAll('button, select, input')].filter((x) => !x.hidden && x.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
+  function clearFilters() {
+    state.region = 'all'; state.dist = 'all'; state.vert = 'all'; state.town = ''; state.status = 'all'; state.due = false;
+    state.sortMode = 'priority'; state.sortK = null; state.sortDir = 1;
+    syncChips(regionChips, 'all'); syncChips(distChips, 'all');
+    vertSel.value = 'all'; townIn.value = ''; sortSel.value = 'priority';
+    buildStatusChips();
+    refresh();
+  }
+  // Active filters as removable chips next to the Filters button.
+  function renderActiveChips() {
+    const wrap = $('activeChips');
+    wrap.textContent = '';
+    const items = [];
+    if (state.region !== 'all') items.push(['Region', REGION_LABELS[state.region] || state.region, () => { state.region = 'all'; syncChips(regionChips, 'all'); }]);
+    if (state.dist !== 'all') items.push(['Miles', DIST_LABEL[state.dist] || state.dist, () => { state.dist = 'all'; syncChips(distChips, 'all'); }]);
+    if (state.vert !== 'all') items.push(['Vertical', state.vert, () => { state.vert = 'all'; vertSel.value = 'all'; }]);
+    if (state.town) items.push(['Town', state.town, () => { state.town = ''; townIn.value = ''; }]);
+    if (unlocked && state.status !== 'all') items.push(['Progress', ST_LABEL[state.status] || state.status, () => { state.status = 'all'; buildStatusChips(); }]);
+    if (unlocked && state.due) items.push(['Due', 'today or earlier', () => { state.due = false; buildStatusChips(); }]);
+    if (state.sortK || state.sortMode !== 'priority') {
+      const lbl = state.sortK ? sortSel.options[sortSel.selectedIndex]?.textContent : SORT_LABEL[state.sortMode] || state.sortMode;
+      items.push(['Sort', lbl, () => { state.sortMode = 'priority'; state.sortK = null; state.sortDir = 1; sortSel.value = 'priority'; }]);
+    }
+    for (const [k, v, undo] of items) {
+      const b = el('button', 'achip');
+      b.setAttribute('aria-label', 'Remove filter ' + k + ': ' + v);
+      b.append(el('i', null, k + ':'), document.createTextNode(' ' + v), el('span', 'x', '×'));
+      b.addEventListener('click', () => { undo(); refresh(); });
+      wrap.append(b);
+    }
+    const n = $('filtersN');
+    const drawerCount = items.filter(([k]) => k !== 'Sort').length;
+    n.textContent = String(drawerCount); n.hidden = drawerCount === 0;
+  }
 
   // ---- render ----
-  const rowsEl = document.getElementById('rows');
-  const emptyEl = document.getElementById('empty');
-  const countEl = document.getElementById('count');
-  const pagerTop = document.getElementById('pagerTop');
-  const pagerBottom = document.getElementById('pagerBottom');
-  const COLS = 11;
+  const rowsEl = $('rows');
+  const emptyEl = $('empty');
+  const countEl = $('count');
+  const pagerTop = $('pagerTop');
+  const pagerBottom = $('pagerBottom');
 
-  function renderPager(el, totalPages, scrollOnChange) {
-    el.textContent = '';
+  function renderPager(root, totalPages, scrollOnChange) {
+    root.textContent = '';
     if (totalPages <= 1) return;
     const mk = (label, delta, disabled) => {
-      const b = document.createElement('button');
-      b.textContent = label; b.disabled = disabled;
+      const b = el('button', null, label); b.disabled = disabled;
       b.addEventListener('click', () => {
         state.page = Math.min(Math.max(1, state.page + delta), totalPages);
         render();
-        if (scrollOnChange) document.querySelector('.tablewrap').scrollIntoView({ block: 'start' });
+        if (scrollOnChange) $('boardList').scrollIntoView({ block: 'start' });
       });
       return b;
     };
-    const label = document.createElement('span');
-    label.className = 'plabel';
-    label.textContent = 'Page ' + state.page + ' of ' + totalPages;
-    el.append(mk('‹ Prev', -1, state.page <= 1), label, mk('Next ›', 1, state.page >= totalPages));
+    const label = el('span', 'plabel', 'Page ' + state.page + ' of ' + totalPages);
+    root.append(mk('‹ Prev', -1, state.page <= 1), label, mk('Next ›', 1, state.page >= totalPages));
   }
 
   function filtered() {
@@ -937,22 +1280,16 @@
         (unlocked && noteOf(d).toLowerCase().includes(needle)));
     }
     if (state.sortK) {
-      const k = state.sortK, dir = state.sortDir;
+      const k = state.sortK;
+      // scores read high→low on their first direction; text columns A→Z
+      const dir = ['wScore', 'itScore'].includes(k) ? -state.sortDir : state.sortDir;
       rows = rows.slice().sort((a, b) => {
         const av = a[k], bv = b[k];
         if (typeof av === 'number') return (av - bv) * dir || a.idx - b.idx;
         return String(av).localeCompare(String(bv)) * dir || a.idx - b.idx;
       });
-      if (['wScore', 'itScore'].includes(k) && dir === 1) rows.reverse();
     }
     return rows;
-  }
-
-  function td(cls, content) {
-    const el = document.createElement('td');
-    if (cls) el.className = cls;
-    if (content != null) el.textContent = content;
-    return el;
   }
 
   // ---- call prep (generated client-side from scan evidence) ----
@@ -1032,95 +1369,117 @@
     const when = CALL_WINDOWS[d.vertical] || CALL_WINDOWS.other;
     return { opener: intro + hook, pitch, who, points, when };
   }
-
-  function prepBlock(d) {
-    const p = makePrep(d);
-    const box = document.createElement('div'); box.className = 'prep';
-    const row = (label, node) => {
-      const r = document.createElement('div'); r.className = 'prow';
-      const l = document.createElement('span'); l.className = 'plbl'; l.textContent = label;
-      r.append(l, node); box.append(r);
-    };
-    const copyBtn = (text, label) => {
-      const b = document.createElement('button'); b.className = 'minibtn'; b.textContent = label || 'Copy';
-      b.addEventListener('click', () => {
-        navigator.clipboard.writeText(text).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = label || 'Copy'; }, 1500); })
-          .catch(() => showToast('Copy failed — select it manually'));
-      });
-      return b;
-    };
-
-    // Sending the checkup (SMS link / mail app) appends a dated note once per day,
-    // so the follow-up trail writes itself.
-    const logSent = (channel) => {
-      if (!TRACKING || !unlocked) return;
-      const key = keyOf(d);
-      const line = TODAY + ' — Checkup sent (' + channel + ')';
-      const wrapEl = box.closest('.edwrap');
-      const ta = wrapEl ? wrapEl.querySelector('textarea') : null;
-      const cur = ta ? ta.value : noteOf(d);
-      if (cur.split('\n').some((ln) => ln.trim() === line)) return;
-      clearTimeout(noteTimers[key]);
-      const next = cur.trim() ? cur.replace(/\s+$/, '') + '\n' + line : line;
-      if (ta) ta.value = next;
-      const metaEl = wrapEl ? wrapEl.querySelector('.edmeta') : null;
-      saveLead(key, { n: next }, metaEl).then(() => {
-        const edrow = box.closest('tr.edrow');
-        const tr = edrow && edrow.previousElementSibling;
-        if (tr && tr.classList.contains('lead')) updateRowChip(tr, d);
-      });
-    };
-
-    const lf = document.createElement('div'); lf.className = 'pv';
-    const site = (trackState[keyOf(d)] && trackState[keyOf(d)].w) || d.website;
-    if (site) {
-      const sa = document.createElement('a');
-      sa.href = site; sa.target = '_blank'; sa.rel = 'noopener'; sa.className = 'minibtn';
-      sa.textContent = 'Open their site ↗';
-      lf.append(sa);
-    } else {
-      const none = document.createElement('span'); none.textContent = 'No website on file — that IS the pitch.';
-      lf.append(none);
-    }
-    if (d.fw) {
-      const fa = document.createElement('a');
-      fa.href = d.fw; fa.target = '_blank'; fa.rel = 'noopener'; fa.className = 'minibtn';
-      fa.textContent = 'FSQ-listed site ↗';
-      lf.append(fa);
-    }
-    const ma = document.createElement('a');
-    ma.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.name + ' ' + d.town + ' ' + d.st);
-    ma.target = '_blank'; ma.rel = 'noopener'; ma.className = 'minibtn';
-    ma.textContent = 'Map ↗';
-    lf.append(ma);
-    row('Look first', lf);
-
-    if (d.brk || d.nw) {
-      const tm = document.createElement('p');
-      const listed = /Newly listed/.test(d.brk || '');
-      tm.className = (d.brk && !listed) ? 'warn' : '';
-      tm.textContent = d.brk && !listed
+  function stillOpen(d) {
+    if (d.ct) return { warn: true, text: 'Listings mark this business as TEMPORARILY or POSSIBLY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.' };
+    if (d.g) return { warn: false, text: 'Listed as operational (places data' + (d.dv ? ', record as of ' + d.dv : '') + ').' };
+    if (d.gl) return { warn: false, text: 'Listed in places data, but open/closed status isn’t stated — confirm when you call.' };
+    return { warn: false, text: 'Couldn’t cross-check against places data — confirm they’re still open when you call.' };
+  }
+  function timingOf(d) {
+    if (!(d.brk || d.nw)) return null;
+    const listed = /Newly listed/.test(d.brk || '');
+    return {
+      hot: !!(d.brk && !listed),
+      text: d.brk && !listed
         ? d.brk + ' — it was working 12–24 hours ago. Call this week while it’s fresh; lead with “noticed your site just went down.”'
         : d.nw
           ? 'Recently opened — listed since ' + d.nw + '. New owners pick a web/IT partner in the first months; get in before someone else does.'
-          : 'Newly listed business — just appeared on the map. New owners decide on a website early; get in first.';
-      row('Timing', tm);
-    }
+          : 'Newly listed business — just appeared on the map. New owners decide on a website early; get in first.',
+    };
+  }
+  const checkupUrlOf = (d) => (d.slug ? location.origin + '/a/' + d.slug + '.html' : '');
+  const smsBodyOf = (d) => 'Hey, this is Peyton with Ridge Web Designs / Ignite Cyber — here’s that one-page checkup of your online presence I mentioned: ' + checkupUrlOf(d) + ' — happy to walk through it any time: (423) 863-9727';
+  const voicemailOf = (d) => 'Hey, this is Peyton with ' + (d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs') + ' here in the Tri-Cities. Quick heads up — I ran a checkup on ' + d.name + '’s online presence and noticed ' + headlineOf(d) + '. Nothing scary, and it takes two minutes to explain. I’m at 423-863-9727 — again, that’s Peyton, 423-863-9727. Thanks!';
+  function emailSubjectOf(d) {
+    const h = headlineOf(d);
+    return (h.includes('domain registration') || h.includes('domain is on hold')) ? 'Time-sensitive heads-up about your domain'
+      : h.includes('couldn’t find a website') || h.includes('Facebook') ? 'Getting ' + d.name + ' findable on Google'
+      : 'Quick heads-up about your website';
+  }
+  function emailDraftOf(d, afterCall, gkName) {
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const intro = afterCall
+      ? 'This is Peyton with Ridge Web Designs. I called earlier and ' + (gkName || 'your team') + ' suggested email was the best way to reach you.'
+      : 'This is Peyton with Ridge Web Designs / Ignite Cyber Solutions.';
+    return greet + ',\n\n' + intro + '\n\nWhile researching ' + d.vertical + ' businesses around ' + d.town +
+      ', I noticed ' + headlineOf(d) + '. I have compiled the details into a one-page checkup here:\n\n' +
+      (checkupUrlOf(d) || '(checkup page unavailable for this lead)') +
+      '\n\nIf you would like to discuss this, please feel free to call or text me at (423) 863-9727.\n\nBest regards,\n\nPeyton\nRidge Web Designs / Ignite Cyber Solutions';
+  }
+  const mailtoOf = (d, gkName) => 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(emailSubjectOf(d)) + '&body=' + encodeURIComponent(emailDraftOf(d, true, gkName));
+  const smsHrefOf = (d) => 'sms:' + d.phone.replace(/[^+\d]/g, '') + '?&body=' + encodeURIComponent(smsBodyOf(d));
 
-    const op = document.createElement('div'); op.className = 'pv';
-    const opP = document.createElement('p'); opP.textContent = p.opener;
-    op.append(opP, copyBtn(p.opener));
+  // Sending the checkup (SMS link / mail app) appends a dated note once per day,
+  // so the follow-up trail writes itself. `ta` is the live notes box if one is
+  // on screen, `metaEl` its save indicator.
+  function logCheckupSent(d, channel, ta, metaEl) {
+    if (!TRACKING || !unlocked) return;
+    const key = keyOf(d);
+    const line = TODAY + ' — Checkup sent (' + channel + ')';
+    const cur = ta ? ta.value : noteOf(d);
+    if (cur.split('\n').some((ln) => ln.trim() === line)) return;
+    clearTimeout(noteTimers[key]);
+    const next = cur.trim() ? cur.replace(/\s+$/, '') + '\n' + line : line;
+    if (ta) ta.value = next;
+    saveLead(key, { n: next }, metaEl).then(() => updateRowChip(d)).catch(() => {});
+  }
+  function copyBtn(text, label) {
+    const b = el('button', 'minibtn', label || 'Copy');
+    b.addEventListener('click', () => {
+      navigator.clipboard.writeText(typeof text === 'function' ? text() : text)
+        .then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = label || 'Copy'; }, 1500); })
+        .catch(() => showToast('Copy failed — select it manually'));
+    });
+    return b;
+  }
+  function extLink(href, label, cls) {
+    const a = el('a', cls === undefined ? 'minibtn' : cls, label); // '' = plain text link
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    return a;
+  }
+  const mapUrl = (d) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.name + ' ' + d.town + ' ' + d.st);
+  const siteOf = (d) => (unlocked && trackState[keyOf(d)] && trackState[keyOf(d)].w) || d.website;
+  const hostLabel = (u) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  function lookFirst(d) {
+    const lf = el('div', 'pv');
+    const site = siteOf(d);
+    if (site) lf.append(extLink(site, 'Open their site ↗'));
+    else lf.append(el('span', null, 'No website on file — that IS the pitch.'));
+    if (d.fw) lf.append(extLink(d.fw, 'FSQ-listed site ↗'));
+    lf.append(extLink(mapUrl(d), 'Map ↗'));
+    if (d.slug) lf.append(extLink('/a/' + d.slug + '.html', 'Checkup page ↗'));
+    return lf;
+  }
+
+  function prepBlock(d) {
+    const p = makePrep(d);
+    const box = el('div', 'prep');
+    const row = (label, node) => {
+      const r = el('div', 'prow');
+      r.append(el('span', 'plbl', label), node); box.append(r);
+    };
+    const ctx = () => {
+      const wrapEl = box.closest('.edwrap');
+      return [wrapEl ? wrapEl.querySelector('textarea') : null, wrapEl ? wrapEl.querySelector('.edmeta') : null];
+    };
+
+    row('Look first', lookFirst(d));
+
+    const tm = timingOf(d);
+    if (tm) { const tp = el('p', tm.hot ? 'warn' : '', tm.text); row('Timing', tp); }
+
+    const op = el('div', 'pv');
+    op.append(el('p', null, p.opener), copyBtn(p.opener));
     row('Open with', op);
 
-    const ul = document.createElement('ul');
-    for (const pt of p.points) { const li = document.createElement('li'); li.textContent = pt; ul.append(li); }
+    const ul = el('ul');
+    for (const pt of p.points) ul.append(el('li', null, pt));
     row('Talking points', ul);
 
-    const pi = document.createElement('p'); pi.textContent = p.pitch;
-    row('Pitch', pi);
+    row('Pitch', el('p', null, p.pitch));
 
     if (d.mx || d.tech || d.dp || d.sa || d.dk || d.sh || d.dh) {
-      const mp = document.createElement('p');
       const spoof = ((d.x || '') + (d.evidence || '')).toLowerCase().includes('spoofable');
       const bits = [];
       if (d.tech) bits.push('Built on ' + d.tech);
@@ -1133,342 +1492,333 @@
       if (d.dk) bits.push('DKIM found: ' + (d.dkn ? d.dkn.split(',').join(', ') : d.dk + ' selector' + (d.dk === 1 ? '' : 's')));
       if (d.sh) bits.push('self-hosted mail (MX on their own domain)');
       if (d.dh) bits.push('DNS names published: ' + d.dh.split(',').join(', '));
-      mp.textContent = bits.join('; ') + '.';
-      row('Their stack', mp);
+      row('Their stack', el('p', null, bits.join('; ') + '.'));
     }
     if (d.perf) {
-      const pf = document.createElement('p');
       const parts = ['Loads in ' + d.perf.load + 's', d.perf.mb + ' MB page'];
       if (d.perf.mob) parts.push('content runs off-screen on phones (measured)');
-      pf.textContent = parts.join(' · ') + '. Real numbers from our own render — use them.';
-      if (d.perf.load >= 5 || d.perf.mob) pf.className = 'warn';
+      const pf = el('p', (d.perf.load >= 5 || d.perf.mob) ? 'warn' : '', parts.join(' · ') + '. Real numbers from our own render — use them.');
       row('Measured performance', pf);
     }
-    if (d.cg) {
-      const cgp = document.createElement('p'); cgp.textContent = d.cg;
-      row('Competitive angle', cgp);
-    }
+    if (d.cg) row('Competitive angle', el('p', null, d.cg));
 
-    const wh = document.createElement('p');
-    wh.textContent = p.when + (d.hours ? ' Posted hours: ' + d.hours + '.' : '');
-    row('When to call', wh);
+    row('When to call', el('p', null, p.when + (d.hours ? ' Posted hours: ' + d.hours + '.' : '')));
+    row('Who to ask for', el('p', d.multi ? 'warn' : '', p.who));
+    row('Gatekeeper play', el('p', null, 'If a gatekeeper answers, leave with three things: the owner’s direct email (“what’s the best address for them?”), the staffer’s name (“who am I thanking?” — use it next call), and a time window (“do they take calls before you open?”). Then email same-day referencing the call, and set a +3–4 day follow-up here.'));
 
-    const who = document.createElement('p');
-    who.textContent = p.who;
-    if (d.multi) who.className = 'warn';
-    row('Who to ask for', who);
-
-    const gk = document.createElement('p');
-    gk.textContent = 'If a gatekeeper answers, leave with three things: the owner’s direct email (“what’s the best address for them?”), the staffer’s name (“who am I thanking?” — use it next call), and a time window (“do they take calls before you open?”). Then email same-day referencing the call, and set a +3–4 day follow-up here.';
-    row('Gatekeeper play', gk);
-
-    const sc = document.createElement('p');
-    if (d.ct) { sc.className = 'warn'; sc.textContent = 'Listings mark this business as TEMPORARILY or POSSIBLY CLOSED — open with "saw you’re closed right now" or set a follow-up date instead.'; }
-    else if (d.g) sc.textContent = 'Listed as operational (places data' + (d.dv ? ', record as of ' + d.dv : '') + ').';
-    else if (d.gl) sc.textContent = 'Listed in places data, but open/closed status isn’t stated — confirm when you call.';
-    else sc.textContent = 'Couldn’t cross-check against places data — confirm they’re still open when you call.';
-    row('Still open?', sc);
+    const so = stillOpen(d);
+    row('Still open?', el('p', so.warn ? 'warn' : '', so.text));
 
     if (d.r) {
-      const rp = document.createElement('p');
-      rp.textContent = d.r + '★' + (d.rc ? ' from ' + d.rc + ' Google reviews' : ' rating') + ' — ' + (
+      row('Reputation', el('p', null, d.r + '★' + (d.rc ? ' from ' + d.rc + ' Google reviews' : ' rating') + ' — ' + (
         d.r >= 4.5 ? 'lead with it: “you’ve earned a great reputation, but nobody can see it online.”'
         : d.r >= 3.8 ? 'solid reputation; the online presence should match it.'
-        : 'reputation needs work too — tread gently and focus on the fix.');
-      row('Reputation', rp);
+        : 'reputation needs work too — tread gently and focus on the fix.')));
     }
 
     if (d.slug) {
-      const lk = document.createElement('div'); lk.className = 'pv';
-      const a = document.createElement('a');
-      a.href = '/a/' + d.slug + '.html'; a.target = '_blank'; a.rel = 'noopener';
-      a.textContent = 'Open their checkup page';
-      const full = location.origin + '/a/' + d.slug + '.html';
-      const smsBody = 'Hey, this is Peyton with Ridge Web Designs / Ignite Cyber — here’s that one-page checkup of your online presence I mentioned: ' + full + ' — happy to walk through it any time: (423) 863-9727';
-      const sms = document.createElement('a');
-      sms.className = 'minibtn';
-      sms.href = 'sms:' + d.phone.replace(/[^+\d]/g, '') + '?&body=' + encodeURIComponent(smsBody);
-      sms.textContent = 'Text it to them';
-      sms.addEventListener('click', () => logSent('SMS'));
-      lk.append(a, sms, copyBtn(smsBody, 'Copy text msg'), copyBtn(full, 'Copy link'));
+      const lk = el('div', 'pv');
+      const a = extLink('/a/' + d.slug + '.html', 'Open their checkup page', '');
+      const sms = el('a', 'minibtn', 'Text it to them');
+      sms.href = smsHrefOf(d);
+      sms.addEventListener('click', () => { const [ta, meta] = ctx(); logCheckupSent(d, 'SMS', ta, meta); });
+      lk.append(a, sms, copyBtn(smsBodyOf(d), 'Copy text msg'), copyBtn(checkupUrlOf(d), 'Copy link'));
       row('Checkup', lk);
     }
 
-    const checkupUrl = d.slug ? location.origin + '/a/' + d.slug + '.html' : '';
-    const h = headlineOf(d);
-    const subj = (h.includes('domain registration') || h.includes('domain is on hold')) ? 'Time-sensitive heads-up about your domain'
-      : h.includes('couldn’t find a website') || h.includes('Facebook') ? 'Getting ' + d.name + ' findable on Google'
-      : 'Quick heads-up about your website';
-    const hour = new Date().getHours();
-    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     let gkName = '';
-    const draft = (afterCall) => {
-      const intro = afterCall
-        ? 'This is Peyton with Ridge Web Designs. I called earlier and ' + (gkName || 'your team') + ' suggested email was the best way to reach you.'
-        : 'This is Peyton with Ridge Web Designs / Ignite Cyber Solutions.';
-      return greet + ',\n\n' + intro + '\n\nWhile researching ' + d.vertical + ' businesses around ' + d.town +
-        ', I noticed ' + h + '. I have compiled the details into a one-page checkup here:\n\n' +
-        (checkupUrl || '(checkup page unavailable for this lead)') +
-        '\n\nIf you would like to discuss this, please feel free to call or text me at (423) 863-9727.\n\nBest regards,\n\nPeyton\nRidge Web Designs / Ignite Cyber Solutions';
-    };
-
-    const emP = document.createElement('p');
-    emP.style.whiteSpace = 'pre-wrap'; emP.style.fontSize = '12px'; emP.style.color = 'var(--ink-soft)';
-    const emA = document.createElement('a'); emA.className = 'minibtn'; emA.textContent = 'Open in mail app';
-    emA.addEventListener('click', () => { if (checkupUrl) logSent('email'); });
-    const refreshEmail = () => {
-      emP.textContent = draft(true);
-      emA.href = 'mailto:' + encodeURIComponent(d.em || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(draft(true));
-    };
-    const gkIn = document.createElement('input');
-    gkIn.className = 'schedctl'; gkIn.placeholder = 'Gatekeeper’s name (fills the draft)';
+    const emP = el('p');
+    emP.style.whiteSpace = 'pre-wrap'; emP.style.fontSize = '13px'; emP.style.color = 'var(--ink-soft)';
+    const emA = el('a', 'minibtn', 'Open in mail app');
+    emA.addEventListener('click', () => { if (checkupUrlOf(d)) { const [ta, meta] = ctx(); logCheckupSent(d, 'email', ta, meta); } });
+    const refreshEmail = () => { emP.textContent = emailDraftOf(d, true, gkName); emA.href = mailtoOf(d, gkName); };
+    const gkIn = el('input', 'ctl');
+    gkIn.placeholder = 'Gatekeeper’s name (fills the draft)';
     gkIn.style.width = '220px';
     gkIn.addEventListener('input', () => { gkName = gkIn.value.trim(); refreshEmail(); });
-    const mkCopy = (label, fn) => {
-      const b = document.createElement('button'); b.className = 'minibtn'; b.textContent = label;
-      b.addEventListener('click', () => navigator.clipboard.writeText(fn())
-        .then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = label; }, 1500); })
-        .catch(() => showToast('Copy failed — select it manually')));
-      return b;
-    };
-    const emBtns = document.createElement('div'); emBtns.className = 'pv';
+    const emBtns = el('div', 'pv');
     emBtns.append(gkIn, emA,
-      mkCopy('Copy (after a call)', () => 'Subject: ' + subj + '\n\n' + draft(true)),
-      mkCopy('Copy (cold)', () => 'Subject: ' + subj + '\n\n' + draft(false)));
-    const emTo = document.createElement('p');
-    emTo.style.fontSize = '11px'; emTo.style.color = 'var(--ink-soft)';
-    emTo.textContent = d.em ? 'To: ' + d.em : 'No address on file — get their direct email from the gatekeeper, then send.';
-    const emCol = document.createElement('div');
+      copyBtn(() => 'Subject: ' + emailSubjectOf(d) + '\n\n' + emailDraftOf(d, true, gkName), 'Copy (after a call)'),
+      copyBtn(() => 'Subject: ' + emailSubjectOf(d) + '\n\n' + emailDraftOf(d, false, gkName), 'Copy (cold)'));
+    const emTo = el('p', null, d.em ? 'To: ' + d.em : 'No address on file — get their direct email from the gatekeeper, then send.');
+    emTo.style.fontSize = '12px'; emTo.style.color = 'var(--ink-soft)';
+    const emCol = el('div');
     emCol.style.display = 'flex'; emCol.style.flexDirection = 'column'; emCol.style.gap = '6px';
     emCol.append(emTo, emP, emBtns);
     refreshEmail();
-    const emWrap = document.createElement('div'); emWrap.className = 'pv';
-    emWrap.append(emCol);
+    const emWrap = el('div', 'pv'); emWrap.append(emCol);
     row('Email draft', emWrap);
 
-    const vmBrand = d.need === 'IT' ? 'Ignite Cyber Solutions' : 'Ridge Web Designs';
-    const vm = 'Hey, this is Peyton with ' + vmBrand + ' here in the Tri-Cities. Quick heads up — I ran a checkup on ' + d.name + '’s online presence and noticed ' + headlineOf(d) + '. Nothing scary, and it takes two minutes to explain. I’m at 423-863-9727 — again, that’s Peyton, 423-863-9727. Thanks!';
-    const vmWrap = document.createElement('div'); vmWrap.className = 'pv';
-    const vmP = document.createElement('p'); vmP.textContent = vm;
-    vmWrap.append(vmP, copyBtn(vm));
+    const vm = voicemailOf(d);
+    const vmWrap = el('div', 'pv');
+    vmWrap.append(el('p', null, vm), copyBtn(vm));
     row('If voicemail', vmWrap);
 
-    if (d.fw) {
-      const f = document.createElement('p');
-      f.textContent = 'Foursquare lists a website we didn’t have on file: ' + d.fw + ' — worth a look before you call. It gets audited automatically next rescan.';
-      f.className = 'warn';
-      row('Heads up', f);
-    }
-    if (d.pm) {
-      const pmp = document.createElement('p');
-      pmp.textContent = 'Listings show a second phone number: ' + d.pm + ' — try it if the main one doesn’t connect.';
-      row('Number check', pmp);
-    }
+    if (d.fw) row('Heads up', el('p', 'warn', 'Foursquare lists a website we didn’t have on file: ' + d.fw + ' — worth a look before you call. It gets audited automatically next rescan.'));
+    if (d.pm) row('Number check', el('p', null, 'Listings show a second phone number: ' + d.pm + ' — try it if the main one doesn’t connect.'));
     return box;
   }
 
-  let openKey = null;
-  function closeEditor() {
-    const ed = rowsEl.querySelector('tr.edrow');
-    if (ed) ed.remove();
-    openKey = null;
-  }
   function buildLeadPanel(d, onStatus) {
     const key = keyOf(d);
-    const wrap = document.createElement('div'); wrap.className = 'edwrap';
+    const wrap = el('div', 'edwrap');
 
-    const btns = document.createElement('div'); btns.className = 'stbtns';
-    const meta = document.createElement('div'); meta.className = 'edmeta';
+    const btns = el('div', 'stbtns');
+    const meta = el('div', 'edmeta');
     const cur = trackState[key] || {};
     meta.innerHTML = cur.t
       ? 'Last updated ' + new Date(cur.t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
       : 'Not contacted yet';
 
-    for (const [sk, label] of STATUSES) {
-      const b = document.createElement('button');
-      b.className = 'stbtn'; b.textContent = label;
+    STATUSES.forEach(([sk, label], i) => {
+      const b = el('button', 'stbtn', label);
+      if (i > 0) b.append(el('kbd', null, String(i)));
       b.setAttribute('aria-pressed', String(stOf(d) === sk));
       b.addEventListener('click', () => {
         btns.querySelectorAll('.stbtn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
-        saveLead(key, { s: sk }, meta).then(() => { if (onStatus) onStatus(); });
+        saveLead(key, { s: sk }, meta).then(() => { if (onStatus) onStatus(); }).catch(() => {});
       });
       btns.append(b);
-    }
+    });
 
-    const ta = document.createElement('textarea');
+    const ta = el('textarea');
     ta.placeholder = 'Call notes — who you talked to, what they said, next step…';
     ta.value = noteOf(d);
     ta.addEventListener('input', () => {
       clearTimeout(noteTimers[key]);
       meta.innerHTML = 'Typing&hellip;';
       noteTimers[key] = setTimeout(() => {
-        saveLead(key, { n: ta.value }, meta).then(() => { if (onStatus) onStatus(); });
+        saveLead(key, { n: ta.value }, meta).then(() => { if (onStatus) onStatus(); }).catch(() => {});
       }, 900);
     });
 
-    const fu = document.createElement('div'); fu.className = 'furow';
-    const fuLbl = document.createElement('span'); fuLbl.textContent = 'Follow up on:';
-    const fuIn = document.createElement('input'); fuIn.type = 'date'; fuIn.value = dueOf(d);
+    const fu = el('div', 'furow');
+    const fuIn = el('input'); fuIn.type = 'date'; fuIn.value = dueOf(d); fuIn.setAttribute('aria-label', 'Follow-up date');
     fuIn.addEventListener('change', () => {
-      saveLead(key, { d: fuIn.value }, meta).then(() => { if (onStatus) onStatus(); });
+      saveLead(key, { d: fuIn.value }, meta).then(() => { if (onStatus) onStatus(); }).catch(() => {});
     });
-    const fuClear = document.createElement('button'); fuClear.className = 'minibtn'; fuClear.textContent = 'Clear';
+    const fuClear = el('button', 'minibtn', 'Clear');
     fuClear.addEventListener('click', () => {
       fuIn.value = '';
-      saveLead(key, { d: '' }, meta).then(() => { if (onStatus) onStatus(); });
+      saveLead(key, { d: '' }, meta).then(() => { if (onStatus) onStatus(); }).catch(() => {});
     });
-    const quick = document.createElement('button'); quick.className = 'minibtn'; quick.textContent = '+1 week';
+    const quick = el('button', 'minibtn', '+1 week');
     quick.addEventListener('click', () => {
-      const t = new Date(); t.setDate(t.getDate() + 7);
-      fuIn.value = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+      fuIn.value = plusDays(7);
       fuIn.dispatchEvent(new Event('change'));
     });
-    const vLbl = document.createElement('span'); vLbl.textContent = '· $ if won:';
-    const vIn = document.createElement('input');
-    vIn.type = 'number'; vIn.min = '0'; vIn.step = '50'; vIn.placeholder = '0';
-    vIn.className = 'schedctl'; vIn.style.width = '96px';
+    const vIn = el('input', 'ctl');
+    vIn.type = 'number'; vIn.min = '0'; vIn.step = '50'; vIn.placeholder = '0'; vIn.style.width = '96px';
+    vIn.setAttribute('aria-label', 'Dollar value if won');
     vIn.value = (trackState[key] && trackState[key].v) || '';
-    vIn.addEventListener('change', () => saveLead(key, { v: vIn.value }, meta));
-    fu.append(fuLbl, fuIn, quick, fuClear, vLbl, vIn);
+    vIn.addEventListener('change', () => saveLead(key, { v: vIn.value }, meta).catch(() => {}));
+    const vWrap = el('span', 'fuval');
+    vWrap.append(el('span', null, '$ if won:'), vIn);
+    fu.append(el('span', null, 'Follow up on:'), fuIn, quick, fuClear, vWrap);
 
     // Wrong-domain correction: what goes here overrides the scanned website and
     // is re-audited on the next monthly rescan.
-    const cw = document.createElement('div'); cw.className = 'furow';
-    const cwLbl = document.createElement('span'); cwLbl.textContent = 'Real website:';
-    const cwIn = document.createElement('input'); cwIn.type = 'url';
+    const cw = el('div', 'furow');
+    const cwIn = el('input', 'ctl'); cwIn.type = 'url';
     cwIn.placeholder = 'https://… (paste if ours is wrong or missing)';
     cwIn.style.flex = '1 1 220px';
+    cwIn.setAttribute('aria-label', 'Real website');
     cwIn.value = (trackState[key] && trackState[key].w) || '';
     cwIn.addEventListener('change', () => {
       let v = cwIn.value.trim();
       if (v && !/^https?:\/\//i.test(v)) { v = 'https://' + v; cwIn.value = v; }
       if (v && !/^https?:\/\/\S{4,300}$/.test(v)) { showToast('That doesn’t look like a URL'); return; }
-      saveLead(key, { w: v }, meta).then(() => render());
+      saveLead(key, { w: v }, meta).then(() => render()).catch(() => {});
     });
-    cw.append(cwLbl, cwIn);
+    cw.append(el('span', null, 'Real website:'), cwIn);
 
-    wrap.append(prepBlock(d), btns, ta, fu, cw, meta);
+    wrap.append(btns, ta, fu, cw, meta, prepBlock(d));
     return wrap;
   }
-  function openEditor(tr, d) {
-    closeEditor();
-    openKey = keyOf(d);
-    const ed = document.createElement('tr'); ed.className = 'edrow';
-    const cell = document.createElement('td'); cell.colSpan = COLS;
-    cell.append(buildLeadPanel(d, () => updateRowChip(tr, d)));
-    ed.append(cell);
-    tr.after(ed);
+
+  // ---- prep drawer (board) ----
+  let openKey = null;
+  let prepReturnFocus = null;
+  const prepDrawer = $('prepDrawer');
+  function closePrep() {
+    if (!openKey) return;
+    const key = openKey;
+    openKey = null;
+    prepDrawer.hidden = true;
+    document.body.classList.remove('prep-open');
+    $('prepBody').textContent = '';
+    let r = prepReturnFocus;
+    prepReturnFocus = null;
+    if (r && !r.isConnected && r.classList && r.classList.contains('row')) r = rowsEl.querySelector('.row[data-key="' + CSS.escape(key) + '"]');   // rows re-rendered since open
+    if (r && r.isConnected && !callActive) r.focus({ preventScroll: true });
   }
-  function updateRowChip(tr, d) {
-    const cell = tr.querySelector('td.progress');
+  $('prepClose').addEventListener('click', closePrep);
+  function openPrep(d, returnTo) {
+    if (!(TRACKING && unlocked)) return;
+    openKey = keyOf(d);
+    prepReturnFocus = returnTo || document.activeElement;
+    $('prepName').textContent = d.name;
+    const sub = $('prepSub'); sub.textContent = '';
+    sub.append(d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '') + ' · ');
+    sub.append(el('span', 'vert', d.vertical));
+    const ph = $('prepPhone'); ph.href = telOf(d); ph.textContent = d.phone || '';
+    const body = $('prepBody'); body.textContent = '';
+    body.append(buildLeadPanel(d, () => updateRowChip(d)));
+    prepDrawer.hidden = false;
+    document.body.classList.add('prep-open');
+    body.scrollTop = 0;
+    $('prepClose').focus({ preventScroll: true });
+  }
+
+  function updateRowChip(d) {
+    const r = rowsEl.querySelector('.row[data-key="' + CSS.escape(keyOf(d)) + '"]');
+    if (!r) return;
+    const cell = r.querySelector('.prog');
     if (cell) fillProgressCell(cell, d);
+    r.className = rowClass(d) + (state.sel === keyOf(d) ? ' sel' : '');
   }
   function fillProgressCell(cell, d) {
     cell.textContent = '';
     const s = stOf(d);
-    const chipEl = document.createElement('span');
-    chipEl.className = 'stchip st-' + s; chipEl.textContent = ST_LABEL[s];
-    cell.append(chipEl);
-    if (noteOf(d)) { const dot = document.createElement('span'); dot.className = 'notedot'; dot.title = 'Has notes'; cell.append(dot); }
+    cell.append(el('span', 'stchip st-' + s, ST_LABEL[s]));
+    if (noteOf(d)) { const dot = el('span', 'notedot'); dot.title = 'Has notes'; cell.append(dot); }
     const dd = dueOf(d);
     if (dd && !['won', 'lost', 'bad', 'gone'].includes(s)) {
-      const tag = document.createElement('div');
       const odDays = dd < TODAY ? Math.round((Date.parse(TODAY) - Date.parse(dd)) / 86400000) : 0;
-      tag.className = 'duetag' + (odDays > 0 ? ' overdue' : '') + (odDays >= 3 ? ' overdue3' : '');
-      tag.textContent = (odDays > 0 ? 'overdue ' + odDays + 'd — ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/');
+      const tag = el('span', 'duetag' + (odDays > 0 ? ' overdue' : '') + (odDays >= 3 ? ' overdue3' : ''),
+        (odDays > 0 ? 'overdue ' + odDays + 'd — ' : dd === TODAY ? 'today ' : '↳ ') + dd.slice(5).replace('-', '/'));
       cell.append(tag);
     }
   }
+  function badgesFor(d) {
+    const out = [];
+    const mk = (cls, text, title) => { const b = el('span', 'badge ' + cls, text); if (title) b.title = title; out.push(b); };
+    if (d.dl) mk('bdl', 'domain lapsed', (d.x || '').split('; ').find((s) => /^Domain (registration lapsed|suspended)/.test(s)) || 'Domain registration lapsed or on registrar hold');
+    if (d.brk && !/Newly listed/.test(d.brk)) mk('bbrk', 'just broke', d.brk);
+    if (d.xd != null) mk('bexp', 'expires ' + d.xd + 'd', 'Domain registration expires in ' + d.xd + ' days');
+    if (d.chg === 'new') mk('bnew', 'new');
+    else if (d.chg === 'up') mk('bup', 'hotter');
+    if (d.nw || /Newly listed/.test(d.brk || '')) mk('bnew', 'new biz', d.nw ? 'Listed on Foursquare since ' + d.nw : 'Just appeared on the map');
+    if (d.multi) mk('bmulti', 'multi · ' + d.multi, 'Same name in ' + d.multi + ' towns — likely multi-location');
+    if (d.ct) mk('bcl', 'closed?', 'Listings mark this business as temporarily or possibly closed');
+    return out;
+  }
+  function rowClass(d) {
+    let sev = '';
+    const s = unlocked ? stOf(d) : 'new';
+    if (s === 'won') sev = ' sev-green';
+    else if (d.dl || (d.brk && !/Newly listed/.test(d.brk))) sev = ' sev-red';
+    else if (d.xd != null || (unlocked && isDue(d) && dueOf(d) < TODAY)) sev = ' sev-amber';
+    return 'row' + sev + (TRACKING && unlocked ? ' trackable' : '');
+  }
 
+  function rowEl(d) {
+    const r = el('div', rowClass(d) + (state.sel === keyOf(d) ? ' sel' : ''));
+    r.setAttribute('role', 'listitem');
+    r.tabIndex = -1;
+    r.dataset.key = keyOf(d);
+    const main = el('div', 'rmain');
+    const l1 = el('div', 'l1');
+    l1.append(el('span', 'name', d.name));
+    if (d.r) { const st = el('span', 'rstar', d.r + '★'); st.title = d.rc ? d.rc + ' Google reviews' : 'Listing rating'; l1.append(st); }
+    badgesFor(d).forEach((b) => l1.append(b));
+    l1.append(el('span', 'pill need-' + d.need, d.need));
+    if (d.confidence === 'Verify') l1.append(el('span', 'pill verify', 'verify'));
+    const sc = el('span', 'scores');
+    const s1 = el('span'); s1.title = 'Web score'; s1.append(el('i', null, 'WEB'), el('b', null, String(d.wScore)));
+    const s2 = el('span'); s2.title = 'IT score'; s2.append(el('i', null, 'IT'), el('b', null, String(d.itScore)));
+    sc.append(s1, s2);
+    l1.append(sc);
+    if (TRACKING && unlocked) { const p = el('span', 'prog l1'); fillProgressCell(p, d); l1.append(p); }
+    const l2 = el('div', 'l2');
+    const geo = el('span', 'geo');
+    geo.append(d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '') + ' · ');
+    geo.append(el('span', 'vert', d.vertical));
+    l2.append(geo, ' — ', el('span', 'why', d.evidence));
+    if (d.x) l2.append(' · ', el('span', 'xtra', d.x));
+    main.append(l1, l2);
+    const side = el('div', 'rside');
+    if (d.phone) { const a = el('a', 'phone', d.phone); a.href = telOf(d); side.append(a); }
+    const links = el('div', 'links');
+    links.append(extLink(mapUrl(d), 'map', ''));
+    if (TRACKING && d.slug) links.append(extLink('/a/' + d.slug + '.html', 'checkup', ''));
+    const override = TRACKING && unlocked && trackState[keyOf(d)] && trackState[keyOf(d)].w;
+    const shownSite = override || d.website;
+    if (shownSite) {
+      const s = extLink(shownSite, (override ? '✓ ' : '') + hostLabel(shownSite), 'site');
+      if (override) s.title = 'Corrected domain (overrides the scanned one; re-audited next rescan)';
+      links.append(s);
+    }
+    side.append(links);
+    r.append(main, side);
+    r.addEventListener('click', (e) => {
+      if (e.target.closest('a, button, input, textarea')) return;
+      selectRow(keyOf(d), false);
+      if (!(TRACKING && unlocked)) return;
+      if (openKey === keyOf(d)) closePrep(); else openPrep(d, r);
+    });
+    return r;
+  }
+
+  let lastRows = [];
+  let lastSlice = [];
   function render() {
     const rows = filtered();
-    closeEditor();
+    lastRows = rows;
     rowsEl.textContent = '';
     emptyEl.hidden = rows.length > 0;
     const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     if (state.page > totalPages) state.page = totalPages;
     const start = (state.page - 1) * PAGE_SIZE;
     const slice = rows.slice(start, start + PAGE_SIZE);
+    lastSlice = slice;
+    if (state.sel && !slice.some((d) => keyOf(d) === state.sel)) state.sel = null;
     const frag = document.createDocumentFragment();
-    for (const d of slice) {
-      const tr = document.createElement('tr');
-      tr.className = 'lead' + (TRACKING && unlocked ? ' trackable' : '');
-      tr.dataset.key = keyOf(d);
-      const biz = td('biz', d.name);
-      if (d.r) { const st = document.createElement('span'); st.className = 'rstar'; st.textContent = d.r + '★'; st.title = d.rc ? d.rc + ' Google reviews' : 'Listing rating'; biz.append(st); }
-      if (d.chg === 'new') { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new'; biz.append(b); }
-      else if (d.chg === 'up') { const b = document.createElement('span'); b.className = 'badge bup'; b.textContent = 'hotter'; biz.append(b); }
-      if (d.ct) { const b = document.createElement('span'); b.className = 'badge bcl'; b.textContent = 'closed?'; b.title = 'Listings mark this business as temporarily or possibly closed'; biz.append(b); }
-      if (d.dl) { const b = document.createElement('span'); b.className = 'badge bdl'; b.textContent = 'domain lapsed'; b.title = (d.x || '').split('; ').find((s) => /^Domain (registration lapsed|suspended)/.test(s)) || 'Domain registration lapsed or on registrar hold'; biz.append(b); }
-      if (d.brk && !/Newly listed/.test(d.brk)) { const b = document.createElement('span'); b.className = 'badge bbrk'; b.textContent = 'just broke'; b.title = d.brk; biz.append(b); }
-      if (d.nw || /Newly listed/.test(d.brk || '')) { const b = document.createElement('span'); b.className = 'badge bnew'; b.textContent = 'new biz'; b.title = d.nw ? 'Listed on Foursquare since ' + d.nw : 'Just appeared on the map'; biz.append(b); }
-      tr.append(biz);
-      tr.append(td('town', d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '')));
-      if (TRACKING && unlocked) {
-        const p = td('progress'); fillProgressCell(p, d); tr.append(p);
-      } else if (TRACKING) {
-        tr.append(td('progress', ''));
-      }
-      const needTd = td('');
-      const chipEl = document.createElement('span');
-      chipEl.className = 'needchip need-' + d.need; chipEl.textContent = d.need;
-      needTd.append(chipEl);
-      if (d.confidence === 'Verify') {
-        needTd.append(document.createElement('br'));
-        const v = document.createElement('span'); v.className = 'vchip'; v.textContent = 'verify';
-        needTd.append(v);
-      }
-      tr.append(needTd);
-      tr.append(td('score', String(d.wScore)));
-      tr.append(td('score', String(d.itScore)));
-      tr.append(td('why', d.evidence));
-      const ph = td('phone');
-      if (d.phone) { const a = document.createElement('a'); a.href = 'tel:' + d.phone.replace(/[^+\d]/g, ''); a.textContent = d.phone; ph.append(a); }
-      tr.append(ph);
-      tr.append(td('town', REGION_LABELS[d.region] || d.region));
-      tr.append(td('vert', d.vertical));
-      const links = td('links');
-      const map = document.createElement('a');
-      map.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.name + ' ' + d.town + ' ' + d.st);
-      map.target = '_blank'; map.rel = 'noopener'; map.textContent = 'map';
-      links.append(map);
-      if (TRACKING && d.slug) {
-        links.append(' ');
-        const au = document.createElement('a');
-        au.href = '/a/' + d.slug + '.html'; au.target = '_blank'; au.rel = 'noopener';
-        au.textContent = 'checkup';
-        links.append(au);
-      }
-      const override = TRACKING && unlocked && trackState[keyOf(d)] && trackState[keyOf(d)].w;
-      const shownSite = override || d.website;
-      if (shownSite) {
-        const s = document.createElement('a'); s.className = 'site';
-        s.href = shownSite; s.target = '_blank'; s.rel = 'noopener';
-        s.textContent = (override ? '✓ ' : '') + shownSite.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
-        if (override) s.title = 'Corrected domain (overrides the scanned one; re-audited next rescan)';
-        links.append(s);
-      }
-      tr.append(links);
-      if (TRACKING && unlocked) {
-        tr.addEventListener('click', (e) => {
-          if (e.target.closest('a, button, input, textarea')) return;
-          const wasOpen = openKey === keyOf(d);
-          closeEditor();
-          if (!wasOpen) openEditor(tr, d);
-        });
-      }
-      frag.append(tr);
-    }
+    for (const d of slice) frag.append(rowEl(d));
     rowsEl.append(frag);
     countEl.textContent = (rows.length ? 'Leads ' + (start + 1) + '–' + (start + slice.length) + ' of ' + rows.length : '0 leads') +
       (rows.length !== DATA.length ? ' (filtered from ' + DATA.length + ')' : '');
     renderPager(pagerTop, totalPages, false);
     renderPager(pagerBottom, totalPages, true);
+    // the open prep follows a re-render only if its lead is still on the page
+    if (openKey && !slice.some((d) => keyOf(d) === openKey)) closePrep();
   }
 
+  // ---- row selection (keyboard first) ----
+  function selectRow(key, scroll) {
+    state.sel = key;
+    rowsEl.querySelectorAll('.row.sel').forEach((r) => r.classList.remove('sel'));
+    const r = key ? rowsEl.querySelector('.row[data-key="' + CSS.escape(key) + '"]') : null;
+    if (r) {
+      r.classList.add('sel');
+      r.setAttribute('aria-current', 'true');
+      if (scroll) r.scrollIntoView({ block: 'nearest' });
+    }
+    rowsEl.querySelectorAll('.row[aria-current]').forEach((x) => { if (x !== r) x.removeAttribute('aria-current'); });
+    return r;
+  }
+  function moveSel(delta) {
+    if (!lastSlice.length) return;
+    let i = lastSlice.findIndex((d) => keyOf(d) === state.sel);
+    if (i === -1) i = delta > 0 ? -1 : lastSlice.length;
+    let ni = i + delta;
+    const wasOpen = !!openKey;   // render() on a page change closes the prep; reopen it for the new lead
+    const totalPages = Math.max(1, Math.ceil(lastRows.length / PAGE_SIZE));
+    if (ni >= lastSlice.length) {
+      if (state.page < totalPages) { state.page++; render(); ni = 0; } else ni = lastSlice.length - 1;
+    } else if (ni < 0) {
+      if (state.page > 1) { state.page--; render(); ni = lastSlice.length - 1; } else ni = 0;
+    }
+    const d = lastSlice[ni];
+    const r = selectRow(keyOf(d), true);
+    if (r) r.focus({ preventScroll: true });
+    if (wasOpen && openKey !== keyOf(d)) openPrep(d, r);
+  }
+  const selected = () => lastSlice.find((d) => keyOf(d) === state.sel) || null;
+
   // ---- next lead: best untouched lead under current region/need filters ----
-  document.getElementById('nextBtn').addEventListener('click', () => {
+  $('nextBtn').addEventListener('click', () => {
     let cand = DATA.filter((d) =>
       (state.region === 'all' || d.region === state.region) &&
       (state.need === 'all' || d.need === state.need) &&
@@ -1482,22 +1832,31 @@
     gotoLead(cand[0]);
   });
 
+  // Put a lead on screen: right page, selected, scrolled into view. Returns its row.
+  function revealLead(target) {
+    const rows = filtered();
+    const idx = rows.indexOf(target);
+    if (idx === -1) { render(); return null; }
+    state.page = Math.max(1, Math.floor(idx / PAGE_SIZE) + 1);
+    render();
+    const r = selectRow(keyOf(target), false);
+    if (r) r.scrollIntoView({ block: 'center' });
+    return r;
+  }
   function gotoLead(target) {
     setView('leads');
     state.status = 'all'; state.due = false; state.q = ''; q.value = '';
-    state.sortK = null;
-    document.querySelectorAll('th.sortable .dir').forEach((el) => { el.textContent = ''; });
+    state.sortK = null; sortSel.value = state.sortMode;
     buildStatusChips();
-    const rows = filtered();
-    const idx = rows.indexOf(target);
-    state.page = Math.max(1, Math.floor(idx / PAGE_SIZE) + 1);
-    render();
-    const tr = rowsEl.querySelector('tr[data-key="' + CSS.escape(keyOf(target)) + '"]');
-    if (tr) { openEditor(tr, target); tr.scrollIntoView({ block: 'center' }); }
+    writeHash();
+    renderActiveChips();
+    const r = revealLead(target);
+    if (r) { openPrep(target, r); r.focus({ preventScroll: true }); }
+    else showToast(target.name + ' is hidden by the vertical / town / miles filters — clear them to open it');
   }
 
   // ---- backup: download the whole tracking doc ----
-  document.getElementById('backupBtn').addEventListener('click', async () => {
+  $('backupBtn').addEventListener('click', async () => {
     try {
       const data = await api('GET');
       const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
@@ -1510,29 +1869,28 @@
   });
 
   // ---- call schedule tab ----
-  // Fills the daily windows (10 AM–3 PM, 8–10 PM) from To-call prospects under
-  // the current region/need filters. Due follow-ups slot first; hospitality and
-  // fitness are held for the evening block when possible. For today, only slots
-  // still ahead of the clock are shown.
-  const schedDateEl = document.getElementById('schedDate');
-  const schedGapEl = document.getElementById('schedGap');
-  const slotsEl = document.getElementById('slots');
-  const schedSummaryEl = document.getElementById('schedSummary');
+  // Fills the daily windows (9 AM–5 PM) from To-call prospects under the current
+  // region/need filters. Due follow-ups slot first. For today, only slots still
+  // ahead of the clock are shown.
+  const schedDateEl = $('schedDate');
+  const schedGapEl = $('schedGap');
+  const slotsEl = $('slots');
+  const schedSummaryEl = $('schedSummary');
   const EVENING_VERTS = new Set(); // no evening block anymore — every vertical books into business hours
   const WINDOW_LABEL = { day: 'Business hours — 9:00 AM to 5:00 PM', eve: 'Evening block' };
 
   function setView(v) {
+    if (callActive) exitCallMode(false);
     state.view = v;
-    document.getElementById('tabLeads').setAttribute('aria-selected', String(v === 'leads'));
-    document.getElementById('tabSched').setAttribute('aria-selected', String(v === 'schedule'));
-    const leadsOnly = [document.getElementById('progressRail'), document.querySelector('.count'), document.querySelector('.tablewrap'), pagerBottom];
-    leadsOnly.forEach((el) => { if (el) el.hidden = v !== 'leads'; });
-    if (v === 'leads' && TRACKING && unlocked) document.getElementById('progressRail').hidden = false;
-    document.getElementById('schedView').hidden = v !== 'schedule';
+    $('tabLeads').setAttribute('aria-selected', String(v === 'leads'));
+    $('tabSched').setAttribute('aria-selected', String(v === 'schedule'));
+    $('boardView').hidden = v !== 'leads';
+    $('schedView').hidden = v !== 'schedule';
+    if (v !== 'leads') { closePrep(); closeFilters(); }
     if (v === 'schedule') renderSchedule();
   }
-  document.getElementById('tabLeads').addEventListener('click', () => setView('leads'));
-  document.getElementById('tabSched').addEventListener('click', () => setView('schedule'));
+  $('tabLeads').addEventListener('click', () => setView('leads'));
+  $('tabSched').addEventListener('click', () => setView('schedule'));
 
   function localDateStr(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -1562,11 +1920,9 @@
     return out;
   }
 
-  function renderSchedule() {
-    if (!schedDateEl.value) return;
-    slotsEl.textContent = '';
-    const slots = slotsFor(schedDateEl.value, parseInt(schedGapEl.value, 10));
-
+  // The day's plan, shared by the schedule tab and call mode.
+  function schedulePlan() {
+    const slots = schedDateEl.value ? slotsFor(schedDateEl.value, parseInt(schedGapEl.value, 10)) : [];
     let pool = DATA;
     if (state.region !== 'all') pool = pool.filter((d) => d.region === state.region);
     if (state.need !== 'all') pool = pool.filter((d) => d.need === state.need);
@@ -1591,22 +1947,6 @@
       .concat(tieBreak(broke))
       .concat(tieBreak(rest.filter((d) => d.confidence === 'High')))
       .concat(tieBreak(rest.filter((d) => d.confidence !== 'High')));
-
-    if (!slots.length) {
-      const p = document.createElement('div'); p.className = 'empty';
-      p.textContent = 'No calling windows left on this day — pick another date.';
-      slotsEl.append(p);
-      schedSummaryEl.textContent = '';
-      return;
-    }
-    if (!due.length && !fresh.length) {
-      const p = document.createElement('div'); p.className = 'empty';
-      p.textContent = 'Nothing tagged "To call" under the current region/need filters.';
-      slotsEl.append(p);
-      schedSummaryEl.textContent = '';
-      return;
-    }
-
     const dayQ = due.concat(fresh.filter((d) => !EVENING_VERTS.has(d.vertical)));
     const eveQ = fresh.filter((d) => EVENING_VERTS.has(d.vertical));
     let di = 0, ei = 0;
@@ -1618,89 +1958,97 @@
       if (!lead) break;
       assigned.push({ s, lead });
     }
+    return { slots, due, dueKeys, fresh, dayQ, eveQ, assigned, di, ei };
+  }
+
+  function renderSchedule() {
+    if (!schedDateEl.value) return;
+    slotsEl.textContent = '';
+    const plan = schedulePlan();
+    const { slots, due, dueKeys, fresh, dayQ, eveQ, assigned, di, ei } = plan;
+
+    if (!slots.length) {
+      slotsEl.append(el('div', 'empty', 'No calling windows left on this day — pick another date.'));
+      schedSummaryEl.textContent = '';
+      return;
+    }
+    if (!due.length && !fresh.length) {
+      slotsEl.append(el('div', 'empty', 'Nothing tagged "To call" under the current region/need filters.'));
+      schedSummaryEl.textContent = '';
+      return;
+    }
 
     let lastKind = null;
+    let group = null;   // each window's slots sit in their own list under the window header
     const frag = document.createDocumentFragment();
     for (const { s, lead } of assigned) {
       if (s.kind !== lastKind) {
         lastKind = s.kind;
-        const h = document.createElement('div'); h.className = 'windowhdr';
-        h.textContent = WINDOW_LABEL[s.kind];
-        frag.append(h);
+        frag.append(el('div', 'windowhdr', WINDOW_LABEL[s.kind]));
+        group = el('div', 'slotgroup');
+        frag.append(group);
       }
-      const row = document.createElement('div'); row.className = 'slot';
-      const time = document.createElement('span'); time.className = 'time';
-      time.textContent = new Date(s.t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-      const who = document.createElement('div'); who.className = 'who';
-      const nm = document.createElement('b'); nm.textContent = lead.name;
-      const chipEl = document.createElement('span');
-      chipEl.className = 'needchip need-' + lead.need; chipEl.textContent = lead.need;
+      const row = el('div', 'slot' + (lead.dl || (lead.brk && !/Newly listed/.test(lead.brk)) ? ' sev-red' : dueKeys.has(keyOf(lead)) ? ' sev-amber' : ''));
+      const time = el('span', 'time', new Date(s.t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }));
+      const who = el('div', 'who');
+      const nm = el('b', null, lead.name);
+      const chipEl = el('span', 'needchip need-' + lead.need, lead.need);
       chipEl.style.marginLeft = '8px';
       who.append(nm, chipEl);
-      if (dueKeys.has(keyOf(lead))) { const f = document.createElement('span'); f.className = 'fchip'; f.textContent = 'follow-up'; who.append(f); }
-      const meta = document.createElement('div'); meta.className = 'meta';
-      meta.textContent = lead.town + ', ' + lead.st + ' · ' + lead.vertical + ' ';
-      const slotSite = (trackState[keyOf(lead)] && trackState[keyOf(lead)].w) || lead.website;
-      if (slotSite) {
-        const sl = document.createElement('a');
-        sl.href = slotSite; sl.target = '_blank'; sl.rel = 'noopener';
-        sl.textContent = slotSite.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
-        meta.append('· ', sl);
-      }
+      if (dueKeys.has(keyOf(lead))) who.append(el('span', 'fchip', 'follow-up'));
+      const meta = el('div', 'meta', lead.town + ', ' + lead.st + ' · ' + lead.vertical + ' ');
+      const slotSite = siteOf(lead);
+      if (slotSite) meta.append('· ', extLink(slotSite, hostLabel(slotSite), ''));
       who.append(meta);
-      const ol = document.createElement('div'); ol.className = 'openline';
-      ol.textContent = makePrep(lead).opener.slice(0, 170) + '…';
-      who.append(ol);
-      const ph = document.createElement('span'); ph.className = 'phone';
-      const pa = document.createElement('a'); pa.href = 'tel:' + lead.phone.replace(/[^+\d]/g, ''); pa.textContent = lead.phone;
+      who.append(el('div', 'openline', makePrep(lead).opener.slice(0, 170) + '…'));
+      const ph = el('span', 'phone');
+      const pa = el('a', null, lead.phone); pa.href = telOf(lead);
       ph.append(pa);
-      const outc = document.createElement('div'); outc.className = 'outc';
+      const outc = el('div', 'outc');
       const OUTCOMES = [['noanswer', 'N/A'], ['callback', 'Call back'], ['interested', 'Interested'], ['bad', 'Bad #'], ['gone', 'Closed']];
       for (const [sk, label] of OUTCOMES) {
-        const ob = document.createElement('button'); ob.className = 'minibtn'; ob.textContent = label;
+        const ob = el('button', 'minibtn', label);
         ob.title = 'Mark ' + ST_LABEL[sk] + ' and stay on the schedule';
         ob.addEventListener('click', () => {
           outc.querySelectorAll('button').forEach((x) => { x.disabled = true; });
           saveLead(keyOf(lead), { s: sk }).then(() => {
             row.classList.add('done');
             outc.textContent = '';
-            const chipD = document.createElement('span');
-            chipD.className = 'stchip st-' + sk; chipD.textContent = ST_LABEL[sk];
-            outc.append(chipD);
+            outc.append(el('span', 'stchip st-' + sk, ST_LABEL[sk]));
             if (sk === 'noanswer' || sk === 'callback') {
               for (const [days, lab] of [[3, '+3d'], [7, '+1w']]) {
-                const qb = document.createElement('button'); qb.className = 'minibtn'; qb.textContent = lab;
+                const qb = el('button', 'minibtn', lab);
                 qb.title = 'Set follow-up date';
                 qb.addEventListener('click', () => {
                   saveLead(keyOf(lead), { d: plusDays(days) }).then(() => {
                     qb.textContent = '✓ ' + plusDays(days).slice(5).replace('-', '/');
                     qb.disabled = true;
-                  });
+                  }).catch(() => {});
                 });
                 outc.append(qb);
               }
             }
-          });
+          }).catch(() => { outc.querySelectorAll('button').forEach((x) => { x.disabled = false; }); });
         });
         outc.append(ob);
       }
-      const open = document.createElement('button'); open.className = 'minibtn'; open.textContent = 'Prep';
+      const open = el('button', 'minibtn', 'Prep');
       open.title = 'Full call brief + notes, right here';
       open.addEventListener('click', () => {
         const next = row.nextElementSibling;
         if (next && next.classList.contains('slotpanel')) { next.remove(); open.textContent = 'Prep'; return; }
         document.querySelectorAll('.slotpanel').forEach((p) => {
-          const btn = p.previousElementSibling?.querySelector('.minibtn:last-of-type');
+          const btn = p.previousElementSibling?.querySelector(':scope > .minibtn');
           if (btn) btn.textContent = 'Prep';
           p.remove();
         });
-        const panel = document.createElement('div'); panel.className = 'slotpanel';
+        const panel = el('div', 'slotpanel');
         panel.append(buildLeadPanel(lead));
         row.insertAdjacentElement('afterend', panel);
         open.textContent = 'Close';
       });
       row.append(time, who, outc, ph, open);
-      frag.append(row);
+      group.append(row);
     }
     slotsEl.append(frag);
 
@@ -1710,8 +2058,265 @@
       (remaining > 0 ? ' · ' + remaining + ' more roll to the next day' : '');
   }
 
+  // ---- call mode: the day's schedule, one lead at a time ----
+  let callQueue = [];
+  let callIdx = 0;
+  let callSource = 'schedule';
+  let callStart = 0;
+  let callTimerT = null;
+  let callNotes = null;      // {d, ta, meta}
+  let undoT = null;
+  let pendingUndo = null;
+  const UNDO_MS = 1500;
+  const undoEl = $('undo');
+
+  function startCallMode() {
+    if (!(TRACKING && unlocked)) { showToast('Unlock the board to start calling'); return; }
+    closePrep(); closeFilters();
+    const plan = schedulePlan();
+    let queue = plan.assigned.map((a) => a.lead);
+    callSource = 'schedule';
+    if (!queue.length) { queue = filtered(); callSource = 'board'; }
+    if (!queue.length) { showToast('Nothing to call under the current filters'); return; }
+    callQueue = queue;
+    callIdx = 0;
+    callActive = true;
+    $('boardView').hidden = true; $('schedView').hidden = true;
+    $('tabs').hidden = true; $('todayStrip').hidden = true; $('learnStrip').hidden = true;
+    $('callMode').hidden = false;
+    showCall();
+  }
+  function exitCallMode(reveal) {
+    if (!callActive) return;
+    flushCallNotes();
+    const cur = callQueue[Math.min(callIdx, callQueue.length - 1)];
+    callActive = false;
+    clearInterval(callTimerT); callTimerT = null;
+    hideUndo();
+    $('callMode').hidden = true; $('callCard').textContent = '';
+    $('tabs').hidden = !unlocked;
+    if (unlocked) { renderToday(); renderLearn(); }
+    $('boardView').hidden = state.view !== 'leads';
+    $('schedView').hidden = state.view !== 'schedule';
+    if (reveal !== false && cur) {
+      if (state.view !== 'leads') { state.view = 'leads'; $('tabLeads').setAttribute('aria-selected', 'true'); $('tabSched').setAttribute('aria-selected', 'false'); $('boardView').hidden = false; $('schedView').hidden = true; }
+      const r = revealLead(cur);
+      if (r) r.focus({ preventScroll: true }); else render();
+    } else render();
+  }
+  $('callExit').addEventListener('click', () => exitCallMode(true));
+
+  function flushCallNotes() {
+    if (!callNotes) return;
+    const { d, ta, meta } = callNotes;
+    callNotes = null;
+    if (ta.value !== sentNote(keyOf(d))) saveLead(keyOf(d), { n: ta.value }, meta).then(() => updateRowChip(d)).catch(() => {});
+  }
+  function fmtElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }
+  function showCall() {
+    flushCallNotes();
+    clearInterval(callTimerT);
+    const card = $('callCard'); card.textContent = '';
+    const n = callQueue.length;
+    const prog = $('callProg');
+    if (callIdx >= n) {
+      prog.textContent = n + ' of ' + n + (callSource === 'schedule' ? ' today' : ' on the board');
+      $('callBarFill').style.width = '100%';
+      $('callTimer').textContent = '--:--';
+      const done = el('div', 'cdone');
+      done.append(el('h2', null, 'That’s the list'), el('p', null, n + ' lead' + (n === 1 ? '' : 's') + ' worked through. Change the filters or the schedule day for more.'));
+      const nav = el('div', 'cnav'); nav.style.justifyContent = 'center';
+      const back = el('button', 'btn', 'Back'); back.addEventListener('click', () => { callIdx = Math.max(0, n - 1); showCall(); });
+      const exit = el('button', 'btn primary'); exit.append('Back to the board', el('kbd', null, 'Esc'));
+      exit.addEventListener('click', () => exitCallMode(true));
+      nav.append(back, exit); done.append(nav);
+      card.append(done);
+      return;
+    }
+    const d = callQueue[callIdx];
+    const key = keyOf(d);
+    prog.textContent = (callIdx + 1) + ' of ' + n + (callSource === 'schedule' ? ' today' : ' on the board');
+    $('callBarFill').style.width = Math.round((callIdx / n) * 100) + '%';
+    callStart = Date.now();
+    const timer = $('callTimer');
+    timer.textContent = '00:00';
+    callTimerT = setInterval(() => { timer.textContent = fmtElapsed(Date.now() - callStart); }, 1000);
+
+    const p = makePrep(d);
+    const cardEl = el('div', 'ccard');
+    const L = el('div', 'cl');
+    const R = el('div', 'cr');
+
+    L.append(el('h2', 'cname', d.name));
+    const meta = el('div', 'cmeta');
+    meta.append(el('span', null, d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '')));
+    meta.append(el('span', 'vert', d.vertical));
+    if (d.r) { const st = el('span', 'rstar', d.r + '★' + (d.rc ? ' · ' + d.rc + ' reviews' : '')); meta.append(st); }
+    meta.append(el('span', 'pill need-' + d.need, d.need));
+    if (d.confidence === 'Verify') meta.append(el('span', 'pill verify', 'verify'));
+    badgesFor(d).forEach((b) => meta.append(b));
+    const sc = el('span', 'scores');
+    const s1 = el('span'); s1.append(el('i', null, 'WEB'), el('b', null, String(d.wScore)));
+    const s2 = el('span'); s2.append(el('i', null, 'IT'), el('b', null, String(d.itScore)));
+    sc.append(s1, s2); meta.append(sc);
+    L.append(meta);
+
+    const ph = el('a', 'cphone', d.phone); ph.href = telOf(d);
+    L.append(ph);
+    if (d.pm) L.append(el('p', 'calt', 'Second number in listings: ' + d.pm));
+
+    const look = el('div', 'clook');
+    look.append(...lookFirst(d).childNodes);
+    L.append(look);
+
+    const tm = timingOf(d);
+    if (tm) { const s = el('div', 'csec'); s.append(el('h3', null, 'Timing'), el('p', tm.hot ? 'timing' : 'warn', tm.text)); L.append(s); }
+
+    const opS = el('div', 'csec');
+    opS.append(el('h3', null, 'Open with'));
+    const cl = el('div', 'copyline'); cl.append(el('p', null, p.opener), copyBtn(p.opener));
+    opS.append(cl); L.append(opS);
+
+    const tpS = el('div', 'csec');
+    tpS.append(el('h3', null, 'Talking points'));
+    const ul = el('ul'); for (const pt of p.points.slice(0, 5)) ul.append(el('li', null, pt));
+    tpS.append(ul); L.append(tpS);
+
+    const piS = el('div', 'csec'); piS.append(el('h3', null, 'Pitch'), el('p', null, p.pitch)); L.append(piS);
+
+    const so = stillOpen(d);
+    const soS = el('div', 'csec'); soS.append(el('h3', null, 'Still open?'), el('p', so.warn ? 'warn' : '', so.text)); L.append(soS);
+    const whoS = el('div', 'csec'); whoS.append(el('h3', null, 'Who to ask for'), el('p', d.multi ? 'warn' : '', p.who + ' ' + p.when)); L.append(whoS);
+
+    // right column: state, outcomes, notes, send, nav
+    const stS = el('div');
+    stS.append(el('h3', null, 'Right now'));
+    const cs = el('div', 'cstate');
+    const prog2 = el('span', 'prog'); fillProgressCell(prog2, d); cs.append(prog2);
+    if (noteOf(d)) { const nt = el('span', null, 'has notes'); cs.append(nt); }
+    stS.append(cs);
+    stS.querySelector('h3').className = 'sr';
+    R.append(stS);
+
+    const oS = el('div');
+    oS.append(el('h3', null, 'Outcome'));
+    oS.querySelector('h3').style.cssText = 'font:600 11px/1.4 Barlow,sans-serif;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin-bottom:6px';
+    const grid = el('div', 'outcomes');
+    HOTKEY_ORDER.forEach((sk, i) => {
+      const b = el('button', 'stbtn');
+      b.append(ST_LABEL[sk], el('kbd', null, String(i + 1)));
+      b.setAttribute('aria-pressed', String(stOf(d) === sk));
+      b.addEventListener('click', () => callOutcome(sk));
+      grid.append(b);
+    });
+    oS.append(grid);
+    const fuRow = el('div', 'furow'); fuRow.style.marginTop = '8px';
+    const fuIn = el('input'); fuIn.type = 'date'; fuIn.value = dueOf(d); fuIn.setAttribute('aria-label', 'Follow-up date');
+    fuIn.addEventListener('change', () => saveLead(key, { d: fuIn.value }).then(() => { updateRowChip(d); fillProgressCell(prog2, d); }).catch(() => {}));
+    const q3 = el('button', 'minibtn', '+3d'); q3.addEventListener('click', () => { fuIn.value = plusDays(3); fuIn.dispatchEvent(new Event('change')); });
+    const q7 = el('button', 'minibtn', '+1 week'); q7.addEventListener('click', () => { fuIn.value = plusDays(7); fuIn.dispatchEvent(new Event('change')); });
+    fuRow.append(el('span', null, 'Follow up:'), fuIn, q3, q7);
+    oS.append(fuRow);
+    R.append(oS);
+
+    const nS = el('div');
+    const nh = el('h3', null, 'Notes'); nh.style.cssText = 'font:600 11px/1.4 Barlow,sans-serif;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin-bottom:6px';
+    const ta = el('textarea', 'cnotes');
+    ta.placeholder = 'Who you talked to, what they said, next step… (saves when you leave the box)';
+    ta.value = noteOf(d);
+    const nmeta = el('div', 'edmeta', (trackState[key] && trackState[key].t) ? 'Last updated ' + new Date(trackState[key].t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not contacted yet');
+    ta.addEventListener('blur', () => {
+      if (ta.value === sentNote(key)) return;
+      saveLead(key, { n: ta.value }, nmeta).then(() => { updateRowChip(d); fillProgressCell(prog2, d); }).catch(() => {});
+    });
+    callNotes = { d, ta, meta: nmeta };
+    nS.append(nh, ta, nmeta);
+    R.append(nS);
+
+    const sS = el('div');
+    const sh = el('h3', null, 'Send the checkup'); sh.style.cssText = nh.style.cssText;
+    const send = el('div', 'csend');
+    if (d.slug) {
+      const sms = el('a', 'minibtn', 'Text it'); sms.href = smsHrefOf(d);
+      sms.addEventListener('click', () => logCheckupSent(d, 'SMS', ta, nmeta));
+      const em = el('a', 'minibtn', 'Email it'); em.href = mailtoOf(d, '');
+      em.addEventListener('click', () => logCheckupSent(d, 'email', ta, nmeta));
+      send.append(sms, em, copyBtn(checkupUrlOf(d), 'Copy link'));
+    } else {
+      const em = el('a', 'minibtn', 'Email draft'); em.href = mailtoOf(d, '');
+      send.append(em, el('span', 'edmeta', 'No checkup page for this lead.'));
+    }
+    send.append(copyBtn(voicemailOf(d), 'Copy voicemail'));
+    sS.append(sh, send);
+    R.append(sS);
+
+    const nav = el('div', 'cnav');
+    const back = el('button', 'btn sm'); back.append('Back', el('kbd', null, '←')); back.disabled = callIdx === 0;
+    back.addEventListener('click', callBack);
+    const skip = el('button', 'btn sm'); skip.append('Skip', el('kbd', null, 'Space'));
+    skip.addEventListener('click', callSkip);
+    const more = el('button', 'btn sm', 'Full prep…');
+    more.title = 'Every prep row: gatekeeper play, email draft, stack, reputation';
+    more.addEventListener('click', () => openPrep(d, more));
+    const sp = el('span', 'spacer');
+    nav.append(back, skip, sp, more);
+    R.append(nav);
+
+    cardEl.append(L, R);
+    card.append(cardEl);
+    if (openKey) openPrep(d, null);
+    window.scrollTo({ top: 0 });
+  }
+  function callSkip() { if (!callActive || callIdx >= callQueue.length) return; callIdx++; showCall(); }
+  function callBack() { if (!callActive || callIdx === 0) return; callIdx--; showCall(); }
+  function callOutcome(sk) {
+    if (!callActive || callIdx >= callQueue.length) return;
+    const d = callQueue[callIdx];
+    const prev = stOf(d);
+    const at = callIdx;
+    // One body carries the status and the live notes value, so the status save can
+    // never overwrite a note that is still in flight.
+    const n = callNotes && callNotes.d === d ? callNotes.ta.value : undefined;
+    callNotes = null;
+    saveLead(keyOf(d), { s: sk, ...(n !== undefined ? { n } : {}) }).then(() => updateRowChip(d)).catch(() => {});
+    pendingUndo = { d, prev, at };
+    showUndo(ST_LABEL[sk] + ' — ' + d.name);
+    callIdx++;
+    showCall();
+  }
+  function showUndo(msg) {
+    $('undoMsg').textContent = msg;
+    undoEl.classList.add('show');
+    clearTimeout(undoT);
+    undoT = setTimeout(hideUndo, UNDO_MS);
+  }
+  function hideUndo() { undoEl.classList.remove('show'); pendingUndo = null; }
+  function doUndo() {
+    if (!pendingUndo) return;
+    const { d, prev, at } = pendingUndo;
+    hideUndo();
+    saveLead(keyOf(d), { s: prev }).then(() => updateRowChip(d)).catch(() => {});
+    if (callActive) { callIdx = at; showCall(); }
+    showToast('Undone — back to ' + ST_LABEL[prev]);
+  }
+  $('undoBtn').addEventListener('click', doUndo);
+  function callKeys(e) {
+    // Space on a focused button/link activates that control (outcome, Undo, Full prep…);
+    // it only means Skip when nothing interactive has focus.
+    const onCtl = !!e.target.closest('button, a, input, select, textarea');
+    if (e.key === ' ' && onCtl) return;
+    if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); callSkip(); return; }
+    if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); callBack(); return; }
+    if (e.key === 'z' || e.key === 'Z') { if (pendingUndo) { e.preventDefault(); doUndo(); } return; }
+    const sk = HOTKEY_ORDER[parseInt(e.key, 10) - 1];
+    if (sk) { e.preventDefault(); callOutcome(sk); }
+  }
+
   // ---- export (current filters, with progress + notes) ----
-  document.getElementById('exportBtn').addEventListener('click', () => {
+  $('exportBtn').addEventListener('click', () => {
     const rows = filtered();
     const header = ['Region', 'Town', 'State', 'Business', 'Vertical', 'Need', 'Confidence', 'Web score', 'IT score', 'Evidence', 'Phone', 'Website', 'Google rating', 'Reviews', 'Progress', 'Follow-up', 'Notes'];
     const esc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
@@ -1727,23 +2332,51 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   });
 
-  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  $('printBtn').addEventListener('click', () => window.print());
 
-  // Desktop hotkeys: N = next lead; 1–8 set status on the open lead's editor.
+  // ---- keyboard ----
+  // Esc closes whatever is on top (field → filters → prep → call mode). C starts
+  // calling, N = next lead, / = search, ↑↓ move the selection, Enter opens prep,
+  // 1–8 set status on the open lead (or the lead on the call card).
   document.addEventListener('keydown', (e) => {
-    if (e.target.closest('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    const inField = e.target.closest('input, textarea, select, [contenteditable="true"]');
+    if (e.key === 'Escape') {
+      if (inField) { e.target.blur(); return; }
+      if (filtersOpen) { e.preventDefault(); closeFilters(); return; }
+      if (openKey) { e.preventDefault(); closePrep(); return; }
+      if (callActive) { e.preventDefault(); exitCallMode(true); return; }
+      if (state.sel) { selectRow(null, false); }
+      return;
+    }
+    if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === '/') { e.preventDefault(); q.focus(); q.select(); return; }
+    if (callActive) { callKeys(e); return; }
+    if (filtersOpen) return;
+    if (e.key === 'c' || e.key === 'C') {
+      // startCallMode owns the locked case: it toasts "Unlock the board…" instead of starting
+      if (TRACKING) { e.preventDefault(); startCallMode(); }
+      return;
+    }
     if (e.key === 'n' || e.key === 'N') {
-      const b = document.getElementById('nextBtn');
+      const b = $('nextBtn');
       if (!b.hidden) { e.preventDefault(); b.click(); }
       return;
     }
-    const order = ['noanswer', 'callback', 'interested', 'quoted', 'won', 'lost', 'bad', 'gone'];
-    const sk = order[parseInt(e.key, 10) - 1];
+    const inDrawer = !!e.target.closest('#prepDrawer, #filterDrawer');
+    if (state.view === 'leads') {
+      if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); moveSel(1); return; }
+      if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); moveSel(-1); return; }
+      if (e.key === 'Enter') {
+        if (inDrawer) return;   // Enter on a drawer button/link/field acts on that control
+        const d = selected();
+        if (d && TRACKING && unlocked) { e.preventDefault(); if (openKey === keyOf(d)) closePrep(); else openPrep(d, rowsEl.querySelector('.row.sel')); }
+        return;
+      }
+    }
+    const sk = HOTKEY_ORDER[parseInt(e.key, 10) - 1];
     if (sk && openKey) {
-      const ed = document.querySelector('tr.edrow');
-      if (!ed) return;
       const idx = STATUSES.findIndex((s) => s[0] === sk);
-      const btn = ed.querySelectorAll('.stbtn')[idx];
+      const btn = prepDrawer.querySelectorAll('.stbtn')[idx];
       if (btn) { e.preventDefault(); btn.click(); }
     }
   });
@@ -1751,8 +2384,11 @@
   function refresh() {
     state.page = 1;
     writeHash();
+    renderActiveChips();
     render();
     if (state.view === 'schedule') renderSchedule();
   }
+  sortSel.value = sortValue();
+  renderActiveChips();
   render();
 </script>
