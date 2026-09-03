@@ -1,709 +1,827 @@
 <meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C2410C'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%230B1220' stroke-width='3'/%3E%3C/svg%3E">
 <title>Ignite Lead Radar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
-  /* Dark "ink" ground is the default look; the light palette maps the same tokens
-     and switches in via prefers-color-scheme (or data-theme="light" on the root). */
+  /* Dark ops ground is the default; the light palette maps the same tokens and
+     switches in via prefers-color-scheme (or data-theme="light" on the root). */
   :root {
-    --bg: #1B1714;
-    --surface: #241F1B;
-    --surface-2: #2D2723;
-    --surface-3: #37302A;
-    --ink: #EDE6DF;
-    --ink-soft: #A89C90;
-    --ink-mute: #7E7369;
-    --line: #3A332D;
-    --line-strong: #4B433B;
-    --accent: #E0561F;
-    --accent-ink: #FFF7F2;
-    --accent-soft: rgba(224, 86, 31, .14);
-    --focus: #F08A5B;
-    --red: #F27D62;     --red-bg: #43231C;
-    --amber: #E3B44C;   --amber-bg: #3A311A;
-    --green: #5FC2A9;   --green-bg: #173832;
-    --blue: #85B4DC;    --blue-bg: #1F3245;
-    --violet: #B49BE0;  --violet-bg: #2E2540;
-    --need-both: #F0956B; --need-both-bg: #45291B;
-    --need-web: #85B4DC;  --need-web-bg: #1F3245;
-    --need-it: #6FC4B5;   --need-it-bg: #173832;
-    --verify: #D6B75E;    --verify-bg: #3A311A;
-    --quoted: #B49BE0;    --quoted-bg: #2E2540;
-    --row-hover: #2A2420;
-    --ok: #5FC2A9;
-    --err: #F27D62;
-    --shadow: 0 18px 48px rgba(0, 0, 0, .55);
+    --bg: #0B1220;
+    --surface: #111A2B;
+    --surface-2: #16213A;
+    --line: #223049;
+    --ink: #E6EDF7;
+    --ink-soft: #93A2B8;
+    --ink-mute: #5B6B82;
+    --accent: #2DD4BF;
+    --accent-ink: #99F6E4;
+    --accent-soft: rgba(45, 212, 191, .12);
+    --on-accent: #062B27;
+    --brand: #C2410C;
+    --red: #F87171;   --red-bg: rgba(248, 113, 113, .14); --on-red: #0B1220;
+    --amber: #FBBF24; --amber-bg: rgba(251, 191, 36, .14);
+    --green: #34D399; --green-bg: rgba(52, 211, 153, .14);
+    --blue: #60A5FA;  --blue-bg: rgba(96, 165, 250, .14);
+    --shadow: 0 24px 64px rgba(0, 0, 0, .55);
+    --r: 8px;
     color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
-      --bg: #F6F2EE;
+      --bg: #F5F7FB;
       --surface: #FFFFFF;
-      --surface-2: #F1EBE5;
-      --surface-3: #E8E0D8;
-      --ink: #26211D;
-      --ink-soft: #6B6259;
-      --ink-mute: #8E8379;
-      --line: #E3DAD1;
-      --line-strong: #CFC4B9;
-      --accent: #C2410C;
-      --accent-ink: #FFFFFF;
-      --accent-soft: rgba(194, 65, 12, .10);
-      --focus: #C2410C;
-      --red: #B3400F;     --red-bg: #F7E3D7;
-      --amber: #8A6D1C;   --amber-bg: #F5ECD4;
-      --green: #177E70;   --green-bg: #DCF0EB;
-      --blue: #2F6FAB;    --blue-bg: #E1ECF5;
-      --violet: #6D4FA1;  --violet-bg: #EAE3F5;
-      --need-both: #B3400F; --need-both-bg: #F7E3D7;
-      --need-web: #2F6FAB;  --need-web-bg: #E1ECF5;
-      --need-it: #177E70;   --need-it-bg: #DCF0EB;
-      --verify: #8A6D1C;    --verify-bg: #F5ECD4;
-      --quoted: #6D4FA1;    --quoted-bg: #EAE3F5;
-      --row-hover: #F4EDE6;
-      --ok: #177E70;
-      --err: #B3400F;
-      --shadow: 0 18px 48px rgba(38, 33, 29, .22);
+      --surface-2: #EEF2F7;
+      --line: #E3E8F0;
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --ink-mute: #94A3B8;
+      --accent: #0F766E;
+      --accent-ink: #115E59;
+      --accent-soft: rgba(15, 118, 110, .10);
+      --on-accent: #FFFFFF;
+      --red: #B91C1C;   --red-bg: rgba(185, 28, 28, .10); --on-red: #FFFFFF;
+      --amber: #92400E; --amber-bg: rgba(146, 64, 14, .12);
+      --green: #065F46; --green-bg: rgba(6, 95, 70, .12);
+      --blue: #1D4ED8;  --blue-bg: rgba(29, 78, 216, .10);
+      --shadow: 0 24px 64px rgba(15, 23, 42, .18);
       color-scheme: light;
     }
   }
   :root[data-theme="light"] {
-    --bg: #F6F2EE;
+    --bg: #F5F7FB;
     --surface: #FFFFFF;
-    --surface-2: #F1EBE5;
-    --surface-3: #E8E0D8;
-    --ink: #26211D;
-    --ink-soft: #6B6259;
-    --ink-mute: #8E8379;
-    --line: #E3DAD1;
-    --line-strong: #CFC4B9;
-    --accent: #C2410C;
-    --accent-ink: #FFFFFF;
-    --accent-soft: rgba(194, 65, 12, .10);
-    --focus: #C2410C;
-    --red: #B3400F;     --red-bg: #F7E3D7;
-    --amber: #8A6D1C;   --amber-bg: #F5ECD4;
-    --green: #177E70;   --green-bg: #DCF0EB;
-    --blue: #2F6FAB;    --blue-bg: #E1ECF5;
-    --violet: #6D4FA1;  --violet-bg: #EAE3F5;
-    --need-both: #B3400F; --need-both-bg: #F7E3D7;
-    --need-web: #2F6FAB;  --need-web-bg: #E1ECF5;
-    --need-it: #177E70;   --need-it-bg: #DCF0EB;
-    --verify: #8A6D1C;    --verify-bg: #F5ECD4;
-    --quoted: #6D4FA1;    --quoted-bg: #EAE3F5;
-    --row-hover: #F4EDE6;
-    --ok: #177E70;
-    --err: #B3400F;
-    --shadow: 0 18px 48px rgba(38, 33, 29, .22);
+    --surface-2: #EEF2F7;
+    --line: #E3E8F0;
+    --ink: #0F172A;
+    --ink-soft: #475569;
+    --ink-mute: #94A3B8;
+    --accent: #0F766E;
+    --accent-ink: #115E59;
+    --accent-soft: rgba(15, 118, 110, .10);
+    --on-accent: #FFFFFF;
+    --red: #B91C1C;   --red-bg: rgba(185, 28, 28, .10); --on-red: #FFFFFF;
+    --amber: #92400E; --amber-bg: rgba(146, 64, 14, .12);
+    --green: #065F46; --green-bg: rgba(6, 95, 70, .12);
+    --blue: #1D4ED8;  --blue-bg: rgba(29, 78, 216, .10);
+    --shadow: 0 24px 64px rgba(15, 23, 42, .18);
     color-scheme: light;
   }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html { scroll-padding-top: 12px; }
+  html { scroll-padding-top: 72px; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font: 400 15px/1.45 "Barlow", "Segoe UI", system-ui, sans-serif;
+    font: 400 15px/1.5 "Manrope", "Segoe UI", system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
   }
   a { color: var(--blue); }
-  h1, h2, h3 { margin: 0; }
-  .mono { font-family: "IBM Plex Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
-  .disp { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+  h1, h2, h3, p { margin: 0; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .ico.s { width: 14px; height: 14px; }
+  .ico.l { width: 20px; height: 20px; }
   kbd {
-    display: inline-block; min-width: 18px; padding: 1px 5px; margin-left: 6px;
-    border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 3px;
-    background: var(--surface-2); color: var(--ink-soft);
-    font: 500 11px/1.3 "IBM Plex Mono", Consolas, monospace; text-align: center; vertical-align: 1px;
+    display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; margin-left: 8px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--bg); color: var(--ink-soft);
+    font: 500 11px/1 "JetBrains Mono", Consolas, monospace;
   }
-  .primary kbd { background: rgba(0, 0, 0, .18); border-color: rgba(0, 0, 0, .25); color: var(--accent-ink); }
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .primary kbd, [aria-pressed="true"] kbd { background: rgba(0, 0, 0, .18); border-color: rgba(0, 0, 0, .12); color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .lbl { font: 600 12px/1.3 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 
-  .wrap { max-width: 1320px; margin: 0 auto; padding: 18px 20px 48px; }
-  /* On wide screens the board sits beside the open prep drawer instead of under it,
-     so the toolbar (Filters button included) and every row stay clickable. The
-     padding is exactly what the 520px drawer overlaps: 540px while the wrap fills
-     the viewport, 1200px − half the viewport once the wrap is centered, never < 20px. */
+  /* ---- shell: rail + main ---- */
+  .app { display: flex; min-height: 100vh; }
+  .rail {
+    position: sticky; top: 0; height: 100vh; width: 72px; flex: none; z-index: 30;
+    display: flex; flex-direction: column; gap: 4px; padding: 12px 10px;
+    background: var(--surface); border-right: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 6px; margin-bottom: 10px; }
+  .mark { width: 22px; height: 22px; border-radius: 6px; flex: none; background: var(--brand); position: relative; }
+  .mark::after { content: ""; position: absolute; left: 6px; top: 6px; width: 10px; height: 10px; border-radius: 3px; background: var(--surface); }
+  .brand b { display: none; font: 700 15px/1.1 "Manrope", sans-serif; white-space: nowrap; }
+  .brand small { display: none; font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  .railnav { display: flex; flex-direction: column; gap: 4px; }
+  .railfoot { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
+  .ritem {
+    display: flex; align-items: center; gap: 12px; width: 100%; height: 44px; padding: 0 14px;
+    border: 1px solid transparent; border-radius: var(--r); background: transparent; color: var(--ink-soft);
+    font: 600 14px/1 "Manrope", sans-serif; cursor: pointer; text-align: left; white-space: nowrap;
+    transition: background .12s ease, color .12s ease;
+  }
+  .ritem .ico { width: 20px; height: 20px; }
+  .ritem span { display: none; }
+  .ritem kbd { display: none; margin-left: auto; }
+  .ritem:hover { background: var(--surface-2); color: var(--ink); }
+  .ritem[aria-selected="true"], .ritem.on { background: var(--accent-soft); color: var(--accent); }
+  .ritem.lockitem { color: var(--amber); }
+  .ritem.lockitem.ok { color: var(--green); }
+  @media (min-width: 1280px) {
+    .rail { width: 220px; padding: 12px 12px; }
+    .brand b, .brand small { display: block; }
+    .brand { flex-direction: row; }
+    .brand .btxt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .ritem span, .ritem kbd { display: inline-flex; }
+  }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   @media (min-width: 1100px) {
-    body.prep-open .wrap { padding-right: clamp(20px, calc(1200px - 50%), 540px); }
+    body.prep-open .main { padding-right: min(520px, 45vw); }
   }
 
-  /* ---- header ---- */
-  header.top {
-    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px;
-    padding-bottom: 12px; border-bottom: 2px solid var(--ink);
+  /* ---- top bar ---- */
+  .topbar {
+    position: sticky; top: 0; z-index: 25;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+    padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line);
   }
-  .brand h1 {
-    font: 700 34px/1 "Barlow Condensed", "Arial Narrow", sans-serif;
-    letter-spacing: .02em; text-transform: uppercase;
+  body.call-on .topbar { display: none; }
+  .search { position: relative; flex: 1 1 200px; min-width: 180px; max-width: 340px; }
+  .search .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); pointer-events: none; }
+  .search kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; }
+  #q {
+    width: 100%; height: 40px;
+    border: 1px solid var(--line); border-radius: var(--r);
+    background: var(--bg); color: var(--ink);
+    font: 400 15px/1.2 "Manrope", sans-serif; padding: 0 40px 0 38px;
   }
-  .brand h1 .tick { color: var(--accent); }
-  .brand p { margin: 4px 0 0; color: var(--ink-soft); font-size: 13px; }
-  .scanmeta { margin-left: auto; display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; }
-  .stat { text-align: right; }
-  .stat b { display: block; font: 600 24px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; }
-  .stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
+  #q::placeholder { color: var(--ink-mute); }
+  #q:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  .seg { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); }
+  .seg .chip { border: none; background: transparent; border-radius: 6px; height: 32px; padding: 0 12px; }
+  .seg .chip:hover { background: var(--surface-2); }
+  .seg .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .scanmeta { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  @media (max-width: 1400px) { .scanmeta { margin-left: 0; width: 100%; } }
+  .scanmeta .stat b { font: 600 13px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink); margin-right: 4px; }
+  .scanmeta .stat.hot b { color: var(--red); }
 
-  /* ---- buttons, chips, pills: one system ---- */
+  /* ---- buttons, chips ---- */
   .btn, .chip, .minibtn, .stbtn {
     display: inline-flex; align-items: center; gap: 6px;
-    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
-    font: 500 14px/1 "Barlow", sans-serif; padding: 8px 12px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 600 14px/1 "Manrope", sans-serif; height: 36px; padding: 0 14px; border-radius: var(--r); cursor: pointer;
     text-decoration: none; white-space: nowrap;
-    transition: background .12s, border-color .12s, color .12s;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
   }
-  .btn:hover, .chip:hover, .minibtn:hover, .stbtn:hover { border-color: var(--ink-soft); background: var(--surface-2); }
+  .btn:hover, .chip:hover, .minibtn:hover, .stbtn:hover { background: var(--surface-2); border-color: var(--ink-mute); }
   .btn:disabled, .minibtn:disabled { opacity: .45; cursor: default; }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-  .btn.primary:hover { background: var(--accent); filter: brightness(1.08); }
-  .btn.sm, .minibtn { font-size: 13px; padding: 5px 9px; }
-  .btn.lg { font-size: 16px; padding: 12px 18px; }
-  .btn.ghost { border-color: transparent; background: transparent; }
-  .btn.ghost:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.sm, .minibtn { font-size: 13px; height: 30px; padding: 0 10px; }
+  .btn.lg { font-size: 15px; height: 44px; padding: 0 20px; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-soft); }
+  .btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
   .iconbtn {
+    display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid transparent; background: transparent; color: var(--ink-soft);
-    font: 500 22px/1 "Barlow", sans-serif; width: 34px; height: 34px; border-radius: 4px; cursor: pointer;
+    width: 36px; height: 36px; border-radius: var(--r); cursor: pointer; flex: none;
   }
   .iconbtn:hover { background: var(--surface-2); color: var(--ink); }
-  .chip[aria-pressed="true"], .stbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .chip .n { opacity: .7; margin-left: 2px; font-size: 12px; }
-  .chip.due-on { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+  .chip[aria-pressed="true"], .stbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .chip .n { font: 500 12px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink-soft); margin-left: 2px; }
+  .chip[aria-pressed="true"] .n, .stbtn[aria-pressed="true"] .n { color: inherit; opacity: .75; }
+  .chip.due-on { background: var(--amber); border-color: var(--amber); color: #1a1200; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .ctl {
-    border: 1px solid var(--line-strong); border-radius: 4px; padding: 8px 10px;
-    background: var(--surface); color: var(--ink); font: 400 14px/1.2 "Barlow", sans-serif;
+  .ctl, .schedctl {
+    height: 36px; border: 1px solid var(--line); border-radius: var(--r); padding: 0 10px;
+    background: var(--bg); color: var(--ink); font: 500 14px/1.2 "Manrope", sans-serif;
   }
   .ctl::placeholder { color: var(--ink-mute); }
-  .schedctl { border: 1px solid var(--line-strong); border-radius: 4px; padding: 8px 10px; background: var(--surface); color: var(--ink); font: 400 14px/1.2 "Barlow", sans-serif; }
+  .ctl:focus, .schedctl:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  #filtersBtn .n {
+    display: inline-flex; min-width: 20px; height: 20px; padding: 0 6px; justify-content: center; align-items: center;
+    border-radius: 10px; background: var(--accent); color: var(--on-accent); font: 600 11px/1 "JetBrains Mono", Consolas, monospace;
+  }
 
+  /* pills, badges, status chips */
   .pill {
-    display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px;
-    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px;
+    font: 600 12px/1 "Manrope", sans-serif; white-space: nowrap;
   }
-  .need-Both    { color: var(--need-both); background: var(--need-both-bg); }
-  .need-Website { color: var(--need-web);  background: var(--need-web-bg); }
-  .need-IT      { color: var(--need-it);   background: var(--need-it-bg); }
-  .pill.verify { border: 1px dashed var(--verify); color: var(--verify); background: var(--verify-bg); }
-  .needchip { display: inline-flex; padding: 3px 8px; border-radius: 4px; font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
-
+  .need-Both    { color: var(--accent-ink); background: var(--accent-soft); }
+  .need-Website { color: var(--blue);  background: var(--blue-bg); }
+  .need-IT      { color: var(--green); background: var(--green-bg); }
+  .pill.verify { border: 1px dashed var(--amber); color: var(--amber); background: transparent; }
+  .needchip { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 6px; font: 600 11px/1 "Manrope", sans-serif; white-space: nowrap; }
   .badge {
-    display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 3px;
-    font: 600 10px/1.4 "Barlow", sans-serif; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px 0 6px; border-radius: 6px;
+    font: 600 12px/1 "Manrope", sans-serif; white-space: nowrap; border: 1px solid transparent;
   }
-  .badge.bnew { color: var(--blue); border: 1px solid var(--blue); }
-  .badge.bup  { color: var(--accent-ink); background: var(--accent); }
-  .badge.bcl  { color: var(--amber); border: 1px dashed var(--amber); }
-  .badge.bbrk { color: #fff; background: var(--red); }
-  .badge.bdl  { color: #fff; background: var(--red); box-shadow: 0 0 0 2px var(--red-bg); }
-  .badge.bmulti { color: var(--violet); border: 1px solid var(--violet); }
+  .badge.bnew { color: var(--blue); background: var(--blue-bg); }
+  .badge.bup  { color: var(--accent); background: var(--accent-soft); }
+  .badge.bcl  { color: var(--amber); border-color: var(--amber); border-style: dashed; }
+  .badge.bbrk { color: var(--red); background: var(--red-bg); }
+  .badge.bdl  { color: var(--on-red); background: var(--red); }
+  .badge.bmulti { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line); }
   .badge.bexp { color: var(--amber); background: var(--amber-bg); }
-  .rstar { font-size: 12px; color: var(--amber); white-space: nowrap; font-weight: 500; }
-
+  .rstar { font: 500 12px/1 "JetBrains Mono", Consolas, monospace; color: var(--amber); white-space: nowrap; }
   .stchip {
-    display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px;
-    font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .04em; white-space: nowrap;
-    border: 1px solid transparent; text-transform: uppercase;
+    display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px;
+    font: 600 12px/1 "Manrope", sans-serif; white-space: nowrap; border: 1px solid transparent;
   }
-  .st-new        { color: var(--ink-soft); background: var(--surface-3); }
+  .st-new        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line); }
   .st-noanswer   { color: var(--amber); background: var(--amber-bg); }
   .st-callback   { color: var(--blue); background: var(--blue-bg); }
   .st-interested { color: var(--green); background: var(--green-bg); }
-  .st-quoted     { color: var(--violet); background: var(--violet-bg); }
-  .st-won        { color: var(--bg); background: var(--green); }
+  .st-quoted     { color: var(--accent-ink); background: var(--accent-soft); }
+  .st-won        { color: var(--on-accent); background: var(--green); }
   .st-lost       { color: var(--red); background: var(--red-bg); }
-  .st-bad        { color: var(--ink-soft); background: var(--surface-2); border-color: var(--line-strong); border-style: dashed; }
-  .st-gone       { color: var(--red); background: var(--surface-2); border: 1px dashed var(--red); }
+  .st-bad        { color: var(--ink-soft); border-color: var(--line); border-style: dashed; }
+  .st-gone       { color: var(--red); border: 1px dashed var(--red); }
   .notedot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
-  .duetag { font: 500 12px/1.3 "IBM Plex Mono", monospace; color: var(--amber); white-space: nowrap; }
+  .duetag { font: 500 12px/1.3 "JetBrains Mono", Consolas, monospace; color: var(--amber); white-space: nowrap; }
   .duetag.overdue { color: var(--red); font-weight: 600; }
   .duetag.overdue3 { text-decoration: underline; }
 
-  /* ---- tabs ---- */
-  .tabs { display: flex; gap: 0; margin-top: 14px; border-bottom: 1px solid var(--line); }
-  .tab {
-    border: none; border-bottom: 3px solid transparent; background: transparent; color: var(--ink-soft);
-    font: 600 15px/1 "Barlow", sans-serif; padding: 10px 14px; cursor: pointer; margin-bottom: -1px;
-  }
-  .tab:hover { color: var(--ink); }
-  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  /* ---- content ---- */
+  .content { width: 100%; max-width: 1320px; margin: 0 auto; padding: 20px 24px 64px; }
+  .card { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+  .msgcard { padding: 40px 24px; text-align: center; }
+  .msgcard .ico { width: 28px; height: 28px; color: var(--ink-mute); margin-bottom: 10px; }
+  .msgcard h2 { font: 700 18px/1.3 "Manrope", sans-serif; margin-bottom: 4px; }
+  .msgcard p { color: var(--ink-soft); font-size: 14px; }
 
   /* ---- unlock ---- */
-  .unlockbar {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-    border: 1px solid var(--amber); background: var(--amber-bg); color: var(--ink);
-    border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 14px;
-  }
-  .unlockbar b { color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+  .unlockbar { padding: 32px 24px; margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  .unlockbar .ico { width: 28px; height: 28px; color: var(--amber); }
+  .unlockbar b { font: 700 18px/1.3 "Manrope", sans-serif; }
+  .unlockbar > span { color: var(--ink-soft); font-size: 14px; }
+  .unlockbar .pinrow { display: flex; gap: 8px; margin-top: 10px; }
   #keyinput {
-    border: 1px solid var(--line-strong); border-radius: 4px; padding: 7px 10px;
-    background: var(--surface); color: var(--ink); font: 500 15px/1 "IBM Plex Mono", monospace;
-    letter-spacing: .2em; width: 140px;
+    height: 40px; width: 160px; border: 1px solid var(--line); border-radius: var(--r); padding: 0 12px;
+    background: var(--bg); color: var(--ink); font: 500 16px/1 "JetBrains Mono", Consolas, monospace; letter-spacing: .25em;
   }
-  .unlockbar .msg { color: var(--err); font-size: 13px; }
+  #keyinput:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  .unlockbar .msg { color: var(--red); font-size: 13px; min-height: 18px; }
 
-  /* ---- today tiles + learning ---- */
-  .today {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 22px; align-items: center;
-    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
-    padding: 12px 14px; margin-top: 12px;
-  }
-  .tiles { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 8px; }
+  /* ---- today KPI tiles + learning ---- */
+  .today { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px; align-items: stretch; margin-bottom: 12px; container-type: inline-size; }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   .tile {
-    border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 4px;
-    background: var(--surface-2); padding: 8px 12px 7px; min-width: 0;
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--surface);
+    padding: 14px 16px 12px; min-width: 0; position: relative; overflow: hidden;
   }
-  .tile b { display: block; font: 700 30px/1 "Barlow Condensed", "Arial Narrow", sans-serif; }
-  .tile span { display: block; font-size: 11px; line-height: 1.3; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-top: 3px; }
-  .tile small { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
-  .tile.t-due.on { border-left-color: var(--amber); }
+  .tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+  .tile b { display: block; font: 700 28px/1.1 "Manrope", sans-serif; font-variant-numeric: tabular-nums; }
+  .tile span { display: block; font: 600 12px/1.3 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+  .tile small { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile.t-worked.on::before { background: var(--blue); }
+  .tile.t-conv.on::before { background: var(--green); }
+  .tile.t-due.on::before { background: var(--amber); }
   .tile.t-due.on b { color: var(--amber); }
-  .tile.t-dom.on { border-left-color: var(--red); }
+  .tile.t-dom.on::before { background: var(--red); }
   .tile.t-dom.on b { color: var(--red); }
-  .tile.t-conv.on { border-left-color: var(--green); }
-  .tactions { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-  .tsub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-soft); }
-  .tsub b { color: var(--ink); }
+  .tactions { display: flex; flex-direction: column; gap: 8px; align-items: stretch; justify-content: center; }
+  .tsub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-soft); margin-top: -2px; }
+  .tsub b { color: var(--ink); font-family: "JetBrains Mono", Consolas, monospace; font-weight: 600; }
   .tsub .hot b { color: var(--red); }
-  .learn {
-    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
-    border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 6px;
-    background: var(--surface); padding: 9px 14px; margin-top: 8px; font-size: 13px; color: var(--ink-soft);
-  }
-  .learn .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); font-weight: 600; }
-  .learn .tstat b { color: var(--ink); font-size: 15px; }
-  .today .tstat b { color: var(--ink); }
+  .learn { padding: 12px 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+  .learn .lhead { display: flex; align-items: center; gap: 8px; }
+  .learn .tstat b { color: var(--ink); font-family: "JetBrains Mono", Consolas, monospace; }
+  .learn .lrow { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .learn .lrow .v { text-transform: capitalize; color: var(--ink); font-weight: 600; }
+  .learn .lbar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .learn .lbar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .learn .lrow b { font: 600 13px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink); white-space: nowrap; }
 
-  /* ---- toolbar ---- */
-  .toolbar {
-    display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;
-    padding: 14px 0 8px;
-  }
-  #q {
-    flex: 1 1 240px; min-width: 180px; max-width: 360px;
-    border: 1px solid var(--line-strong); border-radius: 4px;
-    background: var(--surface); color: var(--ink);
-    font: 400 15px/1.2 "Barlow", sans-serif; padding: 8px 12px;
-  }
-  #q::placeholder { color: var(--ink-mute); }
-  .toolbar .sep { width: 1px; height: 24px; background: var(--line); margin: 0 2px; }
-  #filtersBtn .n {
-    display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; justify-content: center; align-items: center;
-    border-radius: 9px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 600;
-  }
-  #filtersBtn .n[hidden] { display: none; }
+  /* ---- list bar, active chips ---- */
   .achips { display: flex; flex-wrap: wrap; gap: 6px; }
   .achip {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 6px; height: 28px;
     border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink);
-    font: 500 13px/1 "Barlow", sans-serif; padding: 5px 6px 5px 9px; border-radius: 4px; cursor: pointer;
+    font: 500 13px/1 "Manrope", sans-serif; padding: 0 6px 0 10px; border-radius: 6px; cursor: pointer;
   }
   .achip i { font-style: normal; color: var(--ink-soft); }
   .achip .x { font-size: 15px; line-height: 1; color: var(--accent); }
   .achip:hover .x { color: var(--ink); }
-
-  .listbar {
-    display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
-    padding: 6px 0 8px; font-size: 13px; color: var(--ink-soft);
-  }
+  .listbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 4px 0 10px; font-size: 13px; color: var(--ink-soft); }
   .listbar .grow { flex: 1; }
-  .listbar label { display: inline-flex; gap: 6px; align-items: center; }
-  .listbar select { padding: 6px 8px; font-size: 13px; }
+  .listbar label { display: inline-flex; gap: 8px; align-items: center; }
+  .listbar select { height: 32px; font-size: 13px; }
+  #count { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; }
 
   /* ---- rows ---- */
-  .board { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+  .board { overflow: hidden; }
   .row {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; align-items: start;
-    padding: 10px 14px 10px 11px; border-left: 3px solid transparent; border-bottom: 1px solid var(--line);
-    cursor: default;
+    display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 4px 14px; align-items: start;
+    padding: 12px 16px 12px 13px; border-left: 3px solid transparent; border-bottom: 1px solid var(--line);
+    cursor: default; transition: background .12s ease;
   }
   .row:last-child { border-bottom: none; }
   .row.trackable { cursor: pointer; }
-  .row:hover { background: var(--row-hover); }
+  .row:hover { background: var(--surface-2); }
   .row.sev-red { border-left-color: var(--red); }
   .row.sev-amber { border-left-color: var(--amber); }
   .row.sev-green { border-left-color: var(--green); }
-  .row.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
-  .row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
-  .rmain { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-  .l1 .name { font-weight: 600; font-size: 16px; line-height: 1.25; }
-  .scores { display: inline-flex; gap: 8px; font: 500 13px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--ink-soft); }
-  .scores b { color: var(--ink); font-weight: 500; }
-  .scores i { font-style: normal; font-size: 10px; letter-spacing: .06em; margin-right: 3px; }
-  .l2 { font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+  .row.sel { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--accent); }
+  .row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .av {
+    width: 36px; height: 36px; border-radius: var(--r); display: flex; align-items: center; justify-content: center;
+    font: 700 13px/1 "Manrope", sans-serif; letter-spacing: .02em; color: var(--av); background: var(--av-bg); flex: none; margin-top: 1px;
+  }
+  /* avatar tints by vertical (8 slots, both themes) */
+  .av.c0 { --av: #60A5FA; --av-bg: rgba(96, 165, 250, .16); }
+  .av.c1 { --av: #2DD4BF; --av-bg: rgba(45, 212, 191, .16); }
+  .av.c2 { --av: #34D399; --av-bg: rgba(52, 211, 153, .16); }
+  .av.c3 { --av: #FBBF24; --av-bg: rgba(251, 191, 36, .16); }
+  .av.c4 { --av: #A78BFA; --av-bg: rgba(167, 139, 250, .16); }
+  .av.c5 { --av: #F472B6; --av-bg: rgba(244, 114, 182, .16); }
+  .av.c6 { --av: #FB923C; --av-bg: rgba(251, 146, 60, .16); }
+  .av.c7 { --av: #38BDF8; --av-bg: rgba(56, 189, 248, .16); }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) .av.c0 { --av: #1D4ED8; --av-bg: rgba(29, 78, 216, .12); }
+    :root:not([data-theme="dark"]) .av.c1 { --av: #0F766E; --av-bg: rgba(15, 118, 110, .12); }
+    :root:not([data-theme="dark"]) .av.c2 { --av: #047857; --av-bg: rgba(4, 120, 87, .12); }
+    :root:not([data-theme="dark"]) .av.c3 { --av: #92400E; --av-bg: rgba(146, 64, 14, .12); }
+    :root:not([data-theme="dark"]) .av.c4 { --av: #6D28D9; --av-bg: rgba(109, 40, 217, .12); }
+    :root:not([data-theme="dark"]) .av.c5 { --av: #BE185D; --av-bg: rgba(190, 24, 93, .12); }
+    :root:not([data-theme="dark"]) .av.c6 { --av: #9A3412; --av-bg: rgba(154, 52, 18, .12); }
+    :root:not([data-theme="dark"]) .av.c7 { --av: #075985; --av-bg: rgba(7, 89, 133, .12); }
+  }
+  :root[data-theme="light"] .av.c0 { --av: #1D4ED8; --av-bg: rgba(29, 78, 216, .12); }
+  :root[data-theme="light"] .av.c1 { --av: #0F766E; --av-bg: rgba(15, 118, 110, .12); }
+  :root[data-theme="light"] .av.c2 { --av: #047857; --av-bg: rgba(4, 120, 87, .12); }
+  :root[data-theme="light"] .av.c3 { --av: #92400E; --av-bg: rgba(146, 64, 14, .12); }
+  :root[data-theme="light"] .av.c4 { --av: #6D28D9; --av-bg: rgba(109, 40, 217, .12); }
+  :root[data-theme="light"] .av.c5 { --av: #BE185D; --av-bg: rgba(190, 24, 93, .12); }
+  :root[data-theme="light"] .av.c6 { --av: #9A3412; --av-bg: rgba(154, 52, 18, .12); }
+  :root[data-theme="light"] .av.c7 { --av: #075985; --av-bg: rgba(7, 89, 133, .12); }
+  .rmain { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-height: 22px; }
+  .l1 .name { font-weight: 600; font-size: 15px; line-height: 1.3; }
+  .meters { display: inline-flex; gap: 10px; align-items: center; }
+  .meter { display: inline-flex; align-items: center; gap: 5px; font: 500 12px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink-soft); }
+  .meter i { display: inline-flex; gap: 2px; }
+  .meter i::before, .meter i::after { display: none; }
+  .meter em { display: block; width: 6px; height: 10px; border-radius: 2px; background: var(--line); }
+  .meter em.f { background: var(--accent); }
+  .meter.it em.f { background: var(--green); }
+  .meter b { color: var(--ink); font-weight: 600; }
+  .l2 { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
   .l2 .geo { color: var(--ink); }
   .l2 .geo .vert { text-transform: capitalize; }
   .l2 .why { color: var(--ink-soft); }
-  .l2 .xtra { color: var(--ink-mute); }
-  .rside { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 1px; }
+  .l2 .xtra { color: var(--ink-soft); }
+  .rside { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 2px; }
   .rside .phone {
-    font: 500 15px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--ink); text-decoration: none;
-    border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 500 16px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink); text-decoration: none; white-space: nowrap;
+    transition: color .12s ease;
   }
-  .rside .phone:hover { border-bottom-color: var(--accent); color: var(--accent); }
-  .rside .links { display: flex; gap: 10px; font-size: 13px; white-space: nowrap; }
-  .rside .links a { color: var(--blue); text-decoration: none; }
-  .rside .links a:hover { text-decoration: underline; }
-  .rside .links .site { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-  .empty { padding: 40px; text-align: center; color: var(--ink-soft); }
+  .rside .phone .ico { color: var(--accent); }
+  .rside .phone:hover { color: var(--accent); }
+  .rside .links { display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+  .rside .links a {
+    display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 7px; border-radius: 6px;
+    color: var(--ink-soft); text-decoration: none; font-size: 12px; transition: background .12s ease, color .12s ease;
+  }
+  .rside .links a:hover { background: var(--surface-2); color: var(--ink); }
+  .rside .links .site { max-width: 200px; overflow: hidden; text-overflow: ellipsis; display: inline-block; line-height: 26px; }
+  .rside .links .site .ico { vertical-align: -3px; margin-right: 5px; }
+  .empty { padding: 48px 24px; text-align: center; color: var(--ink-soft); }
+  .empty .ico { width: 28px; height: 28px; color: var(--ink-mute); display: block; margin: 0 auto 10px; }
+  .empty b { display: block; font: 700 16px/1.3 "Manrope", sans-serif; color: var(--ink); margin-bottom: 4px; }
 
   .pager { display: inline-flex; gap: 6px; align-items: center; }
   .pager button {
-    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
-    font: 500 13px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; height: 30px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 600 13px/1 "Manrope", sans-serif; padding: 0 10px; border-radius: 6px; cursor: pointer;
   }
-  .pager button:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .pager button:hover:not(:disabled) { background: var(--surface-2); }
   .pager button:disabled { opacity: .4; cursor: default; }
-  .pager .plabel { font-size: 13px; color: var(--ink-soft); padding: 0 6px; white-space: nowrap; }
-  .pager.bottom { display: flex; justify-content: center; margin-top: 14px; }
+  .pager .plabel { font: 500 12px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink-soft); padding: 0 6px; white-space: nowrap; }
+  .pager.bottom { display: flex; justify-content: center; margin-top: 16px; }
 
   /* ---- drawers ---- */
-  .scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 40; }
+  .scrim { position: fixed; inset: 0; background: rgba(2, 6, 16, .5); z-index: 40; }
   .drawer {
     position: fixed; top: 0; bottom: 0; z-index: 41; width: min(460px, 100vw);
-    background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow);
+    background: var(--surface); box-shadow: var(--shadow);
     display: flex; flex-direction: column;
   }
-  .drawer.left { left: 0; border-left: none; border-right: 1px solid var(--line); width: min(400px, 100vw); }
-  .drawer.right { right: 0; width: min(520px, 100vw); }
+  .drawer.left { left: 0; border-right: 1px solid var(--line); width: min(400px, 100vw); animation: slideL .16s ease; }
+  .drawer.right { right: 0; border-left: 1px solid var(--line); width: min(520px, 100vw); animation: slideR .16s ease; }
+  @keyframes slideL { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes slideR { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
   .dhead {
-    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--line); background: var(--surface-2);
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 0;
   }
-  .dhead h2 { font: 700 22px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .02em; }
-  .dhead .iconbtn { margin-left: auto; flex: none; }
-  .dbody { flex: 1; overflow-y: auto; padding: 14px 16px 24px; }
-  .dfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface-2); }
-  .fsec { margin-bottom: 18px; }
-  .fsec h3 { font: 600 11px/1.4 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); margin-bottom: 8px; }
+  .dhead h2 { font: 700 18px/1.25 "Manrope", sans-serif; overflow-wrap: anywhere; }
+  .dhead .iconbtn { margin-left: auto; }
+  .dhead .av { width: 40px; height: 40px; font-size: 14px; }
+  .dhead .dtitle { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .dbody { flex: 1; overflow-y: auto; padding: 16px 16px 28px; }
+  .dfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface); }
+  .fsec { margin-bottom: 20px; }
+  .fsec h3 { font: 600 12px/1.3 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; }
   .fsec .ctl, .fsec .schedctl { width: 100%; }
-  .prepsub { font-size: 14px; color: var(--ink-soft); margin-top: 3px; }
+  .prepsub { font-size: 13px; color: var(--ink-soft); }
   .prepsub .vert { text-transform: capitalize; }
   #prepPhone {
-    display: inline-block; margin-top: 8px; font: 500 20px/1 "IBM Plex Mono", Consolas, monospace;
-    color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-strong);
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; margin-top: 4px; height: 36px; padding: 0 14px;
+    border-radius: var(--r); background: var(--accent); color: var(--on-accent); text-decoration: none;
+    font: 600 15px/1 "JetBrains Mono", Consolas, monospace;
   }
-  #prepPhone:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  #prepPhone:hover { filter: brightness(1.06); }
 
   /* ---- lead panel (prep + tracking) ---- */
   .edwrap { display: flex; flex-direction: column; gap: 12px; }
-  .edwrap .stbtns { display: flex; flex-wrap: wrap; gap: 6px; }
-  .edwrap .stbtn { font-size: 13px; padding: 6px 10px; }
+  .edwrap .stbtns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .edwrap .stbtn { font-size: 13px; height: 36px; padding: 0 10px; justify-content: space-between; }
+  .edwrap .stbtn:first-child { grid-column: 1 / -1; justify-content: center; }
   .edwrap textarea, .cnotes {
-    width: 100%; min-height: 84px; resize: vertical;
-    border: 1px solid var(--line-strong); border-radius: 4px;
-    background: var(--surface); color: var(--ink);
-    font: 400 15px/1.5 "Barlow", sans-serif; padding: 9px 10px;
+    width: 100%; min-height: 88px; resize: vertical;
+    border: 1px solid var(--line); border-radius: var(--r);
+    background: var(--bg); color: var(--ink);
+    font: 400 14px/1.5 "Manrope", sans-serif; padding: 10px 12px;
   }
   .edwrap textarea::placeholder, .cnotes::placeholder { color: var(--ink-mute); }
   .furow { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-soft); flex-wrap: wrap; }
   .furow .fuval { display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
   .furow input[type="date"] {
-    border: 1px solid var(--line-strong); border-radius: 4px; padding: 5px 8px;
-    background: var(--surface); color: var(--ink); font: 400 13px/1 "Barlow", sans-serif;
+    height: 30px; border: 1px solid var(--line); border-radius: 6px; padding: 0 8px;
+    background: var(--bg); color: var(--ink); font: 500 13px/1 "JetBrains Mono", Consolas, monospace;
   }
+  .furow .ctl { height: 30px; font-size: 13px; }
   .edmeta { font-size: 12px; color: var(--ink-soft); }
-  .edmeta .saved { color: var(--ok); }
-  .edmeta .fail { color: var(--err); }
+  .edmeta .saved { color: var(--green); }
+  .edmeta .fail { color: var(--red); }
 
-  .prep {
-    border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    border-radius: 6px; background: var(--surface-2);
-    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
-  }
-  .prow { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: start; }
-  .plbl { font: 600 10px/1.7 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); padding-top: 2px; }
+  .prep { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface-2); padding: 4px 14px; display: flex; flex-direction: column; }
+  .prow { display: grid; grid-template-columns: 118px 1fr; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .prow:last-child { border-bottom: none; }
+  .plbl { display: flex; align-items: center; gap: 6px; font: 600 12px/1.4 "Manrope", sans-serif; letter-spacing: .04em; color: var(--ink-soft); padding-top: 2px; }
+  .plbl .ico { color: var(--accent); }
   .prow p, .prow ul { margin: 0; font-size: 14px; line-height: 1.5; }
   .prow ul { padding-left: 18px; }
   .prow li { margin-bottom: 2px; }
   .prow .pv { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
   .prow .warn { color: var(--amber); font-weight: 600; }
-  @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 2px; } }
+  @media (max-width: 560px) { .prow { grid-template-columns: 1fr; gap: 4px; } }
 
   /* ---- call mode ---- */
-  #callMode { margin-top: 14px; }
-  .chead {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px 20px; align-items: center;
-    padding: 10px 0 12px;
-  }
+  #callMode { max-width: 1120px; margin: 0 auto; }
+  .chead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px 20px; align-items: center; padding: 4px 0 14px; }
   .cprog { font-size: 14px; color: var(--ink-soft); }
-  .cprog b { color: var(--ink); font-size: 15px; }
-  .cbar { height: 3px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-  .cbar div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-  .ctimer { font: 500 20px/1 "IBM Plex Mono", Consolas, monospace; color: var(--ink-soft); }
-  .ccard {
-    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
-    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 0;
-  }
-  .ccard > .cl { padding: 22px 26px 22px; border-right: 1px solid var(--line); min-width: 0; }
-  .ccard > .cr { padding: 22px 22px; background: var(--surface-2); min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-  .cname { font: 700 38px/1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .01em; overflow-wrap: anywhere; }
-  .cmeta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 8px; color: var(--ink-soft); font-size: 15px; }
+  .cprog b { color: var(--ink); font: 600 14px/1 "JetBrains Mono", Consolas, monospace; }
+  .cbar { height: 4px; background: var(--surface-2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .cbar div { height: 100%; width: 0; background: var(--accent); transition: width .2s ease; }
+  .ctimer { font: 500 20px/1 "JetBrains Mono", Consolas, monospace; color: var(--ink-soft); }
+  .ccard { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 0; overflow: hidden; }
+  .ccard > .cl { padding: 24px 28px; border-right: 1px solid var(--line); min-width: 0; }
+  .ccard > .cr { padding: 24px 22px; background: var(--surface-2); min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+  .cname { font: 700 28px/1.15 "Manrope", sans-serif; overflow-wrap: anywhere; }
+  .cmeta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
   .cmeta .vert { text-transform: capitalize; }
   .cphone {
-    display: inline-block; margin: 18px 0 4px;
-    font: 500 52px/1 "IBM Plex Mono", Consolas, monospace; letter-spacing: -.01em; color: var(--ink);
-    text-decoration: none; border-bottom: 3px solid var(--accent); padding-bottom: 4px; overflow-wrap: anywhere;
+    display: inline-flex; align-items: center; gap: 14px; margin: 20px 0 4px;
+    font: 500 52px/1 "JetBrains Mono", Consolas, monospace; letter-spacing: -.02em; color: var(--ink);
+    text-decoration: none; overflow-wrap: anywhere; transition: color .12s ease;
   }
+  .cphone .ico { width: 32px; height: 32px; color: var(--accent); }
   .cphone:hover { color: var(--accent); }
   .calt { font-size: 14px; color: var(--ink-soft); margin: 4px 0 0; }
-  .clook { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 18px; }
+  .clook { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
   .csec { margin-top: 18px; }
-  .csec h3 { font: 600 11px/1.4 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); margin-bottom: 6px; }
-  .csec p { margin: 0; font-size: 16px; line-height: 1.5; }
-  .csec ul { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.5; }
+  .csec h3, .cr h3 { display: flex; align-items: center; gap: 6px; font: 600 12px/1.3 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; }
+  .csec h3 .ico, .cr h3 .ico { color: var(--accent); }
+  .csec p { margin: 0; font-size: 15px; line-height: 1.55; }
+  .csec ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
   .csec li { margin-bottom: 3px; }
   .csec .warn { color: var(--amber); font-weight: 600; }
   .csec .timing { color: var(--red); font-weight: 600; }
   .copyline { display: flex; gap: 10px; align-items: flex-start; }
   .copyline p { flex: 1; }
-  .outcomes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .outcomes .stbtn { justify-content: space-between; padding: 10px 12px; font-size: 15px; }
-  .outcomes .stbtn kbd { margin-left: 8px; }
+  .outcomes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .outcomes .stbtn { justify-content: space-between; height: 40px; padding: 0 12px; font-size: 14px; }
   .cnav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .cnav .spacer { flex: 1; }
-  .cdone { text-align: center; padding: 60px 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
-  .cdone h2 { font: 700 34px/1.1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
-  .cdone p { color: var(--ink-soft); margin: 8px 0 18px; }
+  .cdone { text-align: center; padding: 64px 24px; }
+  .cdone h2 { font: 700 26px/1.2 "Manrope", sans-serif; }
+  .cdone p { color: var(--ink-soft); margin: 8px 0 20px; }
   .csend { display: flex; flex-wrap: wrap; gap: 6px; }
   .cstate { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-soft); }
   @media (max-width: 860px) {
     .ccard { grid-template-columns: 1fr; }
     .ccard > .cl { border-right: none; border-bottom: 1px solid var(--line); }
-    .cphone { font-size: 38px; }
-    .cname { font-size: 30px; }
+    .cphone { font-size: 36px; }
+    .cname { font-size: 24px; }
+  }
+  @media (max-width: 400px) {
+    .cphone { font-size: 30px; gap: 0; }
+    .cphone .ico { display: none; }
   }
 
-  /* ---- undo toast / toast ---- */
+  /* ---- toasts ---- */
   .toast {
-    position: fixed; right: 16px; bottom: 16px; z-index: 60;
-    background: var(--ink); color: var(--bg);
-    padding: 10px 14px; border-radius: 6px; font-size: 14px;
-    opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s;
-    pointer-events: none;
+    position: fixed; left: 50%; bottom: 80px; transform: translate(-50%, 8px); z-index: 60;
+    background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 10px 16px; border-radius: var(--r); font-size: 14px; box-shadow: var(--shadow);
+    opacity: 0; transition: opacity .12s ease, transform .12s ease; pointer-events: none; max-width: min(520px, 92vw);
   }
-  .toast.show { opacity: 1; transform: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
   .undo {
-    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 8px); z-index: 61;
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 8px); z-index: 61;
     display: flex; align-items: center; gap: 12px;
-    background: var(--ink); color: var(--bg); padding: 10px 10px 10px 16px; border-radius: 6px;
-    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s;
-    box-shadow: var(--shadow);
+    background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 8px 8px 8px 16px; border-radius: var(--r); font-size: 14px; box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: opacity .12s ease, transform .12s ease; max-width: min(560px, 92vw);
   }
   .undo.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
   .undo button {
-    border: 1px solid var(--bg); background: transparent; color: var(--bg);
-    font: 600 13px/1 "Barlow", sans-serif; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+    display: inline-flex; align-items: center; height: 30px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font: 600 13px/1 "Manrope", sans-serif; padding: 0 10px; border-radius: 6px; cursor: pointer;
   }
-  .undo button:hover { background: var(--bg); color: var(--ink); }
-  .undo kbd { border-color: rgba(255, 255, 255, .3); background: transparent; color: var(--bg); }
+  .undo button:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
   /* ---- schedule ---- */
-  .schedrail { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 14px 0 6px; }
-  .schedrail .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); }
-  #schedSummary { font-size: 14px; color: var(--ink-soft); }
-  .windowhdr {
-    font: 600 11px/1.2 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .09em;
-    color: var(--ink-soft); margin: 18px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;
-  }
+  .schedrail { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 0 0 12px; }
+  .schedrail .lbl { font-size: 12px; }
+  #schedSummary { font-size: 13px; color: var(--ink-soft); }
+  .windowhdr { display: flex; align-items: center; gap: 8px; font: 600 12px/1.3 "Manrope", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 16px 0 8px; }
+  .windowhdr .ico { color: var(--accent); }
+  .slotgroup { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
   .slot {
     display: grid; grid-template-columns: 84px minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center;
-    padding: 9px 12px; border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 6px;
-    background: var(--surface); margin-bottom: 6px;
+    padding: 10px 14px 10px 11px; border-left: 3px solid transparent; border-bottom: 1px solid var(--line);
   }
+  .slotgroup > :last-child { border-bottom: none; }
   .slot.sev-red { border-left-color: var(--red); }
   .slot.sev-amber { border-left-color: var(--amber); }
   .slot.done { opacity: .55; }
-  .slotpanel {
-    border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    border-radius: 0 0 6px 6px; background: var(--surface-2);
-    padding: 14px 16px; margin: -6px 0 10px;
-  }
+  .slotpanel { border-left: 3px solid var(--accent); border-bottom: 1px solid var(--line); background: var(--surface-2); padding: 14px 16px; }
   .outc { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
-  .slot .time { font: 600 14px/1.2 "IBM Plex Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
-  .slot .who b { font-weight: 600; font-size: 16px; }
-  .slot .meta { color: var(--ink-soft); font-size: 14px; }
+  .slot .time { font: 600 13px/1.2 "JetBrains Mono", Consolas, monospace; color: var(--accent); white-space: nowrap; }
+  .slot .who b { font-weight: 600; font-size: 15px; }
+  .slot .meta { color: var(--ink-soft); font-size: 13px; }
   .slot .meta a { color: var(--blue); text-decoration: none; }
   .slot .meta a:hover { text-decoration: underline; }
   .slot .fchip {
-    display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 3px;
-    background: var(--amber-bg); color: var(--amber);
-    font: 600 10px/1.3 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .05em;
+    display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 6px;
+    background: var(--amber-bg); color: var(--amber); font: 600 11px/1.3 "Manrope", sans-serif;
   }
-  .slot .phone { font: 500 15px/1.4 "IBM Plex Mono", Consolas, monospace; white-space: nowrap; }
-  .slot .phone a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
-  .slot .phone a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .slot .phone { font: 500 15px/1.4 "JetBrains Mono", Consolas, monospace; white-space: nowrap; }
+  .slot .phone a { color: var(--ink); text-decoration: none; }
+  .slot .phone a:hover { color: var(--accent); }
   .openline { display: none; }
   @media (max-width: 680px) {
     .slot { grid-template-columns: 70px minmax(0, 1fr); }
     .slot .phone, .slot .minibtn, .slot .outc { grid-column: 2; justify-self: start; }
   }
 
-  footer {
-    margin-top: 22px; color: var(--ink-soft); font-size: 13px; line-height: 1.6;
-    border-top: 1px solid var(--line); padding-top: 12px;
-  }
+  footer { margin-top: 28px; color: var(--ink-soft); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 14px; }
   footer kbd { margin-left: 0; }
 
   @media print {
-    /* the day sheet always prints black on white, whatever the screen theme */
     :root, :root[data-theme="dark"] {
-      --bg: #fff; --surface: #fff; --surface-2: #fff; --surface-3: #eee;
-      --ink: #000; --ink-soft: #444; --ink-mute: #666; --line: #bbb; --line-strong: #999;
-      --accent: #C2410C; --accent-ink: #fff; --blue: #1f4e79; --amber: #8A6D1C; --amber-bg: #fff;
-      --need-both: #B3400F; --need-both-bg: #fff; --need-web: #2F6FAB; --need-web-bg: #fff; --need-it: #177E70; --need-it-bg: #fff;
+      --bg: #fff; --surface: #fff; --surface-2: #fff;
+      --ink: #000; --ink-soft: #444; --ink-mute: #666; --line: #bbb;
+      --accent: #0F766E; --accent-ink: #115E59; --on-accent: #fff; --blue: #1f4e79; --amber: #8A6D1C; --amber-bg: #fff; --accent-soft: #fff;
+      --blue-bg: #fff; --green-bg: #fff; --red-bg: #fff;
       color-scheme: light;
     }
     .needchip, .fchip { border: 1px solid currentColor; }
-    .tabs, .toolbar, .listbar, .board, .pager, .today, .learn, .toast, .undo, .outc, .slot .minibtn,
-    .drawer, .scrim, #callMode, .unlockbar, .schedrail, footer, header.top .scanmeta { display: none !important; }
-    .slot { border: none; border-bottom: 1px solid #bbb; border-radius: 0; margin: 0; padding: 6px 2px; grid-template-columns: 70px 1fr auto; opacity: 1; }
+    .rail, .topbar, #tabs, .listbar, .board, .pager, .today, .learn, .toast, .undo, .outc, .slot .minibtn,
+    .drawer, .scrim, #callMode, .unlockbar, .schedrail, footer, .achips { display: none !important; }
+    .slotgroup { border: none; border-radius: 0; }
+    .slot { border: none; border-bottom: 1px solid #bbb; margin: 0; padding: 6px 2px; grid-template-columns: 70px 1fr auto; opacity: 1; }
     .slot .openline { display: block; color: #444; font-size: 11px; margin-top: 2px; }
     .slotpanel { display: none !important; }
     body { background: #fff; color: #000; }
+    .content { padding: 0; max-width: none; }
     .slot .time, .slot .phone a { color: #000; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   }
-  @media (max-width: 820px) {
-    .today { grid-template-columns: 1fr; }
+  /* KPI tiles key on the strip's own width (prep drawer open, collapsed rail), not the viewport:
+     four tiles need ~200px each for the 12px uppercase labels and the domains subline. */
+  @container (max-width: 1040px) {
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @container (max-width: 640px) {
+    .tile small { white-space: normal; overflow: visible; text-overflow: clip; }
+  }
+  @media (min-width: 1100px) {
+    @container (max-width: 500px) {
+      .tiles { grid-template-columns: minmax(0, 1fr); }
+    }
+  }
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .rail {
+      position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 60px; width: auto; flex-direction: row; align-items: center;
+      gap: 0; padding: 0 4px; border-right: none; border-top: 1px solid var(--line);
+    }
+    .brand { display: none; }
+    .railnav, .railfoot { flex-direction: row; flex: 1; margin: 0; }
+    .ritem { flex: 1; justify-content: center; height: 48px; padding: 0; }
+    .ritem span, .ritem kbd { display: none; }
+    .main { padding-bottom: 60px; }
+    .undo { bottom: 72px; }
+    .toast { bottom: 128px; }
+    .topbar { position: static; padding: 10px 16px; gap: 8px; }
+    .scanmeta { margin-left: 0; width: 100%; gap: 4px 12px; font-size: 12px; }
+    .search { max-width: none; flex-basis: 100%; }
+    .content { padding: 16px 16px 48px; }
+    .today { grid-template-columns: 1fr; }
     .tactions { flex-direction: row; flex-wrap: wrap; }
+    .tactions .btn { flex: 1; justify-content: center; }
     .chead { gap: 10px 12px; }
     .ctimer { font-size: 17px; }
+    .row { grid-template-columns: 36px minmax(0, 1fr); gap: 4px 12px; }
+    .rside { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px 12px; padding-top: 4px; }
+    .learn .lrow { grid-template-columns: 90px minmax(0, 1fr) auto; }
+    .drawer { animation: none; }
   }
-  @media (max-width: 720px) {
-    .wrap { padding: 14px 12px 40px; }
-    .scanmeta { margin-left: 0; gap: 14px; }
-    #q { max-width: none; flex-basis: 100%; }
-    .toolbar .sep { display: none; }
-    .row { grid-template-columns: 1fr; gap: 6px; }
-    .rside { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px 14px; }
-    .rside .phone { font-size: 17px; }
-    .outcomes { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) {
+    .scanmeta { display: none; }
+    .tiles { gap: 8px; }
+    .tile { padding: 12px 12px 10px; }
+    .tile b { font-size: 24px; }
   }
 </style>
 
-<div class="wrap">
-  <header class="top">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M12 8a4 4 0 0 0 4 4 4 4 0 0 0-4 4 4 4 0 0 0-4-4 4 4 0 0 0 4-4z"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5M3 17l9 5 9-5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-11a7 7 0 0 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.5-4.5A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.8 6.2.9-4.5 4.4 1.1 6.3L12 17.4l-5.6 3 1.1-6.3L3 9.7l6.2-.9L12 3z"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8L7 4z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l2 3h4l2-3h5"/><path d="M5 5h14l2 8v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6l2-8z"/></symbol>
+</svg>
+
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Navigation">
     <div class="brand">
-      <h1>Ignite <span class="tick">/</span> Lead Radar</h1>
-      <p>Ignite Cyber &middot; Ridge Web Designs &mdash; regional prospect scanner</p>
+      <span class="mark" aria-hidden="true"></span>
+      <span class="btxt"><b>Lead Radar</b><small>Ignite Cyber · Ridge Web</small></span>
     </div>
-    <div class="scanmeta" id="scanmeta"></div>
-  </header>
-
-  <div class="tabs" id="tabs" hidden role="tablist">
-    <button class="tab" id="tabLeads" role="tab" aria-selected="true">Lead board</button>
-    <button class="tab" id="tabSched" role="tab" aria-selected="false">Call schedule</button>
-  </div>
-
-  <div class="unlockbar" id="unlockbar" hidden>
-    <b>PIN required</b>
-    <span>Enter the board PIN to unlock tracking, schedule, and call prep:</span>
-    <input id="keyinput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="········" aria-label="Board PIN">
-    <button class="btn" id="unlockbtn">Unlock</button>
-    <span class="msg" id="unlockmsg"></span>
-  </div>
-
-  <section class="today" id="todayStrip" hidden aria-label="Today"></section>
-  <div class="learn" id="learnStrip" hidden></div>
-
-  <section id="callMode" hidden aria-label="Call mode">
-    <div class="chead">
-      <div class="cprog"><b id="callProg"></b><div class="cbar"><div id="callBarFill"></div></div></div>
-      <span class="ctimer" id="callTimer" aria-label="Time on this lead">00:00</span>
-      <button class="btn" id="callExit">Exit <kbd>Esc</kbd></button>
+    <div class="railnav" id="tabs" hidden role="tablist">
+      <button class="ritem tab" id="tabLeads" role="tab" aria-selected="true" title="Lead board"><svg class="ico"><use href="#i-list"/></svg><span>Leads</span></button>
+      <button class="ritem tab" id="tabSched" role="tab" aria-selected="false" title="Call schedule"><svg class="ico"><use href="#i-calendar"/></svg><span>Schedule</span></button>
+      <button class="ritem" id="railCall" title="Call mode (C)"><svg class="ico"><use href="#i-phone"/></svg><span>Call mode</span><kbd>C</kbd></button>
     </div>
-    <div id="callCard"></div>
-  </section>
-
-  <div id="boardView">
-    <div class="toolbar" role="toolbar" aria-label="Search and filters">
-      <input id="q" type="search" placeholder="Search name, town, notes…  /" aria-label="Search leads">
-      <span class="chips" id="needChips" aria-label="Need"></span>
-      <span class="sep"></span>
-      <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check">High confidence</button>
-      <button class="btn" id="filtersBtn" aria-haspopup="dialog" aria-expanded="false">Filters <span class="n" id="filtersN" hidden></span></button>
-      <span class="achips" id="activeChips"></span>
+    <button class="ritem on" id="railExit" hidden title="Exit call mode (Esc)"><svg class="ico"><use href="#i-left"/></svg><span>Exit call mode</span><kbd>Esc</kbd></button>
+    <div class="railfoot">
+      <button class="ritem" id="exportBtn" hidden title="Export CSV (current view, with progress + notes)"><svg class="ico"><use href="#i-download"/></svg><span>Export CSV</span></button>
+      <button class="ritem" id="backupBtn" hidden title="Download all progress + notes as a JSON backup"><svg class="ico"><use href="#i-archive"/></svg><span>Backup</span></button>
+      <button class="ritem" id="printBtn" title="Print a one-page day sheet: times, names, numbers, openers"><svg class="ico"><use href="#i-printer"/></svg><span>Print day sheet</span></button>
+      <button class="ritem lockitem" id="lockItem" title="Tracking is locked — enter the PIN"><svg class="ico"><use href="#i-lock"/></svg><span id="lockLabel">Locked</span></button>
     </div>
+  </nav>
 
-    <div class="listbar">
-      <span id="count"></span>
-      <span class="pager" id="pagerTop"></span>
-      <span class="grow"></span>
-      <label>Sort
-        <select id="sortSel" class="ctl" aria-label="Sort order">
-          <optgroup label="Order">
-            <option value="priority">Priority (need, then score)</option>
-            <option value="closest">Closest to Bristol</option>
-            <option value="hottest">Hottest (highest score)</option>
-            <option value="newest">Newest since last scan</option>
-          </optgroup>
-          <optgroup label="Column">
-            <option value="k:name:1">Business A–Z</option>
-            <option value="k:name:-1">Business Z–A</option>
-            <option value="k:town:1">Town A–Z</option>
-            <option value="k:town:-1">Town Z–A</option>
-            <option value="k:needRank:1">Need (Both first)</option>
-            <option value="k:wScore:1">Web score high→low</option>
-            <option value="k:wScore:-1">Web score low→high</option>
-            <option value="k:itScore:1">IT score high→low</option>
-            <option value="k:itScore:-1">IT score low→high</option>
-          </optgroup>
-        </select>
+  <div class="main">
+    <header class="topbar">
+      <label class="search">
+        <svg class="ico"><use href="#i-search"/></svg>
+        <input id="q" type="search" placeholder="Search leads, towns, notes" aria-label="Search leads">
+        <kbd>/</kbd>
       </label>
-      <button class="btn sm" id="nextBtn" hidden>Next lead <kbd>N</kbd></button>
-      <button class="btn sm" id="exportBtn" hidden>Export CSV</button>
-      <button class="btn sm" id="backupBtn" hidden title="Download all progress + notes as a JSON backup">Backup</button>
-    </div>
+      <button class="btn" id="filtersBtn" aria-haspopup="dialog" aria-expanded="false"><svg class="ico"><use href="#i-filter"/></svg>Filters <span class="n" id="filtersN" hidden></span></button>
+      <span class="seg chips" id="needChips" aria-label="Need"></span>
+      <button class="chip" id="confChip" aria-pressed="false" title="Hide rows that still need a quick manual check"><svg class="ico s"><use href="#i-check"/></svg>High confidence</button>
+      <div class="scanmeta" id="scanmeta"></div>
+    </header>
 
-    <div class="board" id="boardList">
-      <div id="rows" role="list" aria-label="Leads"></div>
-      <div class="empty" id="empty" hidden>No leads match these filters.</div>
+    <div class="content">
+      <div class="card unlockbar" id="unlockbar" hidden>
+        <svg class="ico"><use href="#i-lock"/></svg>
+        <b>PIN required</b>
+        <span>Enter the board PIN to unlock tracking, schedule, and call prep. It stays on this device.</span>
+        <div class="pinrow">
+          <input id="keyinput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="········" aria-label="Board PIN">
+          <button class="btn primary" id="unlockbtn">Unlock</button>
+        </div>
+        <span class="msg" id="unlockmsg"></span>
+      </div>
+
+      <section class="today" id="todayStrip" hidden aria-label="Today"></section>
+      <div class="card learn" id="learnStrip" hidden></div>
+
+      <section id="callMode" hidden aria-label="Call mode">
+        <div class="chead">
+          <div class="cprog"><b id="callProg"></b><div class="cbar"><div id="callBarFill"></div></div></div>
+          <span class="ctimer" id="callTimer" aria-label="Time on this lead">00:00</span>
+          <button class="btn" id="callExit">Exit <kbd>Esc</kbd></button>
+        </div>
+        <div id="callCard"></div>
+      </section>
+
+      <div id="boardView">
+        <div class="listbar">
+          <span id="count"></span>
+          <span class="pager" id="pagerTop"></span>
+          <span class="achips" id="activeChips"></span>
+          <span class="grow"></span>
+          <label>Sort
+            <select id="sortSel" class="ctl" aria-label="Sort order">
+              <optgroup label="Order">
+                <option value="priority">Priority (need, then score)</option>
+                <option value="closest">Closest to Bristol</option>
+                <option value="hottest">Hottest (highest score)</option>
+                <option value="newest">Newest since last scan</option>
+              </optgroup>
+              <optgroup label="Column">
+                <option value="k:name:1">Business A–Z</option>
+                <option value="k:name:-1">Business Z–A</option>
+                <option value="k:town:1">Town A–Z</option>
+                <option value="k:town:-1">Town Z–A</option>
+                <option value="k:needRank:1">Need (Both first)</option>
+                <option value="k:wScore:1">Web score high→low</option>
+                <option value="k:wScore:-1">Web score low→high</option>
+                <option value="k:itScore:1">IT score high→low</option>
+                <option value="k:itScore:-1">IT score low→high</option>
+              </optgroup>
+            </select>
+          </label>
+          <button class="btn sm" id="nextBtn" hidden>Next lead <kbd>N</kbd></button>
+        </div>
+
+        <div class="card board" id="boardList">
+          <div id="rows" role="list" aria-label="Leads"></div>
+          <div class="empty" id="empty" hidden><svg class="ico"><use href="#i-inbox"/></svg><b>No leads match these filters</b>Loosen a filter or clear them all from the Filters drawer.</div>
+        </div>
+        <div class="pager bottom" id="pagerBottom"></div>
+      </div>
+
+      <section id="schedView" hidden>
+        <div class="schedrail">
+          <span class="lbl">Day</span>
+          <input type="date" id="schedDate" class="schedctl" aria-label="Schedule day">
+          <span class="lbl">Spacing</span>
+          <select id="schedGap" class="schedctl" aria-label="Call spacing">
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+          </select>
+          <span id="schedSummary"></span>
+        </div>
+        <div id="slots"></div>
+      </section>
+
+      <footer>
+        <strong>Need</strong> = what the evidence points to: a new <em>website</em> (Ridge Web Designs pitch), an <em>IT</em> partner (Ignite Cyber pitch), or <em>both</em>.
+        Rows marked <em>verify</em> came from listings without a website on file &mdash; do a 30-second Google check before dialing.
+        Click any row (or press Enter on it) for the call-prep brief, progress label, and call notes. Every lead has a phone number.
+        Keys: <kbd>C</kbd> start calling &middot; <kbd>N</kbd> next lead &middot; <kbd>↑</kbd><kbd>↓</kbd> move &middot; <kbd>Enter</kbd> prep &middot; <kbd>1</kbd>&ndash;<kbd>8</kbd> set status on the open lead &middot; <kbd>/</kbd> search &middot; <kbd>Esc</kbd> close.
+        Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
+      </footer>
     </div>
-    <div class="pager bottom" id="pagerBottom"></div>
   </div>
-
-  <section id="schedView" hidden>
-    <div class="schedrail">
-      <span class="lbl">Day</span>
-      <input type="date" id="schedDate" class="schedctl" aria-label="Schedule day">
-      <span class="lbl">Spacing</span>
-      <select id="schedGap" class="schedctl" aria-label="Call spacing">
-        <option value="5">5 min</option>
-        <option value="10">10 min</option>
-        <option value="15">15 min</option>
-      </select>
-      <span id="schedSummary"></span>
-      <button class="btn sm" id="printBtn" title="Print a one-page day sheet: times, names, numbers, openers">Print day sheet</button>
-    </div>
-    <div id="slots"></div>
-  </section>
-
-  <div class="toast" id="toast" role="status"></div>
-  <div class="undo" id="undo" role="status"><span id="undoMsg"></span><button id="undoBtn">Undo <kbd>Z</kbd></button></div>
-
-  <footer>
-    <strong>Need</strong> = what the evidence points to: a new <em>website</em> (Ridge Web Designs pitch), an <em>IT</em> partner (Ignite Cyber pitch), or <em>both</em>.
-    Rows marked <em>verify</em> came from listings without a website on file &mdash; do a 30-second Google check before dialing.
-    Click any row (or press Enter on it) for the call-prep brief, progress label, and call notes. Every lead has a phone number.
-    Keys: <kbd>C</kbd> start calling &middot; <kbd>N</kbd> next lead &middot; <kbd>↑</kbd><kbd>↓</kbd> move &middot; <kbd>Enter</kbd> prep &middot; <kbd>1</kbd>&ndash;<kbd>8</kbd> set status on the open lead &middot; <kbd>/</kbd> search &middot; <kbd>Esc</kbd> close.
-    Business data &copy; OpenStreetMap contributors (ODbL); site audits fetched directly from each business&rsquo;s homepage.<!--CSV_LINK-->
-  </footer>
 </div>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="undo" id="undo" role="status"><span id="undoMsg"></span><button id="undoBtn">Undo <kbd>Z</kbd></button></div>
 
 <div class="scrim" id="filterScrim" hidden></div>
 <aside class="drawer left" id="filterDrawer" role="dialog" aria-modal="true" aria-labelledby="filterTitle" hidden>
   <div class="dhead">
-    <h2 id="filterTitle">Filters</h2>
-    <button class="iconbtn" id="filterClose" aria-label="Close filters" title="Close (Esc)">&times;</button>
+    <div class="dtitle"><h2 id="filterTitle">Filters</h2><div class="prepsub">Every combination is written to the URL — bookmark a view.</div></div>
+    <button class="iconbtn" id="filterClose" aria-label="Close filters" title="Close (Esc)"><svg class="ico"><use href="#i-x"/></svg></button>
   </div>
   <div class="dbody">
     <section class="fsec" id="progressSec" hidden>
@@ -742,16 +860,16 @@
 
 <aside class="drawer right" id="prepDrawer" role="dialog" aria-label="Call prep" hidden>
   <div class="dhead">
-    <div style="min-width:0">
+    <div class="av" id="prepAv" aria-hidden="true"></div>
+    <div class="dtitle">
       <h2 id="prepName"></h2>
       <div class="prepsub" id="prepSub"></div>
-      <a id="prepPhone" href="#"></a>
+      <a id="prepPhone" href="#"><svg class="ico"><use href="#i-phone"/></svg><span id="prepPhoneTxt"></span></a>
     </div>
-    <button class="iconbtn" id="prepClose" aria-label="Close call prep" title="Close (Esc)">&times;</button>
+    <button class="iconbtn" id="prepClose" aria-label="Close call prep" title="Close (Esc)"><svg class="ico"><use href="#i-x"/></svg></button>
   </div>
   <div class="dbody" id="prepBody"></div>
 </aside>
-
 <script>
   const DATA = /*__DATA__*/[];
   const META = /*__META__*/{};
@@ -797,6 +915,31 @@
   const TODAY = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const ico = (name, cls) => {
+    const s = document.createElementNS(SVG_NS, 'svg');
+    s.setAttribute('class', 'ico' + (cls ? ' ' + cls : '')); s.setAttribute('aria-hidden', 'true');
+    const u = document.createElementNS(SVG_NS, 'use'); u.setAttribute('href', '#i-' + name); s.append(u);
+    return s;
+  };
+  const VERTS = [...new Set(DATA.map((d) => d.vertical))].sort();
+  const initialsOf = (n) => String(n || '').split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).slice(0, 2).map((w) => w.replace(/[^a-z0-9]/gi, '')[0] || '').join('').toUpperCase() || '#';
+  function avatarOf(d) {
+    const a = el('span', 'av c' + (Math.max(0, VERTS.indexOf(d.vertical)) % 8), initialsOf(d.name));
+    a.title = d.vertical; a.setAttribute('aria-hidden', 'true');
+    return a;
+  }
+  function meter(label, v, cls) {
+    const m = el('span', 'meter ' + cls); m.title = label + ' score ' + v;
+    const i = el('i'); const f = Math.max(0, Math.min(4, Math.ceil((+v || 0) / 2)));
+    for (let k = 0; k < 4; k++) i.append(el('em', k < f ? 'f' : null));
+    m.append(label, i, el('b', null, String(v)));
+    return m;
+  }
+  const metersOf = (d) => { const w = el('span', 'meters'); w.append(meter('Web', d.wScore, 'web'), meter('IT', d.itScore, 'it')); return w; };
+  const h3i = (icon, text, cls) => { const h = el('h3', cls); h.append(ico(icon), text); return h; };
+  const BADGE_ICON = { bdl: 'alert', bbrk: 'alert', bexp: 'clock', bnew: 'sparkle', bup: 'trend', bmulti: 'layers', bcl: 'clock' };
+  const PLBL_ICON = { 'Look first': 'eye', 'Timing': 'zap', 'Open with': 'mic', 'Talking points': 'list', 'Pitch': 'target', 'Their stack': 'shield', 'Measured performance': 'gauge', 'Competitive angle': 'trend', 'When to call': 'clock', 'Who to ask for': 'user', 'Gatekeeper play': 'user', 'Still open?': 'info', 'Reputation': 'star', 'Checkup': 'file', 'Email draft': 'mail', 'If voicemail': 'msg', 'Heads up': 'alert', 'Number check': 'phone' };
 
   // ---- tracking state ----
   let trackState = {};              // key -> {s, n, t}
@@ -837,8 +980,16 @@
     $('progressSec'), $('exportBtn'), $('backupBtn'), $('nextBtn'),
     $('todayStrip'), $('learnStrip'), $('tabs'),
   ];
+  function setLockItem(isUnlocked) {
+    const li = $('lockItem'); if (!li) return;
+    li.classList.toggle('ok', isUnlocked);
+    li.title = isUnlocked ? 'Tracking unlocked on this device' : 'Tracking is locked — enter the PIN';
+    li.querySelector('use').setAttribute('href', isUnlocked ? '#i-unlock' : '#i-lock');
+    $('lockLabel').textContent = isUnlocked ? 'Unlocked' : 'Locked';
+  }
   function relock() {
     unlocked = false;
+    setLockItem(false);
     if (callActive) exitCallMode(false);
     closePrep();
     $('unlockbar').hidden = false;
@@ -852,6 +1003,7 @@
     try {
       trackState = await api('GET');
       unlocked = true;
+      setLockItem(true);
       $('unlockbar').hidden = true;
       GATED().forEach((e) => { if (e) e.hidden = false; });
       buildStatusChips();
@@ -908,7 +1060,7 @@
     const actions = el('div', 'tactions');
     const start = el('button', 'btn primary lg');
     start.id = 'startCallBtn';
-    start.append('Start calling', el('kbd', null, 'C'));
+    start.append(ico('play'), 'Start calling', el('kbd', null, 'C'));
     start.addEventListener('click', () => { if (callActive) exitCallMode(true); else startCallMode(); });
     actions.append(start);
     if (due > 0) {
@@ -974,17 +1126,21 @@
     const root = $('learnStrip');
     if (!root) return;
     root.hidden = false; root.textContent = '';
-    root.append(el('span', 'lbl', 'Outcome learning'));
+    const head = el('div', 'lhead');
+    head.append(ico('trend'), el('span', 'lbl', 'Outcome learning'));
+    root.append(head);
     if (!LEARN.rows.length) {
       root.append(el('span', 'tstat', 'Too little data yet — a vertical shows its rate once ' + LEARN_MIN + '+ of its leads have been called (' + LEARN.called + ' called so far, all verticals).'));
       return;
     }
     for (const r of LEARN.rows) {
-      const s = el('span', 'tstat');
-      s.append(el('b', null, Math.round(r.rate * 100) + '%'), ' ' + r.vert + ' reach Interested+ (' + r.reached + ' of ' + r.called + ' called)');
-      root.append(s);
+      const line = el('div', 'lrow tstat');
+      const bar = el('div', 'lbar'); const fill = el('i'); fill.style.width = Math.round(r.rate * 100) + '%'; bar.append(fill);
+      line.append(el('span', 'v', r.vert), bar, el('b', null, Math.round(r.rate * 100) + '% · ' + r.reached + ' of ' + r.called));
+      line.title = r.vert + ': ' + r.reached + ' of ' + r.called + ' called reached Interested or better';
+      root.append(line);
     }
-    root.append(el('span', 'tstat', 'Tie-breaker only in the schedule order.'));
+    root.append(el('span', 'tstat', 'Share of called leads that reached Interested+. Tie-breaker only in the schedule order.'));
   }
   // Stable re-order of a schedule group: leads equal on the primary key (priority =
   // need then score, the scan's own order; closest = miles) are nudged so verticals
@@ -1040,15 +1196,15 @@
   // ---- header stats ----
   const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const sm = $('scanmeta');
-  function stat(v, label) {
-    const d = el('div', 'stat');
-    d.append(el('b', null, String(v)), el('span', null, label)); sm.append(d);
+  function stat(v, label, hot) {
+    const d = el('span', 'stat' + (hot ? ' hot' : ''));
+    d.append(el('b', null, String(v)), label); sm.append(d);
   }
-  stat(DATA.length, 'callable leads');
+  stat(DATA.length, 'leads');
   stat(META.byNeed ? META.byNeed.Both : 0, 'need both');
   stat(Object.keys(REGION_LABELS).length, 'regions');
   stat(META.ranAt ? fmtDate(META.ranAt) : '—', 'last scan');
-  if (META.retired) stat(META.retired, 'retired since last scan');
+  if (META.retired) stat(META.retired, 'retired since last scan', true);
   if (META.closedRemoved) stat(META.closedRemoved, 'closed businesses removed');
 
   // ---- filter chips ----
@@ -1242,7 +1398,8 @@
     root.textContent = '';
     if (totalPages <= 1) return;
     const mk = (label, delta, disabled) => {
-      const b = el('button', null, label); b.disabled = disabled;
+      const b = el('button'); b.disabled = disabled;
+      if (delta < 0) b.append(ico('left', 's'), label); else b.append(label, ico('right', 's'));
       b.addEventListener('click', () => {
         state.page = Math.min(Math.max(1, state.page + delta), totalPages);
         render();
@@ -1251,7 +1408,7 @@
       return b;
     };
     const label = el('span', 'plabel', 'Page ' + state.page + ' of ' + totalPages);
-    root.append(mk('‹ Prev', -1, state.page <= 1), label, mk('Next ›', 1, state.page >= totalPages));
+    root.append(mk('Prev', -1, state.page <= 1), label, mk('Next', 1, state.page >= totalPages));
   }
 
   function filtered() {
@@ -1457,7 +1614,10 @@
     const box = el('div', 'prep');
     const row = (label, node) => {
       const r = el('div', 'prow');
-      r.append(el('span', 'plbl', label), node); box.append(r);
+      const lb = el('span', 'plbl');
+      if (PLBL_ICON[label]) lb.append(ico(PLBL_ICON[label]));
+      lb.append(label);
+      r.append(lb, node); box.append(r);
     };
     const ctx = () => {
       const wrapEl = box.closest('.edwrap');
@@ -1651,8 +1811,23 @@
     let r = prepReturnFocus;
     prepReturnFocus = null;
     if (r && !r.isConnected && r.classList && r.classList.contains('row')) r = rowsEl.querySelector('.row[data-key="' + CSS.escape(key) + '"]');   // rows re-rendered since open
-    if (r && r.isConnected && !callActive) r.focus({ preventScroll: true });
+    if (r && r.isConnected && !callActive) { r.focus({ preventScroll: true }); keepClear(r); }
   }
+  // Closing the drawer widens the list; a row that was mid-screen can land under the
+  // sticky top bar. Nudge the scroll so the focused row stays fully visible.
+  function keepClear(r) {
+    const tb = document.querySelector('.topbar');
+    if (!tb || getComputedStyle(tb).display === 'none') return;
+    const top = tb.getBoundingClientRect().bottom + 8;
+    const b = r.getBoundingClientRect();
+    if (b.top < top) window.scrollBy(0, b.top - top);
+  }
+  function syncScrollPadding() {
+    const tb = document.querySelector('.topbar');
+    document.documentElement.style.scrollPaddingTop = (tb && getComputedStyle(tb).display !== 'none' ? tb.offsetHeight + 8 : 8) + 'px';
+  }
+  syncScrollPadding();
+  window.addEventListener('resize', syncScrollPadding);
   $('prepClose').addEventListener('click', closePrep);
   function openPrep(d, returnTo) {
     if (!(TRACKING && unlocked)) return;
@@ -1662,7 +1837,8 @@
     const sub = $('prepSub'); sub.textContent = '';
     sub.append(d.town + ', ' + d.st + (d.mi != null ? ' · ' + d.mi + ' mi' : '') + ' · ');
     sub.append(el('span', 'vert', d.vertical));
-    const ph = $('prepPhone'); ph.href = telOf(d); ph.textContent = d.phone || '';
+    const ph = $('prepPhone'); ph.href = telOf(d); $('prepPhoneTxt').textContent = d.phone || '';
+    const av = $('prepAv'); av.className = 'av c' + (Math.max(0, VERTS.indexOf(d.vertical)) % 8); av.textContent = initialsOf(d.name);
     const body = $('prepBody'); body.textContent = '';
     body.append(buildLeadPanel(d, () => updateRowChip(d)));
     prepDrawer.hidden = false;
@@ -1693,7 +1869,7 @@
   }
   function badgesFor(d) {
     const out = [];
-    const mk = (cls, text, title) => { const b = el('span', 'badge ' + cls, text); if (title) b.title = title; out.push(b); };
+    const mk = (cls, text, title) => { const b = el('span', 'badge ' + cls); b.append(ico(BADGE_ICON[cls] || 'info', 's'), text); if (title) b.title = title; out.push(b); };
     if (d.dl) mk('bdl', 'domain lapsed', (d.x || '').split('; ').find((s) => /^Domain (registration lapsed|suspended)/.test(s)) || 'Domain registration lapsed or on registrar hold');
     if (d.brk && !/Newly listed/.test(d.brk)) mk('bbrk', 'just broke', d.brk);
     if (d.xd != null) mk('bexp', 'expires ' + d.xd + 'd', 'Domain registration expires in ' + d.xd + ' days');
@@ -1725,11 +1901,7 @@
     badgesFor(d).forEach((b) => l1.append(b));
     l1.append(el('span', 'pill need-' + d.need, d.need));
     if (d.confidence === 'Verify') l1.append(el('span', 'pill verify', 'verify'));
-    const sc = el('span', 'scores');
-    const s1 = el('span'); s1.title = 'Web score'; s1.append(el('i', null, 'WEB'), el('b', null, String(d.wScore)));
-    const s2 = el('span'); s2.title = 'IT score'; s2.append(el('i', null, 'IT'), el('b', null, String(d.itScore)));
-    sc.append(s1, s2);
-    l1.append(sc);
+    l1.append(metersOf(d));
     if (TRACKING && unlocked) { const p = el('span', 'prog l1'); fillProgressCell(p, d); l1.append(p); }
     const l2 = el('div', 'l2');
     const geo = el('span', 'geo');
@@ -1739,19 +1911,21 @@
     if (d.x) l2.append(' · ', el('span', 'xtra', d.x));
     main.append(l1, l2);
     const side = el('div', 'rside');
-    if (d.phone) { const a = el('a', 'phone', d.phone); a.href = telOf(d); side.append(a); }
+    if (d.phone) { const a = el('a', 'phone'); a.append(ico('phone'), d.phone); a.href = telOf(d); side.append(a); }
     const links = el('div', 'links');
-    links.append(extLink(mapUrl(d), 'map', ''));
-    if (TRACKING && d.slug) links.append(extLink('/a/' + d.slug + '.html', 'checkup', ''));
+    const iconLink = (href, icon, label) => { const a = extLink(href, '', ''); a.append(ico(icon)); a.title = label; a.setAttribute('aria-label', label); return a; };
     const override = TRACKING && unlocked && trackState[keyOf(d)] && trackState[keyOf(d)].w;
     const shownSite = override || d.website;
     if (shownSite) {
       const s = extLink(shownSite, (override ? '✓ ' : '') + hostLabel(shownSite), 'site');
-      if (override) s.title = 'Corrected domain (overrides the scanned one; re-audited next rescan)';
+      s.prepend(ico('globe'));
+      s.title = override ? 'Corrected domain (overrides the scanned one; re-audited next rescan)' : shownSite;
       links.append(s);
     }
+    links.append(iconLink(mapUrl(d), 'map', 'Map'));
+    if (TRACKING && d.slug) links.append(iconLink('/a/' + d.slug + '.html', 'file', 'Checkup page'));
     side.append(links);
-    r.append(main, side);
+    r.append(avatarOf(d), main, side);
     r.addEventListener('click', (e) => {
       if (e.target.closest('a, button, input, textarea')) return;
       selectRow(keyOf(d), false);
@@ -1968,12 +2142,12 @@
     const { slots, due, dueKeys, fresh, dayQ, eveQ, assigned, di, ei } = plan;
 
     if (!slots.length) {
-      slotsEl.append(el('div', 'empty', 'No calling windows left on this day — pick another date.'));
+      const e1 = el('div', 'card empty'); e1.append(ico('calendar'), el('b', null, 'No calling windows left on this day'), 'Pick another date — the schedule fills 9 AM to 5 PM in the slots still ahead of the clock.'); slotsEl.append(e1);
       schedSummaryEl.textContent = '';
       return;
     }
     if (!due.length && !fresh.length) {
-      slotsEl.append(el('div', 'empty', 'Nothing tagged "To call" under the current region/need filters.'));
+      const e2 = el('div', 'card empty'); e2.append(ico('inbox'), el('b', null, 'Nothing tagged "To call"'), 'Nothing tagged "To call" under the current region/need filters — loosen them to fill the day.'); slotsEl.append(e2);
       schedSummaryEl.textContent = '';
       return;
     }
@@ -1984,7 +2158,7 @@
     for (const { s, lead } of assigned) {
       if (s.kind !== lastKind) {
         lastKind = s.kind;
-        frag.append(el('div', 'windowhdr', WINDOW_LABEL[s.kind]));
+        const wh = el('div', 'windowhdr'); wh.append(ico('clock'), WINDOW_LABEL[s.kind]); frag.append(wh);
         group = el('div', 'slotgroup');
         frag.append(group);
       }
@@ -2084,6 +2258,7 @@
     $('boardView').hidden = true; $('schedView').hidden = true;
     $('tabs').hidden = true; $('todayStrip').hidden = true; $('learnStrip').hidden = true;
     $('callMode').hidden = false;
+    document.body.classList.add('call-on'); $('railExit').hidden = false;
     showCall();
   }
   function exitCallMode(reveal) {
@@ -2094,6 +2269,7 @@
     clearInterval(callTimerT); callTimerT = null;
     hideUndo();
     $('callMode').hidden = true; $('callCard').textContent = '';
+    document.body.classList.remove('call-on'); $('railExit').hidden = true;
     $('tabs').hidden = !unlocked;
     if (unlocked) { renderToday(); renderLearn(); }
     $('boardView').hidden = state.view !== 'leads';
@@ -2158,13 +2334,10 @@
     meta.append(el('span', 'pill need-' + d.need, d.need));
     if (d.confidence === 'Verify') meta.append(el('span', 'pill verify', 'verify'));
     badgesFor(d).forEach((b) => meta.append(b));
-    const sc = el('span', 'scores');
-    const s1 = el('span'); s1.append(el('i', null, 'WEB'), el('b', null, String(d.wScore)));
-    const s2 = el('span'); s2.append(el('i', null, 'IT'), el('b', null, String(d.itScore)));
-    sc.append(s1, s2); meta.append(sc);
+    meta.append(metersOf(d));
     L.append(meta);
 
-    const ph = el('a', 'cphone', d.phone); ph.href = telOf(d);
+    const ph = el('a', 'cphone'); ph.append(ico('phone'), d.phone); ph.href = telOf(d);
     L.append(ph);
     if (d.pm) L.append(el('p', 'calt', 'Second number in listings: ' + d.pm));
 
@@ -2173,23 +2346,23 @@
     L.append(look);
 
     const tm = timingOf(d);
-    if (tm) { const s = el('div', 'csec'); s.append(el('h3', null, 'Timing'), el('p', tm.hot ? 'timing' : 'warn', tm.text)); L.append(s); }
+    if (tm) { const s = el('div', 'csec'); s.append(h3i('zap', 'Timing'), el('p', tm.hot ? 'timing' : 'warn', tm.text)); L.append(s); }
 
     const opS = el('div', 'csec');
-    opS.append(el('h3', null, 'Open with'));
+    opS.append(h3i('mic', 'Open with'));
     const cl = el('div', 'copyline'); cl.append(el('p', null, p.opener), copyBtn(p.opener));
     opS.append(cl); L.append(opS);
 
     const tpS = el('div', 'csec');
-    tpS.append(el('h3', null, 'Talking points'));
+    tpS.append(h3i('list', 'Talking points'));
     const ul = el('ul'); for (const pt of p.points.slice(0, 5)) ul.append(el('li', null, pt));
     tpS.append(ul); L.append(tpS);
 
-    const piS = el('div', 'csec'); piS.append(el('h3', null, 'Pitch'), el('p', null, p.pitch)); L.append(piS);
+    const piS = el('div', 'csec'); piS.append(h3i('target', 'Pitch'), el('p', null, p.pitch)); L.append(piS);
 
     const so = stillOpen(d);
-    const soS = el('div', 'csec'); soS.append(el('h3', null, 'Still open?'), el('p', so.warn ? 'warn' : '', so.text)); L.append(soS);
-    const whoS = el('div', 'csec'); whoS.append(el('h3', null, 'Who to ask for'), el('p', d.multi ? 'warn' : '', p.who + ' ' + p.when)); L.append(whoS);
+    const soS = el('div', 'csec'); soS.append(h3i('info', 'Still open?'), el('p', so.warn ? 'warn' : '', so.text)); L.append(soS);
+    const whoS = el('div', 'csec'); whoS.append(h3i('user', 'Who to ask for'), el('p', d.multi ? 'warn' : '', p.who + ' ' + p.when)); L.append(whoS);
 
     // right column: state, outcomes, notes, send, nav
     const stS = el('div');
@@ -2202,8 +2375,7 @@
     R.append(stS);
 
     const oS = el('div');
-    oS.append(el('h3', null, 'Outcome'));
-    oS.querySelector('h3').style.cssText = 'font:600 11px/1.4 Barlow,sans-serif;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin-bottom:6px';
+    oS.append(h3i('check', 'Outcome'));
     const grid = el('div', 'outcomes');
     HOTKEY_ORDER.forEach((sk, i) => {
       const b = el('button', 'stbtn');
@@ -2223,7 +2395,7 @@
     R.append(oS);
 
     const nS = el('div');
-    const nh = el('h3', null, 'Notes'); nh.style.cssText = 'font:600 11px/1.4 Barlow,sans-serif;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin-bottom:6px';
+    const nh = h3i('file', 'Notes');
     const ta = el('textarea', 'cnotes');
     ta.placeholder = 'Who you talked to, what they said, next step… (saves when you leave the box)';
     ta.value = noteOf(d);
@@ -2237,7 +2409,7 @@
     R.append(nS);
 
     const sS = el('div');
-    const sh = el('h3', null, 'Send the checkup'); sh.style.cssText = nh.style.cssText;
+    const sh = h3i('mail', 'Send the checkup');
     const send = el('div', 'csend');
     if (d.slug) {
       const sms = el('a', 'minibtn', 'Text it'); sms.href = smsHrefOf(d);
@@ -2254,9 +2426,9 @@
     R.append(sS);
 
     const nav = el('div', 'cnav');
-    const back = el('button', 'btn sm'); back.append('Back', el('kbd', null, '←')); back.disabled = callIdx === 0;
+    const back = el('button', 'btn sm'); back.append(ico('left', 's'), 'Back', el('kbd', null, '←')); back.disabled = callIdx === 0;
     back.addEventListener('click', callBack);
-    const skip = el('button', 'btn sm'); skip.append('Skip', el('kbd', null, 'Space'));
+    const skip = el('button', 'btn sm'); skip.append('Skip', ico('right', 's'), el('kbd', null, 'Space'));
     skip.addEventListener('click', callSkip);
     const more = el('button', 'btn sm', 'Full prep…');
     more.title = 'Every prep row: gatekeeper play, email draft, stack, reputation';
@@ -2388,6 +2560,17 @@
     render();
     if (state.view === 'schedule') renderSchedule();
   }
+  // ---- navigation rail ----
+  $('railCall').addEventListener('click', () => { if (callActive) exitCallMode(true); else startCallMode(); });
+  $('railExit').addEventListener('click', () => exitCallMode(true));
+  $('lockItem').addEventListener('click', () => {
+    if (unlocked) { showToast('Tracking is unlocked on this device'); return; }
+    if (!TRACKING) { showToast('This copy of the board is read-only'); return; }
+    $('unlockbar').hidden = false;
+    $('keyinput').focus();
+  });
+  if (!TRACKING) { $('lockItem').title = 'Read-only copy — tracking lives on the live board'; $('lockLabel').textContent = 'Read-only'; }
+
   sortSel.value = sortValue();
   renderActiveChips();
   render();

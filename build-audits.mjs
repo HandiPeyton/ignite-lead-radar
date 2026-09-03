@@ -455,41 +455,200 @@ function passes(l, deep, ds) {
   return out.slice(0, 6);
 }
 
+// ---------- at a glance ----------
+// Every pill is derived from a field we actually hold; a missing field is "Not checked",
+// never a guess. The notes state the measurement, not an opinion.
+const GLANCE_LABEL = { good: 'Good', warn: 'Needs attention', crit: 'Critical', na: 'Not checked' };
+const fmtS = (ms) => (ms / 1000).toFixed(1) + ' s';
+
+function glance(l, deep, ds) {
+  const a = l.audit || {};
+  const d = deep || {};
+  const rows = [];
+  const row = (key, icon, label, status, note) => rows.push({ key, icon, label, status, note });
+
+  // Website availability — from the scan status only.
+  {
+    const s = a.status;
+    if (s === 'ok') row('availability', 'globe', 'Website availability', 'good', 'The homepage loaded normally on our checks.');
+    else if (s === 'http-only') row('availability', 'globe', 'Website availability', 'warn', 'The homepage loads, but only over unencrypted HTTP.');
+    else if (s === 'down') row('availability', 'globe', 'Website availability', 'crit', 'No response on any address variant we tried (www / non-www, secure and not).');
+    else if (s === 'parked') row('availability', 'globe', 'Website availability', 'crit', 'The address shows a parking placeholder instead of a website.');
+    else if (s === 'ssl-error') row('availability', 'globe', 'Website availability', 'crit', 'Browsers report a security-certificate error before the page opens.');
+    else row('availability', 'globe', 'Website availability', 'na', !l.website ? 'No website was found in public listings to test.' : 'Could not be tested from our side.');
+  }
+
+  // Security certificate — from the measured days-left; scan status as the only fallback.
+  {
+    const n = d.certDaysLeft;
+    if (typeof n === 'number') {
+      if (n < 0) row('certificate', 'shield', 'Security certificate', 'crit', `Expired ${d.certValidTo || Math.abs(n) + ' days ago'}.`);
+      else if (n < 30) row('certificate', 'shield', 'Security certificate', 'warn', `Expires in ${n} day${n === 1 ? '' : 's'}${d.certValidTo ? ` (${d.certValidTo})` : ''}.`);
+      else row('certificate', 'shield', 'Security certificate', 'good', `Valid for ${n} more days${d.certValidTo ? ` (through ${d.certValidTo})` : ''}.`);
+    } else if (a.status === 'ssl-error') row('certificate', 'shield', 'Security certificate', 'crit', 'Browsers cannot verify the certificate presented by the site.');
+    else if (a.status === 'http-only') row('certificate', 'shield', 'Security certificate', 'warn', 'No certificate in use — the site is not served over HTTPS.');
+    else row('certificate', 'shield', 'Security certificate', 'na', 'Certificate expiry was not recorded in this review.');
+  }
+
+  // Email protection — from the SPF / DMARC lookups only. A missing record is 'warn', the
+  // same severity as the 'imp' finding card it mirrors, so one fact never carries two labels.
+  {
+    const spf = d.spf, dmarc = d.dmarc;
+    if (spf === false || dmarc === false) {
+      const missing = [spf === false ? 'SPF' : null, dmarc === false ? 'DMARC' : null].filter(Boolean).join(' and ');
+      row('email', 'mail', 'Email protection', 'warn', `Missing ${missing} — forged mail from the domain is not blocked.`);
+    } else if (spf === true && dmarc === true) {
+      if (d.dmarcPolicy === 'none') row('email', 'mail', 'Email protection', 'warn', 'SPF and DMARC are published, but DMARC is set to monitor only (p=none).');
+      else if (d.spfAll === '+all' || d.spfAll === '?all') row('email', 'mail', 'Email protection', 'warn', `SPF and DMARC are published, but the SPF record ends in "${d.spfAll}" and restricts nothing.`);
+      else if (typeof d.spfLookups === 'number' && d.spfLookups > 10) row('email', 'mail', 'Email protection', 'warn', `SPF and DMARC are published, but SPF needs ${d.spfLookups} DNS lookups (limit 10).`);
+      else row('email', 'mail', 'Email protection', 'good', `SPF and DMARC published${d.dmarcPolicy === 'reject' || d.dmarcPolicy === 'quarantine' ? ` and enforcing (p=${d.dmarcPolicy})` : ''}.`);
+    } else row('email', 'mail', 'Email protection', 'na', 'DNS email records were not read for this review.');
+  }
+
+  // Mobile — from the viewport tag; the rendered overflow measurement overrides it.
+  {
+    if (ds && ds.mobileOverflow === true) row('mobile', 'phone', 'Mobile', 'warn', `Rendered on a phone screen, content runs about ${ds.overflowPx || '?'} px off the edge.`);
+    else if (a.viewport === true) row('mobile', 'phone', 'Mobile', 'good', 'Mobile viewport is set; the page adapts to phone screens.');
+    else if (a.viewport === false) row('mobile', 'phone', 'Mobile', 'warn', 'No mobile viewport — phones show a shrunken desktop page.');
+    else row('mobile', 'phone', 'Mobile', 'na', 'Mobile layout was not measured for this review.');
+  }
+
+  // Performance — from the rendered load time and largest-paint measurement.
+  {
+    const load = ds && typeof ds.loadMs === 'number' && ds.loadMs > 0 ? ds.loadMs : null;
+    const lcp = ds && typeof ds.lcpMs === 'number' && ds.lcpMs > 0 ? ds.lcpMs : null;
+    if (load === null && lcp === null) row('performance', 'gauge', 'Performance', 'na', 'Load time was not measured for this review.');
+    else if (load !== null && load >= 5000) row('performance', 'gauge', 'Performance', 'warn', `Homepage took ${fmtS(load)} to load in our browser test.`);
+    else if (lcp !== null && lcp > 4000) row('performance', 'gauge', 'Performance', 'warn', `${load !== null ? `Loaded in ${fmtS(load)}, but the` : 'The'} main content appeared at ${fmtS(lcp)} (Google's "poor" line is 4 s).`);
+    else if (load !== null && load < 3000) row('performance', 'gauge', 'Performance', 'good', `Homepage loaded in ${fmtS(load)} in our browser test${lcp !== null ? `; main content at ${fmtS(lcp)}` : ''}.`);
+    else if (load !== null) row('performance', 'gauge', 'Performance', 'warn', `Homepage loaded in ${fmtS(load)} — the target for a local site is under 3 s.`);
+    else if (lcp <= 2500) row('performance', 'gauge', 'Performance', 'good', `Main content appeared at ${fmtS(lcp)} in our browser test.`);
+    else row('performance', 'gauge', 'Performance', 'warn', `Main content appeared at ${fmtS(lcp)} — Google's target is 2.5 s.`);
+  }
+
+  // Search presence — from the SEO basics we read off the homepage.
+  {
+    const checks = [];
+    if ('title' in d) checks.push(['page title', !!(d.title && d.title.length >= 8)]);
+    if (typeof d.desc === 'boolean') checks.push(['search description', d.desc]);
+    if (typeof d.h1 === 'boolean') checks.push(['main heading', d.h1]);
+    if (typeof d.localSchema === 'boolean') checks.push(['local-business markup', d.localSchema]);
+    if (typeof d.smOk === 'boolean') checks.push(['sitemap', d.smOk]);
+    if (!checks.length) row('search', 'search', 'Search presence', 'na', 'Search basics were not read for this review.');
+    else {
+      const fail = checks.filter(([, ok]) => !ok).map(([n]) => n);
+      if (fail.length) row('search', 'search', 'Search presence', 'warn', `Missing: ${fail.join(', ')}.`);
+      else row('search', 'search', 'Search presence', 'good', `In place: ${checks.map(([n]) => n).join(', ')}.`);
+    }
+  }
+
+  // Domain registration — from the registry status and expiration date.
+  {
+    const expDays = d.exp && Number.isFinite(Date.parse(d.exp)) ? Math.round((Date.parse(d.exp) - Date.now()) / 86400000) : null;
+    const flag = d.domLapsed ? (d.domLapsed === 'pendingdelete' ? 'pending delete' : 'redemption period') : d.domHold ? 'registrar hold' : null;
+    if (flag && !d.ok) row('domain', 'calendar', 'Domain registration', 'crit', `The registry lists the domain as "${flag}"${d.exp ? ` (expiration date ${d.exp})` : ''}.`);
+    else if (flag) row('domain', 'calendar', 'Domain registration', 'warn', `The registry shows a "${flag}" status while the site still loads — confirm the renewal with your registrar.`);
+    else if (d.domGrace) row('domain', 'calendar', 'Domain registration', 'warn', 'The registry shows auto-renew grace status — confirm the renewal went through.');
+    else if (expDays !== null && expDays < 0) row('domain', 'calendar', 'Domain registration', 'warn', `The registry's expiration date (${d.exp}) has passed — confirm the renewal with your registrar.`);
+    else if (expDays !== null && expDays < 45) row('domain', 'calendar', 'Domain registration', 'crit', `Registered only through ${d.exp} — ${expDays} days from now.`);
+    else if (expDays !== null && expDays <= 60) row('domain', 'calendar', 'Domain registration', 'warn', `Registered through ${d.exp} — ${expDays} days from now; renew soon.`);
+    else if (expDays !== null) row('domain', 'calendar', 'Domain registration', 'good', `Registered through ${d.exp}.`);
+    else row('domain', 'calendar', 'Domain registration', 'na', 'Registry data was not read for this review.');
+  }
+  return rows;
+}
+
+// ---------- icons (20px inline SVG, stroke = currentColor) ----------
+const ICON = {
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  phone: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/>',
+  gauge: '<path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-6"/><circle cx="12" cy="17" r="1.2"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name] || ICON.globe}</svg>`;
+
+// Which icon leads a finding card. Matched on the card title so manual pages get one too.
+function categoryOf(f) {
+  const t = f.title;
+  if (/registration|on hold|auto-renew grace/i.test(t)) return 'calendar';
+  if (/remote access|certificate|HTTPS|security|WordPress|server software|1990s|code libraries/i.test(t)) return 'shield';
+  if (/impersonated|monitor only|SPF|\bemail\b|\bmail\b/i.test(t)) return 'mail';
+  if (/\bphones?\b|jumps around/i.test(t)) return 'phone';
+  if (/takes .* seconds|main content takes|slowing you down|heavy homepage/i.test(t)) return 'gauge';
+  if (/title|description|heading|markup|sitemap|analytics|links go to|text alternatives|labels|says ©|hasn’t changed|contact page/i.test(t)) return 'search';
+  return 'globe';
+}
+
 function page(l, F, deep, slug, opts = {}) {
   const shotSrc = opts.shotSrc || `/shot/${esc(slug)}.jpg`;
-  const shotCaption = opts.shotCaption || 'Exhibit: your homepage as visitors see it today';
+  const shotCaption = opts.shotCaption || 'Your homepage as visitors see it today';
   const g = l.website ? grade(F) : null;
   const host = l.website ? hostnameOf(l.website) : null;
+  const ds = l.website ? (opts.ds || null) : null;
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const fullDate = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const isoDate = now.toISOString().slice(0, 10);
   const counts = ['crit', 'imp', 'rec'].map((s) => [s, F.filter((f) => f.sev === s).length]);
   const sevRank = { crit: 0, imp: 1, rec: 2 };
   const ranked = [...F].sort((x, y) => sevRank[x.sev] - sevRank[y.sev]);
   const headline = ranked.slice(0, 3);
   const plan = ranked.slice(0, 3);
-  const good = l.website && !SOCIAL_RE.test(l.website) ? passes(l, deep, l.website ? (opts.ds || null) : null) : [];
+  const hasSite = !!(l.website && !SOCIAL_RE.test(l.website));
+  const good = hasSite ? passes(l, deep, ds) : [];
+  const rows = glance(l, deep, ds);
   const needLine = l.need === 'Both'
     ? 'The findings span both the website itself and the technology behind it — the two halves of how your business shows up and stays safe online.'
     : l.need === 'IT'
       ? 'Most of what we found is about the technology behind the business — the kind of thing an IT partner quietly keeps handled.'
       : 'Most of what we found is about the website itself — how the business looks and performs when customers find you.';
-  const gradeColor = g ? ((g.letter === 'A' || g.letter === 'B') ? 'var(--good)' : g.letter === 'C' ? 'var(--imp)' : 'var(--crit)') : 'var(--soft)';
+  const ringColor = g ? ((g.letter === 'A' || g.letter === 'B') ? '#047857' : g.letter === 'C' ? '#B45309' : '#B91C1C') : '#E3E8F0';
+  const countLine = counts.filter(([, n]) => n).map(([s, n]) => `${n} ${SEV_LABEL[s].toLowerCase()}`).join(' · ') || 'no issues found';
+
+  // Score ring: r=52 → circumference 326.73
+  const C = 2 * Math.PI * 52;
+  const dash = g ? (C * g.score / 100).toFixed(2) : '0';
+  const ring = `
+      <div class="ring" data-grade="${g ? g.letter : ''}" data-score="${g ? g.score : ''}">
+        <svg viewBox="0 0 120 120" width="136" height="136" role="img" aria-label="${g ? `Score ${g.score} out of 100, grade ${g.letter}` : 'No score — no website found'}">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#E3E8F0" stroke-width="7"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="${ringColor}" stroke-width="7" stroke-dasharray="${dash} ${C.toFixed(2)}" transform="rotate(-90 60 60)"/>
+          <text class="rletter" x="60" y="66" text-anchor="middle">${g ? g.letter : '—'}</text>
+          <text class="rscore" x="60" y="86" text-anchor="middle">${g ? `${g.score}/100` : 'no site'}</text>
+        </svg>
+        <div class="ringmeta">
+          <b>${g ? esc(GRADE_MEANING[g.letter]) : 'We couldn’t find a website for your business.'}</b>
+          <span>${g ? `<span class="mono">${F.length}</span> finding${F.length === 1 ? '' : 's'} · ${esc(countLine)}` : 'If you have one we missed, we’d like to check it — otherwise, that is the finding.'}</span>
+        </div>
+      </div>`;
+
+  const glanceRows = rows.map((r) => `
+        <tr data-check="${r.key}" data-status="${r.status}">
+          <th scope="row">${icon(r.icon)}<span>${esc(r.label)}</span></th>
+          <td class="st"><span class="pill p-${r.status}">${GLANCE_LABEL[r.status]}</span></td>
+          <td class="note">${esc(r.note)}</td>
+        </tr>`).join('');
 
   const cards = F.map((f) => {
     const v = verifyHint(f, host);
     return `
-      <article class="card sev-${f.sev}">
-        <div class="cardhead"><span class="sevtag">${SEV_LABEL[f.sev]}</span><h3>${esc(f.title)}</h3></div>
-        <p class="found">${esc(f.found)}</p>
+      <article class="card sev-${f.sev}" data-cat="${categoryOf(f)}">
+        <div class="cardhead">${icon(categoryOf(f))}<span class="sevtag">${SEV_LABEL[f.sev]}</span></div>
+        <h3>${esc(f.title)}</h3>
+        <p class="found"><strong>What we found:</strong> ${esc(f.found)}</p>
         <p><strong>Why it matters:</strong> ${esc(f.why)}</p>
         <p class="fix"><strong>The fix:</strong> ${esc(f.fix)}</p>
         ${v ? `<p class="verify"><strong>Check it yourself:</strong> ${esc(v)}</p>` : ''}
       </article>`;
   }).join('\n');
 
-  const summaryList = headline.map((f) => `<li class="s-${f.sev}"><span class="dot"></span>${esc(f.title)}</li>`).join('');
-  const goodList = good.length >= 2 ? `<h2 class="inline">What’s working</h2><ul class="good">${good.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '';
+  const summaryList = headline.map((f) => `<li class="s-${f.sev}"><span class="sevdot"></span><span>${esc(f.title)}</span></li>`).join('');
+  const goodList = good.length
+    ? `<ul class="good">${good.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>`
+    : `<p class="muted">${hasSite ? 'Nothing we could verify as working from public data alone — that changes once we can look together.' : 'There was no website to check, so there is nothing to list here yet.'}</p>`;
   const planList = plan.map((f) => `<li><div class="ptitle">${esc(f.title)}</div><div class="pfix">${esc(f.fix)}</div><span class="effort">${esc(effortOf(f))}</span></li>`).join('');
 
   return `<!doctype html>
@@ -498,157 +657,233 @@ function page(l, F, deep, slug, opts = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
 <title>${esc(l.name)} — Website &amp; Technology Checkup</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=Manrope:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
   :root {
-    --paper: #FAF7F4; --card: #FFFFFF; --ink: #26211D; --soft: #6B6259; --faint: #9A928A;
-    --line: #E3DAD1; --ember: #C2410C; --ember-soft: #FBE9DF;
-    --crit: #A8321B; --crit-bg: #F9E3DC;
-    --imp: #8A6D1C;  --imp-bg: #F5ECD4;
-    --rec: #2F6FAB;  --rec-bg: #E1ECF5;
-    --good: #177E70; --good-bg: #DDF0EC;
+    --paper: #FFFFFF; --ground: #F6F8FB; --ink: #0F172A; --muted: #475569; --rule: #E3E8F0;
+    --accent: #0F766E; --accent-soft: #DDF3EE; --ember: #C2410C;
+    --crit: #B91C1C; --crit-bg: #FDE8E8;
+    --imp: #A8490A;  --imp-bg: #FDF1DC;
+    --rec: #1D4ED8;  --rec-bg: #E4ECFB;
+    --good: #047857; --good-bg: #DDF3EE;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "SFMono-Regular", Menlo, monospace;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 "Barlow", "Segoe UI", sans-serif; }
-  .sheet { max-width: 840px; margin: 0 auto; padding: 28px 20px 56px; }
-  .brandrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
-    border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
-  .brandrow b { font: 700 17px/1 "Barlow Condensed", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
-  .brandrow b span { color: var(--ember); }
-  .brandrow small { color: var(--soft); }
-  h1 { font: 700 clamp(32px, 6vw, 44px)/1.02 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .01em; margin: 24px 0 4px; text-wrap: balance; }
-  .who { color: var(--soft); margin: 0 0 20px; font-size: 15px; }
-  .who b { color: var(--ink); }
+  html { -webkit-text-size-adjust: 100%; background: var(--ground); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--sans); }
+  .doc { max-width: 760px; margin: 0 auto; background: var(--paper); }
+  .pad { padding: 0 20px; }
+  p { margin: 0 0 12px; max-width: 66ch; }
+  a { color: var(--accent); }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+  strong { font-weight: 600; }
 
-  .top { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 8px; }
-  .gradebox { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center; }
-  .gletter { font: 700 64px/1 "Barlow Condensed", sans-serif; color: ${gradeColor}; grid-row: span 2; font-variant-numeric: tabular-nums; }
-  .gmean { font: 600 17px/1.25 "Barlow", sans-serif; }
-  .gmeta { font-size: 14px; color: var(--soft); }
-  .gmeta b { color: var(--ink); }
-  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px 14px; }
-  h2 { font: 600 12.5px/1 "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .12em; color: var(--soft); margin: 30px 0 12px; }
-  h2.inline { margin: 14px 0 8px; }
-  .summary h2:first-child { margin-top: 0; }
-  ul.headline { list-style: none; margin: 0; padding: 0; }
-  ul.headline li { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; margin: 0 0 6px; line-height: 1.35; }
-  ul.headline .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--rec); }
-  ul.headline .s-crit .dot { background: var(--crit); }
-  ul.headline .s-imp .dot { background: var(--imp); }
-  ul.good { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-  ul.good li { position: relative; padding-left: 20px; color: var(--soft); font-size: 15px; }
-  ul.good li::before { content: ''; position: absolute; left: 0; top: 7px; width: 10px; height: 6px; border-left: 2px solid var(--good); border-bottom: 2px solid var(--good); transform: rotate(-45deg); }
+  /* cover band */
+  .cover { padding: 26px 20px 24px; border-bottom: 1px solid var(--rule); }
+  .brand { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 10px; position: relative; }
+  .brand::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; height: 2px; background: var(--ember); }
+  .brand b { font: 600 13px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .brand small { font-size: 13px; color: var(--muted); }
+  h1 { font: 600 clamp(28px, 5.2vw, 38px)/1.12 var(--serif); letter-spacing: -.01em; margin: 26px 0 18px; text-wrap: balance; }
+  .coverbody { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; }
+  dl.who { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 15px; }
+  dl.who dt { color: var(--muted); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; padding-top: 3px; }
+  dl.who dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  dl.who dd.mono { font-weight: 400; font-size: 14px; }
+  .ring { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center; justify-self: start; }
+  .ring svg { display: block; }
+  .ring .rletter { font: 600 46px var(--serif); fill: var(--ink); }
+  .ring .rscore { font: 400 11.5px var(--mono); fill: var(--muted); letter-spacing: .02em; }
+  .ringmeta { display: grid; gap: 4px; max-width: 300px; }
+  .ringmeta b { font: 600 16px/1.3 var(--sans); }
+  .ringmeta span { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
 
-  .shotwrap { margin: 16px 0 6px; padding: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
-  .shotwrap img { width: 100%; border: 1px solid var(--line); border-radius: 4px; display: block; }
-  .shotwrap figcaption { font-size: 12.5px; color: var(--soft); margin-top: 8px; text-align: center; letter-spacing: .02em; }
-  .angle { margin: 18px 0 24px; padding: 14px 18px; border-left: 3px solid var(--ember); background: var(--card); border-radius: 0 6px 6px 0; }
+  /* at a glance */
+  .glancewrap { padding: 22px 20px 6px; }
+  .glancewrap h2 { margin-top: 0; }
+  table.glance { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--ground); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  table.glance thead th { text-align: left; font: 600 11.5px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--rule); background: var(--paper); }
+  table.glance tbody th, table.glance tbody td { padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; text-align: left; }
+  table.glance tbody tr:last-child th, table.glance tbody tr:last-child td { border-bottom: 0; }
+  table.glance tbody th { font-weight: 600; white-space: nowrap; }
+  table.glance tbody th .ico { vertical-align: -5px; margin-right: 8px; color: var(--accent); }
+  table.glance td.st { white-space: nowrap; }
+  table.glance td.note { color: var(--muted); }
+  .pill { display: inline-block; font: 600 11.5px/1.2 var(--sans); letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+  .p-good { color: var(--good); background: var(--good-bg); }
+  .p-warn { color: var(--imp); background: var(--imp-bg); }
+  .p-crit { color: var(--crit); background: var(--crit-bg); }
+  .p-na   { color: var(--muted); background: var(--rule); }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-left-width: 5px; border-radius: 6px; padding: 14px 18px 6px; margin-bottom: 12px; }
-  .card.sev-crit { border-left-color: var(--crit); }
-  .card.sev-imp  { border-left-color: var(--imp); }
-  .card.sev-rec  { border-left-color: var(--rec); }
-  .cardhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-  .sevtag { display: inline-block; font: 600 10.5px/1.2 "Barlow", sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; }
+  /* sections */
+  section { padding: 22px 20px 8px; }
+  section.ground { background: var(--ground); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-bottom: 14px; }
+  h2 { font: 600 22px/1.25 var(--serif); margin: 0 0 14px; display: flex; align-items: baseline; gap: 12px; letter-spacing: -.005em; }
+  h2 .num { font: 400 13px/1 var(--mono); color: var(--accent); letter-spacing: .04em; min-width: 22px; }
+  .lede { font-size: 17px; line-height: 1.55; margin-bottom: 14px; }
+  ul.headline { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+  ul.headline li { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; line-height: 1.4; }
+  ul.headline .sevdot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; background: var(--rec); }
+  ul.headline .s-crit .sevdot { background: var(--crit); }
+  ul.headline .s-imp .sevdot { background: var(--imp); }
+  figure.exhibit { margin: 8px 0 12px; padding: 12px; background: var(--ground); border: 1px solid var(--rule); border-radius: 6px; }
+  figure.exhibit img { width: 100%; border: 1px solid var(--rule); border-radius: 3px; display: block; background: #fff; }
+  figure.exhibit figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  figure.exhibit figcaption b { font-family: var(--mono); font-weight: 600; color: var(--ink); margin-right: 8px; font-size: 12px; letter-spacing: .04em; }
+
+  /* finding cards */
+  .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px 8px; margin-bottom: 12px; }
+  .cardhead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .cardhead .ico { color: var(--muted); }
+  .sev-crit .cardhead .ico { color: var(--crit); }
+  .sev-imp  .cardhead .ico { color: var(--imp); }
+  .sev-rec  .cardhead .ico { color: var(--rec); }
+  .sevtag { display: inline-block; font: 600 11px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
   .sev-crit .sevtag { color: var(--crit); background: var(--crit-bg); }
   .sev-imp  .sevtag { color: var(--imp); background: var(--imp-bg); }
   .sev-rec  .sevtag { color: var(--rec); background: var(--rec-bg); }
-  .card h3 { margin: 0; font: 600 18px/1.25 "Barlow", sans-serif; text-wrap: balance; }
-  .card p { margin: 0 0 9px; }
-  .card .found { color: var(--soft); }
-  .card .verify { font-size: 14px; color: var(--soft); border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 4px; }
-  .card .verify strong { color: var(--ink); font-weight: 600; }
+  .card h3 { margin: 0 0 10px; font: 600 19px/1.3 var(--serif); text-wrap: balance; }
+  .card p { margin: 0 0 9px; font-size: 15.5px; }
+  .card .found { color: var(--ink); }
+  .card .verify { font-size: 14px; color: var(--muted); border-top: 1px dashed var(--rule); padding-top: 9px; margin-top: 6px; }
+  .card .verify strong { color: var(--ink); }
 
-  ol.plan { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 10px; }
-  ol.plan li { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px 12px 54px; }
-  ol.plan li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 10px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--paper); font: 700 16px/28px "Barlow Condensed", sans-serif; text-align: center; }
+  /* what's working */
+  ul.good { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+  ul.good li { position: relative; padding-left: 26px; }
+  ul.good li::before { content: ''; position: absolute; left: 2px; top: 6px; width: 11px; height: 6px; border-left: 2px solid var(--good); border-bottom: 2px solid var(--good); transform: rotate(-45deg); }
+
+  /* plan */
+  ol.plan { list-style: none; margin: 0 0 8px; padding: 0; counter-reset: step; display: grid; gap: 10px; }
+  ol.plan li { position: relative; background: var(--ground); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px 12px 56px; }
+  ol.plan li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 12px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--paper); font: 600 14px/28px var(--mono); text-align: center; }
   ol.plan .ptitle { font-weight: 600; }
-  ol.plan .pfix { color: var(--soft); font-size: 15px; margin-top: 2px; }
-  ol.plan .effort { display: inline-block; margin-top: 8px; font: 600 11px/1.2 "Barlow", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ember); background: var(--ember-soft); padding: 3px 8px; border-radius: 3px; }
+  ol.plan .pfix { color: var(--muted); font-size: 15px; margin-top: 2px; }
+  ol.plan .effort { display: inline-block; margin-top: 8px; font: 600 11px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: 999px; }
 
-  .cta { margin-top: 30px; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 22px 22px 20px; }
-  .cta h2 { color: var(--paper); opacity: .7; margin: 0 0 8px; }
-  .cta .big { font: 700 24px/1.2 "Barlow Condensed", sans-serif; margin: 0 0 10px; }
-  .cta .tel { display: inline-block; font: 700 34px/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; color: #F0956B; text-decoration: none; font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
-  .cta p { margin: 0 0 4px; }
-  .cta a { color: #F0956B; text-decoration: none; }
-  .cta .reply { color: var(--paper); opacity: .8; font-size: 15px; margin-top: 8px; }
-  footer { margin-top: 24px; color: var(--soft); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 12px; }
+  /* next step */
+  .cta { border: 2px solid var(--accent); border-radius: 8px; padding: 20px 22px 18px; background: var(--paper); margin-bottom: 8px; }
+  .cta .big { font: 600 18px/1.3 var(--serif); margin: 0 0 6px; }
+  .cta .tel { display: inline-block; font: 600 clamp(26px, 6vw, 32px)/1.15 var(--mono); letter-spacing: .01em; color: var(--ink); text-decoration: none; margin: 4px 0 10px; }
+  .cta p { margin: 0 0 6px; }
+  .cta .reply { color: var(--muted); font-size: 15px; margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 10px; }
 
-  @media (min-width: 720px) {
-    .sheet { padding: 34px 26px 60px; }
-    .top { grid-template-columns: 250px 1fr; }
+  footer { padding: 18px 20px 40px; color: var(--muted); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--rule); }
+  footer .mono { color: var(--ink); }
+
+  @media (max-width: 600px) {
+    table.glance thead { display: none; }
+    table.glance tbody tr { display: grid; grid-template-columns: 1fr auto; }
+    table.glance tbody th, table.glance tbody td { border-bottom: 0; padding: 10px 12px 0; }
+    table.glance tbody td.note { grid-column: 1 / -1; padding: 4px 12px 10px 40px; border-bottom: 1px solid var(--rule); font-size: 14px; }
+    table.glance tbody tr:last-child td.note { border-bottom: 0; }
+  }
+  @media (min-width: 640px) {
+    .cover { padding: 34px 32px 28px; }
+    .coverbody { grid-template-columns: 1fr auto; gap: 28px; }
+    .ring { justify-self: end; grid-template-columns: auto; justify-items: center; text-align: center; }
+    .ringmeta { max-width: 220px; }
+    .glancewrap, section { padding-left: 32px; padding-right: 32px; }
+    footer { padding-left: 32px; padding-right: 32px; }
+    .doc { border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
   }
   @media print {
-    body { background: #fff; font-size: 13px; }
-    .sheet { padding: 0; max-width: none; }
-    .top { grid-template-columns: 220px 1fr; }
-    .cta { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
-    .cta a, .cta h2, .cta .tel, .cta .reply { color: var(--ink); }
-    .card, .gradebox, .summary, ol.plan li, .shotwrap { break-inside: avoid; }
-    h2 { break-after: avoid; }
+    @page { size: Letter; margin: 0.55in 0.6in; }
+    html, body { background: #fff; }
+    body { font-size: 12.5px; line-height: 1.5; }
+    .doc { max-width: none; border: 0; }
+    .cover { padding: 0 0 18px; }
+    .glancewrap, section, footer { padding-left: 0; padding-right: 0; }
+    section.ground { background: var(--ground); -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-left: 12px; padding-right: 12px; }
+    .pill, .sevtag, .effort, ol.plan li::before, .ring circle, .cardhead .ico { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .coverbody { grid-template-columns: 1fr auto; }
+    .card, table.glance tr, ol.plan li, figure.exhibit, .cta, .coverbody, .ring { break-inside: avoid; page-break-inside: avoid; }
+    figure.exhibit img { width: auto; max-width: 100%; max-height: 7in; margin: 0 auto; }
+    table.glance thead { display: table-header-group; }
+    h2, h3 { break-after: avoid; page-break-after: avoid; }
+    .card p { font-size: 12.5px; }
+    a { color: inherit; text-decoration: none; }
   }
 </style>
 </head>
 <body>
-<div class="sheet">
-  <div class="brandrow">
-    <b>Ignite <span>/</span> Cyber Solutions &nbsp;&middot;&nbsp; Ridge Web Designs</b>
-    <small>${esc(CONTACT.tagline)}</small>
-  </div>
-
-  <h1>Website &amp; Technology Checkup</h1>
-  <p class="who">Prepared for <b>${esc(l.name)}</b> &middot; ${esc(l.town)}, ${esc(l.st)}${host ? ` &middot; ${esc(host)}` : ''} &middot; ${dateStr}</p>
-
-  <div class="top">
-    ${g ? `<div class="gradebox">
-      <div class="gletter">${g.letter}</div>
-      <div class="gmean">${esc(GRADE_MEANING[g.letter])}</div>
-      <div class="gmeta"><b>${F.length} finding${F.length === 1 ? '' : 's'}</b> &middot; ${counts.filter(([, n]) => n).map(([s, n]) => `${n} ${SEV_LABEL[s].toLowerCase()}`).join(' · ') || 'no issues found'}</div>
-    </div>` : `<div class="gradebox">
-      <div class="gletter">?</div>
-      <div class="gmean">We couldn’t find a website for your business.</div>
-      <div class="gmeta">If you have one we missed, we’d love to check it — otherwise, that’s the finding.</div>
-    </div>`}
-    <div class="summary">
-      <h2>In 20 seconds</h2>
-      <ul class="headline">${summaryList}</ul>
-      ${goodList}
+<div class="doc">
+  <header class="cover">
+    <div class="brand">
+      <b>${CONTACT.brands.split(' · ').map(esc).join(' &nbsp;&middot;&nbsp; ')}</b>
+      <small>${esc(CONTACT.tagline)}</small>
     </div>
+    <h1>Website &amp; Technology Checkup</h1>
+    <div class="coverbody">
+      <dl class="who">
+        <dt>Prepared for</dt><dd>${esc(l.name)}</dd>
+        <dt>Town</dt><dd>${esc(l.town)}, ${esc(l.st)}</dd>
+        ${host ? `<dt>Domain</dt><dd class="mono">${esc(host)}</dd>` : ''}
+        <dt>Date</dt><dd class="mono">${esc(fullDate)}</dd>
+      </dl>
+      ${ring}
+    </div>
+  </header>
+
+  <div class="glancewrap">
+    <h2>At a glance</h2>
+    <table class="glance">
+      <thead><tr><th>Check</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>${glanceRows}
+      </tbody>
+    </table>
   </div>
 
-  ${l.website && !SOCIAL_RE.test(l.website) ? `<figure class="shotwrap">
-    <img src="${shotSrc}" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
-      onerror="this.closest('figure').style.display='none'"${opts.shotMaxWidth ? ` style="max-width:${opts.shotMaxWidth}px;margin:0 auto"` : ''}>
-    <figcaption>${esc(shotCaption)}</figcaption>
-  </figure>` : ''}
+  <section id="s1">
+    <h2><span class="num">1</span>Summary in 20 seconds</h2>
+    <p class="lede">${esc(VERTICAL_ANGLE[l.vertical] || VERTICAL_ANGLE.other)}</p>
+    <ul class="headline">${summaryList}</ul>
+    <p>${esc(needLine)}</p>
+    ${hasSite ? `<figure class="exhibit">
+      <img src="${shotSrc}" alt="Screenshot of the ${esc(l.name)} website today" loading="lazy"
+        onerror="this.closest('figure').style.display='none'"${opts.shotMaxWidth ? ` style="max-width:${opts.shotMaxWidth}px;margin:0 auto"` : ''}>
+      <figcaption><b>EXHIBIT A</b>${esc(shotCaption)}</figcaption>
+    </figure>` : ''}
+  </section>
 
-  <div class="angle">${esc(VERTICAL_ANGLE[l.vertical] || VERTICAL_ANGLE.other)}</div>
+  <section id="s2" class="ground">
+    <h2><span class="num">2</span>Findings</h2>
+    ${cards}
+  </section>
 
-  <h2>What we found</h2>
-  ${cards}
+  <section id="s3">
+    <h2><span class="num">3</span>What’s working</h2>
+    ${goodList}
+  </section>
 
-  <h2>What we’d do first</h2>
-  <ol class="plan">${planList}</ol>
+  <section id="s4">
+    <h2><span class="num">4</span>What we’d do first</h2>
+    <ol class="plan">${planList}</ol>
+  </section>
 
-  <h2>Where this points</h2>
-  <p>${esc(needLine)}</p>
-
-  <div class="cta">
-    <h2>Talk to a local team</h2>
-    <p class="big">${esc(CONTACT.brands)}</p>
-    <a class="tel" href="tel:${CONTACT.phone.replace(/[^\d]/g, '')}">${esc(CONTACT.phone)}</a>
-    <p>Call or text, or email <a href="mailto:${esc(CONTACT.email)}">${esc(CONTACT.email)}</a></p>
-    <p>${CONTACT.sites.map((s) => `<a href="https://${esc(s)}">${esc(s)}</a>`).join(' &middot; ')}</p>
-    <p class="reply">Or simply reply to the email this came with — we’ll pick it up from there.</p>
-  </div>
+  <section id="s5">
+    <h2><span class="num">5</span>Next step</h2>
+    <div class="cta">
+      <p class="big">${esc(CONTACT.brands)}</p>
+      <a class="tel" href="tel:${CONTACT.phone.replace(/[^\d]/g, '')}">${esc(CONTACT.phone)}</a>
+      <p>Call or text, or email <a href="mailto:${esc(CONTACT.email)}">${esc(CONTACT.email)}</a></p>
+      <p>${CONTACT.sites.map((s) => `<a href="https://${esc(s)}">${esc(s)}</a>`).join(' &middot; ')}</p>
+      <p class="reply">Or simply reply to the email this came with — we’ll pick it up from there.</p>
+    </div>
+  </section>
 
   <footer>
-    Reviewed ${esc(fullDate)}. This checkup looked only at publicly visible information — your public website, its security
-    certificate, and public DNS records. No systems were accessed or tested. Findings reflect what we could observe on that
-    date and are easy to confirm together on a quick call.
+    <p><strong>Reviewed</strong> <span class="mono">${esc(isoDate)}</span> (${esc(fullDate)}).</p>
+    <p><strong>Scope.</strong> This checkup looked only at publicly visible information — the public website, its security
+    certificate, and public DNS and registry records. No systems were accessed or tested.</p>
+    <p><strong>Method.</strong> Findings reflect what we could observe on that date; the “At a glance” statuses come only from
+    measurements we recorded, and anything we did not measure is marked “Not checked”. Every item is easy to confirm together on a quick call.</p>
   </footer>
 </div>
 </body>
