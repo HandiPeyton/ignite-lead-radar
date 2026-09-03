@@ -65,7 +65,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RECENT=$(gh run list -R ${{ github.repository }} -w "Monthly lead rescan" -L 10 --json databaseId,createdAt --jq '[.[] | select(.databaseId != ${{ github.run_id }}) | select((now - (.createdAt | fromdateiso8601)) < 7200)] | length')
+          MINE=$(gh run view ${{ github.run_id }} -R ${{ github.repository }} --json createdAt --jq .createdAt)
+          # older run wins; runs that were themselves cancelled don't count as started
+          RECENT=$(gh run list -R ${{ github.repository }} -w "Monthly lead rescan" -L 10 --json databaseId,createdAt,conclusion --jq --arg mine "$MINE" '[.[] | select(.databaseId != ${{ github.run_id }}) | select(.conclusion != "cancelled") | select(.createdAt < $mine) | select((now - (.createdAt | fromdateiso8601)) < 7200)] | length')
           echo "runs started in the last 2 h (other than this one): $RECENT"
           if [ "$RECENT" != "0" ]; then echo "A run already started recently — cancelling this late cron."; gh run cancel ${{ github.run_id }} -R ${{ github.repository }}; sleep 30; fi
 
