@@ -470,8 +470,10 @@ async function auditSite(rawUrl) {
     status: 'ok', viewport: false, year: null, flags: [], freeEmail: '',
     oldServer: '', finalUrl: '', https: true,
   };
-  let page = null, certCode = '', blocked = false, lastNote = '';
+  let page = null, certCode = '', blocked = false, lastNote = '', exhausted = false;
+  const started = Date.now();
   for (const cand of candidates) {
+    if (Date.now() - started > 100000) { exhausted = true; lastNote = 'time budget exhausted'; break; }
     for (let attempt = 0; attempt < 2 && !page; attempt++) {
       try {
         const p = await tryFetch(cand);
@@ -498,9 +500,11 @@ async function auditSite(rawUrl) {
     if (page) break;
   }
   if (!page) {
-    const r = blocked
-      ? { status: 'blocked', notes: [lastNote] }
-      : { status: certCode ? 'ssl-error' : 'down', notes: [lastNote] };
+    const r = exhausted
+      ? { status: 'unknown', notes: [lastNote] }
+      : blocked
+        ? { status: 'blocked', notes: [lastNote] }
+        : { status: certCode ? 'ssl-error' : 'down', notes: [lastNote] };
     auditCache.set(bare, r);
     return r;
   }
@@ -560,6 +564,26 @@ async function auditSite(rawUrl) {
   return result;
 }
 
+// A 'down' verdict whose only evidence is a transient network failure (timeouts, resets,
+// watchdog) is held back as 'unknown' unless the previous run ALSO saw the site down.
+// Definitive answers (ENOTFOUND, connection refused, HTTP 404/410) count immediately.
+const TRANSIENT_DOWN = /ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|UND_ERR_SOCKET|ECONNRESET|EAI_AGAIN|watchdog|time budget|HTTP 50[024]/i;
+function reconcileTransientDowns(items, prevRaw) {
+  let held = 0;
+  for (const b of items) {
+    const a = b.audit;
+    if (!a || a.status !== 'down') continue;
+    const note = (a.notes || []).join(',');
+    if (!TRANSIENT_DOWN.test(note)) continue;
+    const host = hostnameOf(b.website) || b.website;
+    if (prevRaw && prevRaw[host] === 'down') continue; // seen down twice: confirmed
+    a.status = 'unknown';
+    a.notes = ['unconfirmed: ' + note + ' (counts only if the next scan sees it down again)'];
+    held++;
+  }
+  return held;
+}
+
 async function auditPool(items) {
   let i = 0, done = 0;
   const worker = async () => {
@@ -568,9 +592,10 @@ async function auditPool(items) {
       // watchdog race: no single site may stall a worker (a silent exit-0
       // mid-audit was observed once in CI when the pool never completed)
       let timer;
-      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'down', notes: ['watchdog timeout'] }), 60000); });
+      // running out of time proves nothing about the site: 'unknown' makes no claim and no lead
+      const guard = new Promise((res) => { timer = setTimeout(() => res({ status: 'unknown', notes: ['watchdog timeout'] }), 150000); });
       try { item.audit = await Promise.race([auditSite(item.website), guard]); }
-      catch { item.audit = { status: 'down', notes: ['audit error'] }; }
+      catch { item.audit = { status: 'unknown', notes: ['audit error'] }; }
       finally { clearTimeout(timer); }
       done++;
       if (done % 50 === 0) log(`  audited ${done}/${items.length} sites...`);
@@ -846,6 +871,16 @@ async function main() {
   log(`Auditing ${auditSet.length} websites (${auditCache.size ? 'warm' : 'cold'} cache, concurrency ${AUDIT_CONCURRENCY})...`);
   await auditPool(auditSet);
   log('Audits complete.');
+  {
+    const statusPath = path.join(OUT_DIR, 'audit-status.json');
+    let prevRaw = null;
+    try { prevRaw = JSON.parse(fs.readFileSync(statusPath, 'utf8')); } catch { /* first run */ }
+    const raw = {};
+    for (const b of auditSet) raw[hostnameOf(b.website) || b.website] = b.audit && b.audit.status;
+    const held = reconcileTransientDowns(auditSet, prevRaw);
+    if (held) log(`Held back ${held} transient "down" verdicts as unconfirmed — they count only if the next scan sees the site down again.`);
+    fs.writeFileSync(statusPath, JSON.stringify(raw));
+  }
 
   // Score everything; keep actionable leads. Hard requirement: a phone number
   // to call — no phone, no lead (still counted in stats + inventory.json).
